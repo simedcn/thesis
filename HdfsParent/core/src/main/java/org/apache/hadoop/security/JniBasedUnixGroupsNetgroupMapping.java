@@ -33,71 +33,68 @@ import org.apache.hadoop.security.NetgroupCache;
  * that invokes libC calls to get the group
  * memberships of a given user.
  */
-public class JniBasedUnixGroupsNetgroupMapping
-  extends JniBasedUnixGroupsMapping {
-  
-  private static final Log LOG = LogFactory.getLog(
-    JniBasedUnixGroupsNetgroupMapping.class);
+public class JniBasedUnixGroupsNetgroupMapping extends JniBasedUnixGroupsMapping {
 
-  private static final NetgroupCache netgroupCache = new NetgroupCache();
+   private static final Log LOG = LogFactory.getLog(JniBasedUnixGroupsNetgroupMapping.class);
 
-  native String[] getUsersForNetgroupJNI(String group);
-  
-  /**
-   * Gets unix groups and netgroups for the user.
-   *
-   * It gets all unix groups as returned by id -Gn but it
-   * only returns netgroups that are used in ACLs (there is
-   * no way to get all netgroups for a given user, see
-   * documentation for getent netgroup)
-   */
-  @Override
-  public List<String> getGroups(String user) throws IOException {
-    // parent gets unix groups
-    List<String> groups = new LinkedList<String>(super.getGroups(user));
-    netgroupCache.getNetgroups(user, groups);
-    return groups;
-  }
+   private static final NetgroupCache netgroupCache = new NetgroupCache();
 
-  @Override
-  public void cacheGroupsRefresh() throws IOException {
-    List<String> groups = netgroupCache.getNetgroupNames();
-    netgroupCache.clear();
-    cacheGroupsAdd(groups);
-  }
+   native String[] getUsersForNetgroupJNI(String group);
 
-  @Override
-  public void cacheGroupsAdd(List<String> groups) throws IOException {
-    for(String group: groups) {
-      if(group.length() == 0) {
-        // better safe than sorry (should never happen)
-      } else if(group.charAt(0) == '@') {
-        if(!netgroupCache.isCached(group)) {
-          netgroupCache.add(group, getUsersForNetgroup(group));
-        }
-      } else {
-        // unix group, not caching
+   /**
+    * Gets unix groups and netgroups for the user.
+    *
+    * It gets all unix groups as returned by id -Gn but it
+    * only returns netgroups that are used in ACLs (there is
+    * no way to get all netgroups for a given user, see
+    * documentation for getent netgroup)
+    */
+   @Override
+   public List<String> getGroups(String user) throws IOException {
+      // parent gets unix groups
+      List<String> groups = new LinkedList<String>(super.getGroups(user));
+      netgroupCache.getNetgroups(user, groups);
+      return groups;
+   }
+
+   @Override
+   public void cacheGroupsRefresh() throws IOException {
+      List<String> groups = netgroupCache.getNetgroupNames();
+      netgroupCache.clear();
+      cacheGroupsAdd(groups);
+   }
+
+   @Override
+   public void cacheGroupsAdd(List<String> groups) throws IOException {
+      for (String group : groups) {
+         if (group.length() == 0) {
+            // better safe than sorry (should never happen)
+         } else if (group.charAt(0) == '@') {
+            if (!netgroupCache.isCached(group)) {
+               netgroupCache.add(group, getUsersForNetgroup(group));
+            }
+         } else {
+            // unix group, not caching
+         }
       }
-    }
-  }
+   }
 
-  /**
-   * Calls JNI function to get users for a netgroup, since C functions
-   * are not reentrant we need to make this synchronized (see
-   * documentation for setnetgrent, getnetgrent and endnetgrent)
-   */
-  protected synchronized List<String> getUsersForNetgroup(String netgroup) {
-    String[] users = null;
-    try {
-      // JNI code does not expect '@' at the begining of the group name
-      users = getUsersForNetgroupJNI(netgroup.substring(1));
-    } catch (Exception e) {
-      LOG.warn("Got exception while trying to obtain the users for netgroup ["
-        + netgroup + "] [" + e + "]");
-    }
-    if (users != null && users.length != 0) {
-      return Arrays.asList(users);
-    }
-    return new LinkedList<String>();
-  }
+   /**
+    * Calls JNI function to get users for a netgroup, since C functions
+    * are not reentrant we need to make this synchronized (see
+    * documentation for setnetgrent, getnetgrent and endnetgrent)
+    */
+   protected synchronized List<String> getUsersForNetgroup(String netgroup) {
+      String[] users = null;
+      try {
+         // JNI code does not expect '@' at the begining of the group name
+         users = getUsersForNetgroupJNI(netgroup.substring(1));
+      } catch (Exception e) {
+         LOG.warn("Got exception while trying to obtain the users for netgroup [" + netgroup + "] [" + e + "]");
+      }
+      if (users != null && users.length != 0) {
+         return Arrays.asList(users);
+      }
+      return new LinkedList<String>();
+   }
 }

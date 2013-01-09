@@ -27,47 +27,50 @@ import org.apache.hadoop.metrics2.util.TryIterator;
 
 class MetricsRecordFiltered implements MetricsRecord {
 
-  private final MetricsRecord delegate;
-  private final MetricsFilter filter;
+   private final MetricsRecord delegate;
 
-  MetricsRecordFiltered(MetricsRecord delegate, MetricsFilter filter) {
-    this.delegate = delegate;
-    this.filter = filter;
-  }
+   private final MetricsFilter filter;
 
-  public long timestamp() {
-    return delegate.timestamp();
-  }
+   MetricsRecordFiltered(MetricsRecord delegate, MetricsFilter filter) {
+      this.delegate = delegate;
+      this.filter = filter;
+   }
 
-  public String name() {
-    return delegate.name();
-  }
+   public long timestamp() {
+      return delegate.timestamp();
+   }
 
-  public String context() {
-    return delegate.context();
-  }
+   public String name() {
+      return delegate.name();
+   }
 
-  public Iterable<MetricsTag> tags() {
-    return delegate.tags();
-  }
+   public String context() {
+      return delegate.context();
+   }
 
-  public Iterable<Metric> metrics() {
-    return new Iterable<Metric>() {
-      final Iterator<Metric> it = delegate.metrics().iterator();
-      public Iterator<Metric> iterator() {
-        return new TryIterator<Metric>() {
-          public Metric tryNext() {
-            if (it.hasNext()) do {
-              Metric next = it.next();
-              if (filter.accepts(next.name())) {
-                return next;
-              }
-            } while (it.hasNext());
-            return done();
-          }
-        };
-      }
-    };
-  }
+   public Iterable<MetricsTag> tags() {
+      return delegate.tags();
+   }
+
+   public Iterable<Metric> metrics() {
+      return new Iterable<Metric>() {
+         final Iterator<Metric> it = delegate.metrics().iterator();
+
+         public Iterator<Metric> iterator() {
+            return new TryIterator<Metric>() {
+               public Metric tryNext() {
+                  if (it.hasNext())
+                     do {
+                        Metric next = it.next();
+                        if (filter.accepts(next.name())) {
+                           return next;
+                        }
+                     } while (it.hasNext());
+                  return done();
+               }
+            };
+         }
+      };
+   }
 
 }

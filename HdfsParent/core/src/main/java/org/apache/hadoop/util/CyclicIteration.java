@@ -29,80 +29,82 @@ import java.util.NoSuchElementException;
  * it will then continue from the first entry.
  */
 public class CyclicIteration<K, V> implements Iterable<Map.Entry<K, V>> {
-  private final NavigableMap<K, V> navigablemap;
-  private final NavigableMap<K, V> tailmap;
+   private final NavigableMap<K, V> navigablemap;
 
-  /** Construct an {@link Iterable} object,
-   * so that an {@link Iterator} can be created  
-   * for iterating the given {@link NavigableMap}.
-   * The iteration begins from the starting key exclusively.
-   */
-  public CyclicIteration(NavigableMap<K, V> navigablemap, K startingkey) {
-    if (navigablemap == null || navigablemap.isEmpty()) {
-      this.navigablemap = null;
-      this.tailmap = null;
-    }
-    else {
-      this.navigablemap = navigablemap;
-      this.tailmap = navigablemap.tailMap(startingkey, false); 
-    }
-  }
+   private final NavigableMap<K, V> tailmap;
 
-  /** {@inheritDoc} */
-  public Iterator<Map.Entry<K, V>> iterator() {
-    return new CyclicIterator();
-  }
-
-  /** An {@link Iterator} for {@link CyclicIteration}. */
-  private class CyclicIterator implements Iterator<Map.Entry<K, V>> {
-    private boolean hasnext;
-    private Iterator<Map.Entry<K, V>> i;
-    /** The first entry to begin. */
-    private final Map.Entry<K, V> first;
-    /** The next entry. */
-    private Map.Entry<K, V> next;
-    
-    private CyclicIterator() {
-      hasnext = navigablemap != null;
-      if (hasnext) {
-        i = tailmap.entrySet().iterator();
-        first = nextEntry();
-        next = first;
+   /** Construct an {@link Iterable} object,
+    * so that an {@link Iterator} can be created  
+    * for iterating the given {@link NavigableMap}.
+    * The iteration begins from the starting key exclusively.
+    */
+   public CyclicIteration(NavigableMap<K, V> navigablemap, K startingkey) {
+      if (navigablemap == null || navigablemap.isEmpty()) {
+         this.navigablemap = null;
+         this.tailmap = null;
+      } else {
+         this.navigablemap = navigablemap;
+         this.tailmap = navigablemap.tailMap(startingkey, false);
       }
-      else {
-        i = null;
-        first = null;
-        next = null;
-      }
-    }
+   }
 
-    private Map.Entry<K, V> nextEntry() {
-      if (!i.hasNext()) {
-        i = navigablemap.entrySet().iterator();
-      }
-      return i.next();
-    }
+   /** {@inheritDoc} */
+   public Iterator<Map.Entry<K, V>> iterator() {
+      return new CyclicIterator();
+   }
 
-    /** {@inheritDoc} */
-    public boolean hasNext() {
-      return hasnext;
-    }
+   /** An {@link Iterator} for {@link CyclicIteration}. */
+   private class CyclicIterator implements Iterator<Map.Entry<K, V>> {
+      private boolean hasnext;
 
-    /** {@inheritDoc} */
-    public Map.Entry<K, V> next() {
-      if (!hasnext) {
-        throw new NoSuchElementException();
+      private Iterator<Map.Entry<K, V>> i;
+
+      /** The first entry to begin. */
+      private final Map.Entry<K, V> first;
+
+      /** The next entry. */
+      private Map.Entry<K, V> next;
+
+      private CyclicIterator() {
+         hasnext = navigablemap != null;
+         if (hasnext) {
+            i = tailmap.entrySet().iterator();
+            first = nextEntry();
+            next = first;
+         } else {
+            i = null;
+            first = null;
+            next = null;
+         }
       }
 
-      final Map.Entry<K, V> curr = next;
-      next = nextEntry();
-      hasnext = !next.equals(first);
-      return curr;
-    }
+      private Map.Entry<K, V> nextEntry() {
+         if (!i.hasNext()) {
+            i = navigablemap.entrySet().iterator();
+         }
+         return i.next();
+      }
 
-    /** Not supported */
-    public void remove() {
-      throw new UnsupportedOperationException("Not supported");
-    }
-  }
+      /** {@inheritDoc} */
+      public boolean hasNext() {
+         return hasnext;
+      }
+
+      /** {@inheritDoc} */
+      public Map.Entry<K, V> next() {
+         if (!hasnext) {
+            throw new NoSuchElementException();
+         }
+
+         final Map.Entry<K, V> curr = next;
+         next = nextEntry();
+         hasnext = !next.equals(first);
+         return curr;
+      }
+
+      /** Not supported */
+      public void remove() {
+         throw new UnsupportedOperationException("Not supported");
+      }
+   }
 }

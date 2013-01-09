@@ -26,101 +26,103 @@ import org.apache.hadoop.fs.FileSystem;
 
 public class FTPInputStream extends FSInputStream {
 
-  InputStream wrappedStream;
-  FTPClient client;
-  FileSystem.Statistics stats;
-  boolean closed;
-  long pos;
+   InputStream wrappedStream;
 
-  public FTPInputStream(InputStream stream, FTPClient client,
-      FileSystem.Statistics stats) {
-    if (stream == null) {
-      throw new IllegalArgumentException("Null InputStream");
-    }
-    if (client == null || !client.isConnected()) {
-      throw new IllegalArgumentException("FTP client null or not connected");
-    }
-    this.wrappedStream = stream;
-    this.client = client;
-    this.stats = stats;
-    this.pos = 0;
-    this.closed = false;
-  }
+   FTPClient client;
 
-  public long getPos() throws IOException {
-    return pos;
-  }
+   FileSystem.Statistics stats;
 
-  // We don't support seek.
-  public void seek(long pos) throws IOException {
-    throw new IOException("Seek not supported");
-  }
+   boolean closed;
 
-  public boolean seekToNewSource(long targetPos) throws IOException {
-    throw new IOException("Seek not supported");
-  }
+   long pos;
 
-  public synchronized int read() throws IOException {
-    if (closed) {
-      throw new IOException("Stream closed");
-    }
+   public FTPInputStream(InputStream stream, FTPClient client, FileSystem.Statistics stats) {
+      if (stream == null) {
+         throw new IllegalArgumentException("Null InputStream");
+      }
+      if (client == null || !client.isConnected()) {
+         throw new IllegalArgumentException("FTP client null or not connected");
+      }
+      this.wrappedStream = stream;
+      this.client = client;
+      this.stats = stats;
+      this.pos = 0;
+      this.closed = false;
+   }
 
-    int byteRead = wrappedStream.read();
-    if (byteRead >= 0) {
-      pos++;
-    }
-    if (stats != null & byteRead >= 0) {
-      stats.incrementBytesRead(1);
-    }
-    return byteRead;
-  }
+   public long getPos() throws IOException {
+      return pos;
+   }
 
-  public synchronized int read(byte buf[], int off, int len) throws IOException {
-    if (closed) {
-      throw new IOException("Stream closed");
-    }
+   // We don't support seek.
+   public void seek(long pos) throws IOException {
+      throw new IOException("Seek not supported");
+   }
 
-    int result = wrappedStream.read(buf, off, len);
-    if (result > 0) {
-      pos += result;
-    }
-    if (stats != null & result > 0) {
-      stats.incrementBytesRead(result);
-    }
+   public boolean seekToNewSource(long targetPos) throws IOException {
+      throw new IOException("Seek not supported");
+   }
 
-    return result;
-  }
+   public synchronized int read() throws IOException {
+      if (closed) {
+         throw new IOException("Stream closed");
+      }
 
-  public synchronized void close() throws IOException {
-    if (closed) {
-      throw new IOException("Stream closed");
-    }
-    super.close();
-    closed = true;
-    if (!client.isConnected()) {
-      throw new FTPException("Client not connected");
-    }
+      int byteRead = wrappedStream.read();
+      if (byteRead >= 0) {
+         pos++;
+      }
+      if (stats != null & byteRead >= 0) {
+         stats.incrementBytesRead(1);
+      }
+      return byteRead;
+   }
 
-    boolean cmdCompleted = client.completePendingCommand();
-    client.logout();
-    client.disconnect();
-    if (!cmdCompleted) {
-      throw new FTPException("Could not complete transfer, Reply Code - "
-          + client.getReplyCode());
-    }
-  }
+   public synchronized int read(byte buf[], int off, int len) throws IOException {
+      if (closed) {
+         throw new IOException("Stream closed");
+      }
 
-  // Not supported.
+      int result = wrappedStream.read(buf, off, len);
+      if (result > 0) {
+         pos += result;
+      }
+      if (stats != null & result > 0) {
+         stats.incrementBytesRead(result);
+      }
 
-  public boolean markSupported() {
-    return false;
-  }
+      return result;
+   }
 
-  public void mark(int readLimit) {
-    // Do nothing
-  }
+   public synchronized void close() throws IOException {
+      if (closed) {
+         throw new IOException("Stream closed");
+      }
+      super.close();
+      closed = true;
+      if (!client.isConnected()) {
+         throw new FTPException("Client not connected");
+      }
 
-  public void reset() throws IOException {
-    throw new IOException("Mark not supported");
-  }
+      boolean cmdCompleted = client.completePendingCommand();
+      client.logout();
+      client.disconnect();
+      if (!cmdCompleted) {
+         throw new FTPException("Could not complete transfer, Reply Code - " + client.getReplyCode());
+      }
+   }
+
+   // Not supported.
+
+   public boolean markSupported() {
+      return false;
+   }
+
+   public void mark(int readLimit) {
+      // Do nothing
+   }
+
+   public void reset() throws IOException {
+      throw new IOException("Mark not supported");
+   }
 }

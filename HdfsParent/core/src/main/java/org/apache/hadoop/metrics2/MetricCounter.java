@@ -24,15 +24,15 @@ package org.apache.hadoop.metrics2;
  */
 public abstract class MetricCounter<T extends Number> extends Metric {
 
-  /**
-   * Construct a counter metric
-   * @param name  of the metric
-   * @param description of the metric
-   */
-  public MetricCounter(String name, String description) {
-    super(name, description);
-  }
+   /**
+    * Construct a counter metric
+    * @param name  of the metric
+    * @param description of the metric
+    */
+   public MetricCounter(String name, String description) {
+      super(name, description);
+   }
 
-  public abstract T value();
+   public abstract T value();
 
 }

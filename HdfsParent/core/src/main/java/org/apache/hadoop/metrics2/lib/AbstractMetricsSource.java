@@ -26,35 +26,35 @@ import org.apache.hadoop.metrics2.MetricsSource;
  */
 public abstract class AbstractMetricsSource implements MetricsSource {
 
-  protected final MetricsRegistry registry;
+   protected final MetricsRegistry registry;
 
-  /**
-   * Construct the source with name and a mutable metrics factory
-   * @param name  of the default record
-   * @param mf  the factory to create mutable metrics
-   */
-  public AbstractMetricsSource(String name, MetricMutableFactory mf) {
-    registry = new MetricsRegistry(name, mf);
-  }
+   /**
+    * Construct the source with name and a mutable metrics factory
+    * @param name  of the default record
+    * @param mf  the factory to create mutable metrics
+    */
+   public AbstractMetricsSource(String name, MetricMutableFactory mf) {
+      registry = new MetricsRegistry(name, mf);
+   }
 
-  /**
-   * Construct the source with a name with a default factory
-   * @param name  of the default record
-   */
-  public AbstractMetricsSource(String name) {
-    this(name, new MetricMutableFactory());
-  }
+   /**
+    * Construct the source with a name with a default factory
+    * @param name  of the default record
+    */
+   public AbstractMetricsSource(String name) {
+      this(name, new MetricMutableFactory());
+   }
 
-  /**
-   * @return  the registry for mutable metrics
-   */
-  public MetricsRegistry registry() {
-    return registry;
-  }
+   /**
+    * @return  the registry for mutable metrics
+    */
+   public MetricsRegistry registry() {
+      return registry;
+   }
 
-  @Override
-  public void getMetrics(MetricsBuilder builder, boolean all) {
-    registry.snapshot(builder.addRecord(registry.name()), all);
-  }
+   @Override
+   public void getMetrics(MetricsBuilder builder, boolean all) {
+      registry.snapshot(builder.addRecord(registry.name()), all);
+   }
 
 }

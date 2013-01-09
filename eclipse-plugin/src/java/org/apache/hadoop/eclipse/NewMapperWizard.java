@@ -32,7 +32,6 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
@@ -73,8 +72,6 @@ public class NewMapperWizard extends NewElementWizard implements INewWizard,
   }
 
   public static class Page extends NewTypeWizardPage {
-    private Button isCreateMapMethod;
-
     public Page() {
       super(true, "Mapper");
 

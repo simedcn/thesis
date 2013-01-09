@@ -25,46 +25,47 @@ import org.apache.hadoop.util.NativeCodeLoader;
  * Determines if Snappy native library is available and loads it if available.
  */
 public class LoadSnappy {
-  private static final Log LOG = LogFactory.getLog(LoadSnappy.class.getName());
+   private static final Log LOG = LogFactory.getLog(LoadSnappy.class.getName());
 
-  private static boolean AVAILABLE = false;
-  private static boolean LOADED = false;
+   private static boolean AVAILABLE = false;
 
-  static {
-    try {
-      System.loadLibrary("snappy");
-      LOG.warn("Snappy native library is available");
-      AVAILABLE = true;
-    } catch (UnsatisfiedLinkError ex) {
-      //NOP
-    }
-    boolean hadoopNativeAvailable = NativeCodeLoader.isNativeCodeLoaded();
-    LOADED = AVAILABLE && hadoopNativeAvailable;
-    if (LOADED) {
-      LOG.info("Snappy native library loaded");
-    } else {
-      LOG.warn("Snappy native library not loaded");
-    }
-  }
+   private static boolean LOADED = false;
 
-  /**
-   * Returns if Snappy native library is loaded.
-   *
-   * @return <code>true</code> if Snappy native library is loaded,
-   * <code>false</code> if not.
-   */
-  public static boolean isAvailable() {
-    return AVAILABLE;
-  }
+   static {
+      try {
+         System.loadLibrary("snappy");
+         LOG.warn("Snappy native library is available");
+         AVAILABLE = true;
+      } catch (UnsatisfiedLinkError ex) {
+         //NOP
+      }
+      boolean hadoopNativeAvailable = NativeCodeLoader.isNativeCodeLoaded();
+      LOADED = AVAILABLE && hadoopNativeAvailable;
+      if (LOADED) {
+         LOG.info("Snappy native library loaded");
+      } else {
+         LOG.warn("Snappy native library not loaded");
+      }
+   }
 
-  /**
-   * Returns if Snappy native library is loaded.
-   *
-   * @return <code>true</code> if Snappy native library is loaded,
-   * <code>false</code> if not.
-   */
-  public static boolean isLoaded() {
-    return LOADED;
-  }
+   /**
+    * Returns if Snappy native library is loaded.
+    *
+    * @return <code>true</code> if Snappy native library is loaded,
+    * <code>false</code> if not.
+    */
+   public static boolean isAvailable() {
+      return AVAILABLE;
+   }
+
+   /**
+    * Returns if Snappy native library is loaded.
+    *
+    * @return <code>true</code> if Snappy native library is loaded,
+    * <code>false</code> if not.
+    */
+   public static boolean isLoaded() {
+      return LOADED;
+   }
 
 }

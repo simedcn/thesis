@@ -401,6 +401,7 @@ public class DFSActionImpl implements IObjectActionDelegate {
    * @param selection the structured selection
    * @return the list of <T> it contains
    */
+  @SuppressWarnings("unchecked")
   private static <T> List<T> filterSelection(Class<T> clazz,
       IStructuredSelection selection) {
     List<T> list = new ArrayList<T>();

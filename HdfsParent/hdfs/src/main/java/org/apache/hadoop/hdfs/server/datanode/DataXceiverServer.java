@@ -41,141 +41,134 @@ import org.apache.hadoop.util.StringUtils;
  * Hadoop IPC mechanism.
  */
 class DataXceiverServer implements Runnable, FSConstants {
-  public static final Log LOG = DataNode.LOG;
-  
-  ServerSocket ss;
-  DataNode datanode;
-  // Record all sockets opend for data transfer
-  Map<Socket, Socket> childSockets = Collections.synchronizedMap(
-                                       new HashMap<Socket, Socket>());
-  
-  /**
-   * Maximal number of concurrent xceivers per node.
-   * Enforcing the limit is required in order to avoid data-node
-   * running out of memory.
-   */
-  static final int MAX_XCEIVER_COUNT = 256;
-  int maxXceiverCount = MAX_XCEIVER_COUNT;
+   public static final Log LOG = DataNode.LOG;
 
-  /** A manager to make sure that cluster balancing does not
-   * take too much resources.
-   * 
-   * It limits the number of block moves for balancing and
-   * the total amount of bandwidth they can use.
-   */
-  static class BlockBalanceThrottler extends BlockTransferThrottler {
-   private int numThreads;
-   
-   /**Constructor
-    * 
-    * @param bandwidth Total amount of bandwidth can be used for balancing 
+   ServerSocket ss;
+
+   DataNode datanode;
+
+   // Record all sockets opend for data transfer
+   Map<Socket, Socket> childSockets = Collections.synchronizedMap(new HashMap<Socket, Socket>());
+
+   /**
+    * Maximal number of concurrent xceivers per node.
+    * Enforcing the limit is required in order to avoid data-node
+    * running out of memory.
     */
-   private BlockBalanceThrottler(long bandwidth) {
-     super(bandwidth);
-     LOG.info("Balancing bandwith is "+ bandwidth + " bytes/s");
-   }
-   
-   /** Check if the block move can start. 
+   static final int MAX_XCEIVER_COUNT = 256;
+
+   int maxXceiverCount = MAX_XCEIVER_COUNT;
+
+   /** A manager to make sure that cluster balancing does not
+    * take too much resources.
     * 
-    * Return true if the thread quota is not exceeded and 
-    * the counter is incremented; False otherwise.
+    * It limits the number of block moves for balancing and
+    * the total amount of bandwidth they can use.
     */
-   synchronized boolean acquire() {
-     if (numThreads >= Balancer.MAX_NUM_CONCURRENT_MOVES) {
-       return false;
-     }
-     numThreads++;
-     return true;
-   }
-   
-   /** Mark that the move is completed. The thread counter is decremented. */
-   synchronized void release() {
-     numThreads--;
-   }
-  }
+   static class BlockBalanceThrottler extends BlockTransferThrottler {
+      private int numThreads;
 
-  BlockBalanceThrottler balanceThrottler;
-  
-  /**
-   * We need an estimate for block size to check if the disk partition has
-   * enough space. For now we set it to be the default block size set
-   * in the server side configuration, which is not ideal because the
-   * default block size should be a client-size configuration. 
-   * A better solution is to include in the header the estimated block size,
-   * i.e. either the actual block size or the default block size.
-   */
-  long estimateBlockSize;
-  
-  
-  DataXceiverServer(ServerSocket ss, Configuration conf, 
-      DataNode datanode) {
-    
-    this.ss = ss;
-    this.datanode = datanode;
-    
-    this.maxXceiverCount = conf.getInt("dfs.datanode.max.xcievers",
-        MAX_XCEIVER_COUNT);
-    
-    this.estimateBlockSize = conf.getLong("dfs.block.size", DEFAULT_BLOCK_SIZE);
-    
-    //set up parameter for cluster balancing
-    this.balanceThrottler = new BlockBalanceThrottler(
-      conf.getLong("dfs.balance.bandwidthPerSec", 1024L*1024));
-  }
+      /**Constructor
+       * 
+       * @param bandwidth Total amount of bandwidth can be used for balancing 
+       */
+      private BlockBalanceThrottler(long bandwidth) {
+         super(bandwidth);
+         LOG.info("Balancing bandwith is " + bandwidth + " bytes/s");
+      }
 
-  /**
-   */
-  public void run() {
-    while (datanode.shouldRun) {
+      /** Check if the block move can start. 
+       * 
+       * Return true if the thread quota is not exceeded and 
+       * the counter is incremented; False otherwise.
+       */
+      synchronized boolean acquire() {
+         if (numThreads >= Balancer.MAX_NUM_CONCURRENT_MOVES) {
+            return false;
+         }
+         numThreads++;
+         return true;
+      }
+
+      /** Mark that the move is completed. The thread counter is decremented. */
+      synchronized void release() {
+         numThreads--;
+      }
+   }
+
+   BlockBalanceThrottler balanceThrottler;
+
+   /**
+    * We need an estimate for block size to check if the disk partition has
+    * enough space. For now we set it to be the default block size set
+    * in the server side configuration, which is not ideal because the
+    * default block size should be a client-size configuration. 
+    * A better solution is to include in the header the estimated block size,
+    * i.e. either the actual block size or the default block size.
+    */
+   long estimateBlockSize;
+
+   DataXceiverServer(ServerSocket ss, Configuration conf, DataNode datanode) {
+
+      this.ss = ss;
+      this.datanode = datanode;
+
+      this.maxXceiverCount = conf.getInt("dfs.datanode.max.xcievers", MAX_XCEIVER_COUNT);
+
+      this.estimateBlockSize = conf.getLong("dfs.block.size", DEFAULT_BLOCK_SIZE);
+
+      //set up parameter for cluster balancing
+      this.balanceThrottler = new BlockBalanceThrottler(conf.getLong("dfs.balance.bandwidthPerSec", 1024L * 1024));
+   }
+
+   /**
+    */
+   public void run() {
+      while (datanode.shouldRun) {
+         try {
+            Socket s = ss.accept();
+            s.setTcpNoDelay(true);
+            new Daemon(datanode.threadGroup, new DataXceiver(s, datanode, this)).start();
+         } catch (SocketTimeoutException ignored) {
+            // wake up to see if should continue to run
+         } catch (AsynchronousCloseException ace) {
+            LOG.warn(datanode.dnRegistration + ":DataXceiveServer:" + StringUtils.stringifyException(ace));
+            datanode.shouldRun = false;
+         } catch (IOException ie) {
+            LOG.warn(datanode.dnRegistration + ":DataXceiveServer: IOException due to:"
+                  + StringUtils.stringifyException(ie));
+         } catch (Throwable te) {
+            LOG.error(datanode.dnRegistration + ":DataXceiveServer: Exiting due to:"
+                  + StringUtils.stringifyException(te));
+            datanode.shouldRun = false;
+         }
+      }
       try {
-        Socket s = ss.accept();
-        s.setTcpNoDelay(true);
-        new Daemon(datanode.threadGroup, 
-            new DataXceiver(s, datanode, this)).start();
-      } catch (SocketTimeoutException ignored) {
-        // wake up to see if should continue to run
-      } catch (AsynchronousCloseException ace) {
-          LOG.warn(datanode.dnRegistration + ":DataXceiveServer:"
-                  + StringUtils.stringifyException(ace));
-          datanode.shouldRun = false;
+         ss.close();
       } catch (IOException ie) {
-        LOG.warn(datanode.dnRegistration + ":DataXceiveServer: IOException due to:"
-                                 + StringUtils.stringifyException(ie));
-      } catch (Throwable te) {
-        LOG.error(datanode.dnRegistration + ":DataXceiveServer: Exiting due to:" 
-                                 + StringUtils.stringifyException(te));
-        datanode.shouldRun = false;
+         LOG.warn(datanode.dnRegistration + ":DataXceiveServer: Close exception due to: "
+               + StringUtils.stringifyException(ie));
       }
-    }
-    try {
-      ss.close();
-    } catch (IOException ie) {
-      LOG.warn(datanode.dnRegistration + ":DataXceiveServer: Close exception due to: "
-                               + StringUtils.stringifyException(ie));
-    }
-    LOG.info("Exiting DataXceiveServer");
-  }
-  
-  void kill() {
-    assert datanode.shouldRun == false :
-      "shoudRun should be set to false before killing";
-    try {
-      this.ss.close();
-    } catch (IOException ie) {
-      LOG.warn(datanode.dnRegistration + ":DataXceiveServer.kill(): " 
-                              + StringUtils.stringifyException(ie));
-    }
+      LOG.info("Exiting DataXceiveServer");
+   }
 
-    // close all the sockets that were accepted earlier
-    synchronized (childSockets) {
-      for (Iterator<Socket> it = childSockets.values().iterator();
-           it.hasNext();) {
-        Socket thissock = it.next();
-        try {
-          thissock.close();
-        } catch (IOException e) {
-        }
+   void kill() {
+      assert datanode.shouldRun == false : "shoudRun should be set to false before killing";
+      try {
+         this.ss.close();
+      } catch (IOException ie) {
+         LOG.warn(datanode.dnRegistration + ":DataXceiveServer.kill(): " + StringUtils.stringifyException(ie));
       }
-    }
-  }
+
+      // close all the sockets that were accepted earlier
+      synchronized (childSockets) {
+         for (Iterator<Socket> it = childSockets.values().iterator(); it.hasNext();) {
+            Socket thissock = it.next();
+            try {
+               thissock.close();
+            } catch (IOException e) {
+            }
+         }
+      }
+   }
 }

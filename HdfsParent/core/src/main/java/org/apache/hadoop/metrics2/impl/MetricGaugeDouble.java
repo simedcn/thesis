@@ -23,19 +23,19 @@ import org.apache.hadoop.metrics2.MetricsVisitor;
 
 class MetricGaugeDouble extends MetricGauge<Double> {
 
-  final double value;
+   final double value;
 
-  MetricGaugeDouble(String name, String description, double value) {
-    super(name, description);
-    this.value = value;
-  }
+   MetricGaugeDouble(String name, String description, double value) {
+      super(name, description);
+      this.value = value;
+   }
 
-  public Double value() {
-    return value;
-  }
+   public Double value() {
+      return value;
+   }
 
-  public void visit(MetricsVisitor visitor) {
-    visitor.gauge(this, value);
-  }
+   public void visit(MetricsVisitor visitor) {
+      visitor.gauge(this, value);
+   }
 
 }

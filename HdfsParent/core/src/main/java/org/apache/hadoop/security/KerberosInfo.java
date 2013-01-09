@@ -26,7 +26,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface KerberosInfo {
-  /** Key for getting server's Kerberos principal name from Configuration */
-  String serverPrincipal();
-  String clientPrincipal() default "";
+   /** Key for getting server's Kerberos principal name from Configuration */
+   String serverPrincipal();
+
+   String clientPrincipal() default "";
 }

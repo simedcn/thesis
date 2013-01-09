@@ -80,312 +80,265 @@ import com.sun.jersey.spi.container.ResourceFilters;
 @Path("")
 @ResourceFilters(ParamFilter.class)
 public class DatanodeWebHdfsMethods {
-  public static final Log LOG = LogFactory.getLog(DatanodeWebHdfsMethods.class);
+   public static final Log LOG = LogFactory.getLog(DatanodeWebHdfsMethods.class);
 
-  private static final UriFsPathParam ROOT = new UriFsPathParam("");
+   private static final UriFsPathParam ROOT = new UriFsPathParam("");
 
-  private @Context ServletContext context;
-  private @Context HttpServletResponse response;
+   private @Context
+   ServletContext context;
 
-  private void init(final UserGroupInformation ugi, final DelegationParam delegation,
-      final UriFsPathParam path, final HttpOpParam<?> op,
-      final Param<?, ?>... parameters) throws IOException {
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("HTTP " + op.getValue().getType() + ": " + op + ", " + path
-          + ", ugi=" + ugi + Param.toSortedString(", ", parameters));
-    }
+   private @Context
+   HttpServletResponse response;
 
-    //clear content type
-    response.setContentType(null);
-    
-    if (UserGroupInformation.isSecurityEnabled()) {
-      //add a token for RPC.
-      final DataNode datanode = (DataNode)context.getAttribute("datanode");
-      final InetSocketAddress nnRpcAddr = NameNode.getAddress(datanode.getConf());
-      final Token<DelegationTokenIdentifier> token = new Token<DelegationTokenIdentifier>();
-      token.decodeFromUrlString(delegation.getValue());
-      SecurityUtil.setTokenService(token, nnRpcAddr);
-      token.setKind(DelegationTokenIdentifier.HDFS_DELEGATION_KIND);
-      ugi.addToken(token);
-    }
-  }
-
-  /** Handle HTTP PUT request for the root. */
-  @PUT
-  @Path("/")
-  @Consumes({"*/*"})
-  @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
-  public Response putRoot(
-      final InputStream in,
-      @Context final UserGroupInformation ugi,
-      @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT)
-          final DelegationParam delegation,
-      @QueryParam(PutOpParam.NAME) @DefaultValue(PutOpParam.DEFAULT)
-          final PutOpParam op,
-      @QueryParam(PermissionParam.NAME) @DefaultValue(PermissionParam.DEFAULT)
-          final PermissionParam permission,
-      @QueryParam(OverwriteParam.NAME) @DefaultValue(OverwriteParam.DEFAULT)
-          final OverwriteParam overwrite,
-      @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT)
-          final BufferSizeParam bufferSize,
-      @QueryParam(ReplicationParam.NAME) @DefaultValue(ReplicationParam.DEFAULT)
-          final ReplicationParam replication,
-      @QueryParam(BlockSizeParam.NAME) @DefaultValue(BlockSizeParam.DEFAULT)
-          final BlockSizeParam blockSize
-      ) throws IOException, InterruptedException {
-    return put(in, ugi, delegation, ROOT, op, permission, overwrite, bufferSize,
-        replication, blockSize);
-  }
-
-  /** Handle HTTP PUT request. */
-  @PUT
-  @Path("{" + UriFsPathParam.NAME + ":.*}")
-  @Consumes({"*/*"})
-  @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
-  public Response put(
-      final InputStream in,
-      @Context final UserGroupInformation ugi,
-      @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT)
-          final DelegationParam delegation,
-      @PathParam(UriFsPathParam.NAME) final UriFsPathParam path,
-      @QueryParam(PutOpParam.NAME) @DefaultValue(PutOpParam.DEFAULT)
-          final PutOpParam op,
-      @QueryParam(PermissionParam.NAME) @DefaultValue(PermissionParam.DEFAULT)
-          final PermissionParam permission,
-      @QueryParam(OverwriteParam.NAME) @DefaultValue(OverwriteParam.DEFAULT)
-          final OverwriteParam overwrite,
-      @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT)
-          final BufferSizeParam bufferSize,
-      @QueryParam(ReplicationParam.NAME) @DefaultValue(ReplicationParam.DEFAULT)
-          final ReplicationParam replication,
-      @QueryParam(BlockSizeParam.NAME) @DefaultValue(BlockSizeParam.DEFAULT)
-          final BlockSizeParam blockSize
-      ) throws IOException, InterruptedException {
-
-    init(ugi, delegation, path, op, permission, overwrite, bufferSize,
-        replication, blockSize);
-
-    return ugi.doAs(new PrivilegedExceptionAction<Response>() {
-      @Override
-      public Response run() throws IOException, URISyntaxException {
-
-    final String fullpath = path.getAbsolutePath();
-    final DataNode datanode = (DataNode)context.getAttribute("datanode");
-
-    switch(op.getValue()) {
-    case CREATE:
-    {
-      final Configuration conf = new Configuration(datanode.getConf());
-      conf.set(FsPermission.UMASK_LABEL, "000");
-
-      final int b = bufferSize.getValue(conf);
-      DFSClient dfsclient = new DFSClient(conf);
-      FSDataOutputStream out = null;
-      try {
-        out = new FSDataOutputStream(dfsclient.create(
-            fullpath, permission.getFsPermission(), overwrite.getValue(),
-            replication.getValue(conf), blockSize.getValue(conf), null, b), null);
-        IOUtils.copyBytes(in, out, b);
-        out.close();
-        out = null;
-        dfsclient.close();
-        dfsclient = null;
-      } finally {
-        IOUtils.cleanup(LOG, out);
-        IOUtils.cleanup(LOG, dfsclient);
+   private void init(final UserGroupInformation ugi, final DelegationParam delegation, final UriFsPathParam path,
+         final HttpOpParam<?> op, final Param<?, ?>... parameters) throws IOException {
+      if (LOG.isTraceEnabled()) {
+         LOG.trace("HTTP " + op.getValue().getType() + ": " + op + ", " + path + ", ugi=" + ugi
+               + Param.toSortedString(", ", parameters));
       }
-      final String nnAddr = NameNode.getInfoServer(conf);
-      final URI uri = new URI(WebHdfsFileSystem.SCHEME + "://" + nnAddr + fullpath);
-      return Response.created(uri).type(MediaType.APPLICATION_OCTET_STREAM).build();
-    }
-    default:
-      throw new UnsupportedOperationException(op + " is not supported");
-    }
+
+      //clear content type
+      response.setContentType(null);
+
+      if (UserGroupInformation.isSecurityEnabled()) {
+         //add a token for RPC.
+         final DataNode datanode = (DataNode) context.getAttribute("datanode");
+         final InetSocketAddress nnRpcAddr = NameNode.getAddress(datanode.getConf());
+         final Token<DelegationTokenIdentifier> token = new Token<DelegationTokenIdentifier>();
+         token.decodeFromUrlString(delegation.getValue());
+         SecurityUtil.setTokenService(token, nnRpcAddr);
+         token.setKind(DelegationTokenIdentifier.HDFS_DELEGATION_KIND);
+         ugi.addToken(token);
       }
-    });
-  }
+   }
 
-  /** Handle HTTP POST request for the root for the root. */
-  @POST
-  @Path("/")
-  @Consumes({"*/*"})
-  @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
-  public Response postRoot(
-      final InputStream in,
-      @Context final UserGroupInformation ugi,
-      @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT)
-          final DelegationParam delegation,
-      @QueryParam(PostOpParam.NAME) @DefaultValue(PostOpParam.DEFAULT)
-          final PostOpParam op,
-      @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT)
-          final BufferSizeParam bufferSize
-      ) throws IOException, InterruptedException {
-    return post(in, ugi, delegation, ROOT, op, bufferSize);
-  }
+   /** Handle HTTP PUT request for the root. */
+   @PUT
+   @Path("/")
+   @Consumes({ "*/*" })
+   @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+   public Response putRoot(final InputStream in, @Context final UserGroupInformation ugi,
+         @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT) final DelegationParam delegation,
+         @QueryParam(PutOpParam.NAME) @DefaultValue(PutOpParam.DEFAULT) final PutOpParam op,
+         @QueryParam(PermissionParam.NAME) @DefaultValue(PermissionParam.DEFAULT) final PermissionParam permission,
+         @QueryParam(OverwriteParam.NAME) @DefaultValue(OverwriteParam.DEFAULT) final OverwriteParam overwrite,
+         @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT) final BufferSizeParam bufferSize,
+         @QueryParam(ReplicationParam.NAME) @DefaultValue(ReplicationParam.DEFAULT) final ReplicationParam replication,
+         @QueryParam(BlockSizeParam.NAME) @DefaultValue(BlockSizeParam.DEFAULT) final BlockSizeParam blockSize)
+         throws IOException, InterruptedException {
+      return put(in, ugi, delegation, ROOT, op, permission, overwrite, bufferSize, replication, blockSize);
+   }
 
-  /** Handle HTTP POST request. */
-  @POST
-  @Path("{" + UriFsPathParam.NAME + ":.*}")
-  @Consumes({"*/*"})
-  @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
-  public Response post(
-      final InputStream in,
-      @Context final UserGroupInformation ugi,
-      @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT)
-          final DelegationParam delegation,
-      @PathParam(UriFsPathParam.NAME) final UriFsPathParam path,
-      @QueryParam(PostOpParam.NAME) @DefaultValue(PostOpParam.DEFAULT)
-          final PostOpParam op,
-      @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT)
-          final BufferSizeParam bufferSize
-      ) throws IOException, InterruptedException {
+   /** Handle HTTP PUT request. */
+   @PUT
+   @Path("{" + UriFsPathParam.NAME + ":.*}")
+   @Consumes({ "*/*" })
+   @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+   public Response put(final InputStream in, @Context final UserGroupInformation ugi,
+         @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT) final DelegationParam delegation,
+         @PathParam(UriFsPathParam.NAME) final UriFsPathParam path,
+         @QueryParam(PutOpParam.NAME) @DefaultValue(PutOpParam.DEFAULT) final PutOpParam op,
+         @QueryParam(PermissionParam.NAME) @DefaultValue(PermissionParam.DEFAULT) final PermissionParam permission,
+         @QueryParam(OverwriteParam.NAME) @DefaultValue(OverwriteParam.DEFAULT) final OverwriteParam overwrite,
+         @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT) final BufferSizeParam bufferSize,
+         @QueryParam(ReplicationParam.NAME) @DefaultValue(ReplicationParam.DEFAULT) final ReplicationParam replication,
+         @QueryParam(BlockSizeParam.NAME) @DefaultValue(BlockSizeParam.DEFAULT) final BlockSizeParam blockSize)
+         throws IOException, InterruptedException {
 
-    init(ugi, delegation, path, op, bufferSize);
+      init(ugi, delegation, path, op, permission, overwrite, bufferSize, replication, blockSize);
 
-    return ugi.doAs(new PrivilegedExceptionAction<Response>() {
-      @Override
-      public Response run() throws IOException {
+      return ugi.doAs(new PrivilegedExceptionAction<Response>() {
+         @Override
+         public Response run() throws IOException, URISyntaxException {
 
-    final String fullpath = path.getAbsolutePath();
-    final DataNode datanode = (DataNode)context.getAttribute("datanode");
+            final String fullpath = path.getAbsolutePath();
+            final DataNode datanode = (DataNode) context.getAttribute("datanode");
 
-    switch(op.getValue()) {
-    case APPEND:
-    {
-      final Configuration conf = new Configuration(datanode.getConf());
-      final int b = bufferSize.getValue(conf);
-      DFSClient dfsclient = new DFSClient(conf);
-      FSDataOutputStream out = null;
-      try {
-        out = dfsclient.append(fullpath, b, null, null);
-        IOUtils.copyBytes(in, out, b);
-        out.close();
-        out = null;
-        dfsclient.close();
-        dfsclient = null;
-      } finally {
-        IOUtils.cleanup(LOG, out);
-        IOUtils.cleanup(LOG, dfsclient);
-      }
-      return Response.ok().type(MediaType.APPLICATION_OCTET_STREAM).build();
-    }
-    default:
-      throw new UnsupportedOperationException(op + " is not supported");
-    }
-      }
-    });
-  }
+            switch (op.getValue()) {
+            case CREATE: {
+               final Configuration conf = new Configuration(datanode.getConf());
+               conf.set(FsPermission.UMASK_LABEL, "000");
 
-  /** Handle HTTP GET request for the root. */
-  @GET
-  @Path("/")
-  @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
-  public Response getRoot(
-      @Context final UserGroupInformation ugi,
-      @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT)
-          final DelegationParam delegation,
-      @QueryParam(GetOpParam.NAME) @DefaultValue(GetOpParam.DEFAULT)
-          final GetOpParam op,
-      @QueryParam(OffsetParam.NAME) @DefaultValue(OffsetParam.DEFAULT)
-          final OffsetParam offset,
-      @QueryParam(LengthParam.NAME) @DefaultValue(LengthParam.DEFAULT)
-          final LengthParam length,
-      @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT)
-          final BufferSizeParam bufferSize
-      ) throws IOException, InterruptedException {
-    return get(ugi, delegation, ROOT, op, offset, length, bufferSize); 
-  }
-
-  /** Handle HTTP GET request. */
-  @GET
-  @Path("{" + UriFsPathParam.NAME + ":.*}")
-  @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
-  public Response get(
-      @Context final UserGroupInformation ugi,
-      @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT)
-          final DelegationParam delegation,
-      @PathParam(UriFsPathParam.NAME) final UriFsPathParam path,
-      @QueryParam(GetOpParam.NAME) @DefaultValue(GetOpParam.DEFAULT)
-          final GetOpParam op,
-      @QueryParam(OffsetParam.NAME) @DefaultValue(OffsetParam.DEFAULT)
-          final OffsetParam offset,
-      @QueryParam(LengthParam.NAME) @DefaultValue(LengthParam.DEFAULT)
-          final LengthParam length,
-      @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT)
-          final BufferSizeParam bufferSize
-      ) throws IOException, InterruptedException {
-
-    init(ugi, delegation, path, op, offset, length, bufferSize);
-
-    return ugi.doAs(new PrivilegedExceptionAction<Response>() {
-      @Override
-      public Response run() throws IOException {
-
-    final String fullpath = path.getAbsolutePath();
-    final DataNode datanode = (DataNode)context.getAttribute("datanode");
-    final Configuration conf = new Configuration(datanode.getConf());
-    final InetSocketAddress nnRpcAddr = NameNode.getAddress(conf);
-
-    switch(op.getValue()) {
-    case OPEN:
-    {
-      final int b = bufferSize.getValue(conf);
-      final DFSClient dfsclient = new DFSClient(nnRpcAddr, conf);
-      DFSDataInputStream in = null;
-      try {
-        in = new DFSClient.DFSDataInputStream(
-        dfsclient.open(fullpath, b, true, null));
-        in.seek(offset.getValue());
-      } catch(IOException ioe) {
-        IOUtils.cleanup(LOG, in);
-        IOUtils.cleanup(LOG, dfsclient);
-        throw ioe;
-      }
-      final DFSDataInputStream dis = in;
-      final StreamingOutput streaming = new StreamingOutput() {
-        @Override
-        public void write(final OutputStream out) throws IOException {
-          final Long n = length.getValue();
-          DFSDataInputStream dfsin = dis;
-          DFSClient client = dfsclient;
-          try {
-            if (n == null) {
-              IOUtils.copyBytes(dfsin, out, b);
-            } else {
-              IOUtils.copyBytes(dfsin, out, n, b, false);
+               final int b = bufferSize.getValue(conf);
+               DFSClient dfsclient = new DFSClient(conf);
+               FSDataOutputStream out = null;
+               try {
+                  out = new FSDataOutputStream(dfsclient.create(fullpath, permission.getFsPermission(),
+                        overwrite.getValue(), replication.getValue(conf), blockSize.getValue(conf), null, b), null);
+                  IOUtils.copyBytes(in, out, b);
+                  out.close();
+                  out = null;
+                  dfsclient.close();
+                  dfsclient = null;
+               } finally {
+                  IOUtils.cleanup(LOG, out);
+                  IOUtils.cleanup(LOG, dfsclient);
+               }
+               final String nnAddr = NameNode.getInfoServer(conf);
+               final URI uri = new URI(WebHdfsFileSystem.SCHEME + "://" + nnAddr + fullpath);
+               return Response.created(uri).type(MediaType.APPLICATION_OCTET_STREAM).build();
             }
-            dfsin.close();
-            dfsin = null;
-            client.close();
-            client = null;
-          } finally {
-            IOUtils.cleanup(LOG, dfsin);
-            IOUtils.cleanup(LOG, client);
-          }
-        }
-      };
+            default:
+               throw new UnsupportedOperationException(op + " is not supported");
+            }
+         }
+      });
+   }
 
-      return Response.ok(streaming).type(
-          MediaType.APPLICATION_OCTET_STREAM).build();
-    }
-    case GETFILECHECKSUM:
-    {
-      MD5MD5CRC32FileChecksum checksum = null;
-      DFSClient dfsclient = new DFSClient(nnRpcAddr, conf);
-      try {
-        checksum = dfsclient.getFileChecksum(fullpath);
-        dfsclient.close();
-        dfsclient = null;
-      } finally {
-        IOUtils.cleanup(LOG, dfsclient);
-      }
-      final String js = JsonUtil.toJsonString(checksum);
-      return Response.ok(js).type(MediaType.APPLICATION_JSON).build();
-    }
-    default:
-      throw new UnsupportedOperationException(op + " is not supported");
-    }
-      }
-    });
-  }
+   /** Handle HTTP POST request for the root for the root. */
+   @POST
+   @Path("/")
+   @Consumes({ "*/*" })
+   @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+   public Response postRoot(final InputStream in, @Context final UserGroupInformation ugi,
+         @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT) final DelegationParam delegation,
+         @QueryParam(PostOpParam.NAME) @DefaultValue(PostOpParam.DEFAULT) final PostOpParam op,
+         @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT) final BufferSizeParam bufferSize)
+         throws IOException, InterruptedException {
+      return post(in, ugi, delegation, ROOT, op, bufferSize);
+   }
+
+   /** Handle HTTP POST request. */
+   @POST
+   @Path("{" + UriFsPathParam.NAME + ":.*}")
+   @Consumes({ "*/*" })
+   @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+   public Response post(final InputStream in, @Context final UserGroupInformation ugi,
+         @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT) final DelegationParam delegation,
+         @PathParam(UriFsPathParam.NAME) final UriFsPathParam path,
+         @QueryParam(PostOpParam.NAME) @DefaultValue(PostOpParam.DEFAULT) final PostOpParam op,
+         @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT) final BufferSizeParam bufferSize)
+         throws IOException, InterruptedException {
+
+      init(ugi, delegation, path, op, bufferSize);
+
+      return ugi.doAs(new PrivilegedExceptionAction<Response>() {
+         @Override
+         public Response run() throws IOException {
+
+            final String fullpath = path.getAbsolutePath();
+            final DataNode datanode = (DataNode) context.getAttribute("datanode");
+
+            switch (op.getValue()) {
+            case APPEND: {
+               final Configuration conf = new Configuration(datanode.getConf());
+               final int b = bufferSize.getValue(conf);
+               DFSClient dfsclient = new DFSClient(conf);
+               FSDataOutputStream out = null;
+               try {
+                  out = dfsclient.append(fullpath, b, null, null);
+                  IOUtils.copyBytes(in, out, b);
+                  out.close();
+                  out = null;
+                  dfsclient.close();
+                  dfsclient = null;
+               } finally {
+                  IOUtils.cleanup(LOG, out);
+                  IOUtils.cleanup(LOG, dfsclient);
+               }
+               return Response.ok().type(MediaType.APPLICATION_OCTET_STREAM).build();
+            }
+            default:
+               throw new UnsupportedOperationException(op + " is not supported");
+            }
+         }
+      });
+   }
+
+   /** Handle HTTP GET request for the root. */
+   @GET
+   @Path("/")
+   @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+   public Response getRoot(@Context final UserGroupInformation ugi,
+         @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT) final DelegationParam delegation,
+         @QueryParam(GetOpParam.NAME) @DefaultValue(GetOpParam.DEFAULT) final GetOpParam op,
+         @QueryParam(OffsetParam.NAME) @DefaultValue(OffsetParam.DEFAULT) final OffsetParam offset,
+         @QueryParam(LengthParam.NAME) @DefaultValue(LengthParam.DEFAULT) final LengthParam length,
+         @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT) final BufferSizeParam bufferSize)
+         throws IOException, InterruptedException {
+      return get(ugi, delegation, ROOT, op, offset, length, bufferSize);
+   }
+
+   /** Handle HTTP GET request. */
+   @GET
+   @Path("{" + UriFsPathParam.NAME + ":.*}")
+   @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+   public Response get(@Context final UserGroupInformation ugi,
+         @QueryParam(DelegationParam.NAME) @DefaultValue(DelegationParam.DEFAULT) final DelegationParam delegation,
+         @PathParam(UriFsPathParam.NAME) final UriFsPathParam path,
+         @QueryParam(GetOpParam.NAME) @DefaultValue(GetOpParam.DEFAULT) final GetOpParam op,
+         @QueryParam(OffsetParam.NAME) @DefaultValue(OffsetParam.DEFAULT) final OffsetParam offset,
+         @QueryParam(LengthParam.NAME) @DefaultValue(LengthParam.DEFAULT) final LengthParam length,
+         @QueryParam(BufferSizeParam.NAME) @DefaultValue(BufferSizeParam.DEFAULT) final BufferSizeParam bufferSize)
+         throws IOException, InterruptedException {
+
+      init(ugi, delegation, path, op, offset, length, bufferSize);
+
+      return ugi.doAs(new PrivilegedExceptionAction<Response>() {
+         @Override
+         public Response run() throws IOException {
+
+            final String fullpath = path.getAbsolutePath();
+            final DataNode datanode = (DataNode) context.getAttribute("datanode");
+            final Configuration conf = new Configuration(datanode.getConf());
+            final InetSocketAddress nnRpcAddr = NameNode.getAddress(conf);
+
+            switch (op.getValue()) {
+            case OPEN: {
+               final int b = bufferSize.getValue(conf);
+               final DFSClient dfsclient = new DFSClient(nnRpcAddr, conf);
+               DFSDataInputStream in = null;
+               try {
+                  in = new DFSClient.DFSDataInputStream(dfsclient.open(fullpath, b, true, null));
+                  in.seek(offset.getValue());
+               } catch (IOException ioe) {
+                  IOUtils.cleanup(LOG, in);
+                  IOUtils.cleanup(LOG, dfsclient);
+                  throw ioe;
+               }
+               final DFSDataInputStream dis = in;
+               final StreamingOutput streaming = new StreamingOutput() {
+                  @Override
+                  public void write(final OutputStream out) throws IOException {
+                     final Long n = length.getValue();
+                     DFSDataInputStream dfsin = dis;
+                     DFSClient client = dfsclient;
+                     try {
+                        if (n == null) {
+                           IOUtils.copyBytes(dfsin, out, b);
+                        } else {
+                           IOUtils.copyBytes(dfsin, out, n, b, false);
+                        }
+                        dfsin.close();
+                        dfsin = null;
+                        client.close();
+                        client = null;
+                     } finally {
+                        IOUtils.cleanup(LOG, dfsin);
+                        IOUtils.cleanup(LOG, client);
+                     }
+                  }
+               };
+
+               return Response.ok(streaming).type(MediaType.APPLICATION_OCTET_STREAM).build();
+            }
+            case GETFILECHECKSUM: {
+               MD5MD5CRC32FileChecksum checksum = null;
+               DFSClient dfsclient = new DFSClient(nnRpcAddr, conf);
+               try {
+                  checksum = dfsclient.getFileChecksum(fullpath);
+                  dfsclient.close();
+                  dfsclient = null;
+               } finally {
+                  IOUtils.cleanup(LOG, dfsclient);
+               }
+               final String js = JsonUtil.toJsonString(checksum);
+               return Response.ok(js).type(MediaType.APPLICATION_JSON).build();
+            }
+            default:
+               throw new UnsupportedOperationException(op + " is not supported");
+            }
+         }
+      });
+   }
 }

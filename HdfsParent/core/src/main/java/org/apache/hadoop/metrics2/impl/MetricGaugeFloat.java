@@ -23,19 +23,19 @@ import org.apache.hadoop.metrics2.MetricsVisitor;
 
 class MetricGaugeFloat extends MetricGauge<Float> {
 
-  final float value;
+   final float value;
 
-  MetricGaugeFloat(String name, String description, float value) {
-    super(name, description);
-    this.value = value;
-  }
+   MetricGaugeFloat(String name, String description, float value) {
+      super(name, description);
+      this.value = value;
+   }
 
-  public Float value() {
-    return value;
-  }
+   public Float value() {
+      return value;
+   }
 
-  public void visit(MetricsVisitor visitor) {
-    visitor.gauge(this, value);
-  }
+   public void visit(MetricsVisitor visitor) {
+      visitor.gauge(this, value);
+   }
 
 }

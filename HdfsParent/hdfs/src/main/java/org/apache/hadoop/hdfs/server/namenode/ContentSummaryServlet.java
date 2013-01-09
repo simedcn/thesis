@@ -33,49 +33,48 @@ import org.znerd.xmlenc.XMLOutputter;
 
 /** Servlets for file checksum */
 public class ContentSummaryServlet extends DfsServlet {
-  /** For java.io.Serializable */
-  private static final long serialVersionUID = 1L;
-  
-  /** {@inheritDoc} */
-  public void doGet(final HttpServletRequest request,
-      final HttpServletResponse response) throws ServletException, IOException {
-    final Configuration conf = 
-      (Configuration) getServletContext().getAttribute(JspHelper.CURRENT_CONF);
-    final UserGroupInformation ugi = getUGI(request, conf);
-    try {
-      ugi.doAs(new PrivilegedExceptionAction<Void>() {
-        @Override
-        public Void run() throws Exception {
-          final String path = request.getPathInfo();
+   /** For java.io.Serializable */
+   private static final long serialVersionUID = 1L;
 
-          final PrintWriter out = response.getWriter();
-          final XMLOutputter xml = new XMLOutputter(out, "UTF-8");
-          xml.declaration();
-          try {
-            //get content summary
-            final ClientProtocol nnproxy = createNameNodeProxy();
-            final ContentSummary cs = nnproxy.getContentSummary(path);
+   /** {@inheritDoc} */
+   public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException,
+         IOException {
+      final Configuration conf = (Configuration) getServletContext().getAttribute(JspHelper.CURRENT_CONF);
+      final UserGroupInformation ugi = getUGI(request, conf);
+      try {
+         ugi.doAs(new PrivilegedExceptionAction<Void>() {
+            @Override
+            public Void run() throws Exception {
+               final String path = request.getPathInfo();
 
-            //write xml
-            xml.startTag(ContentSummary.class.getName());
-            if (cs != null) {
-              xml.attribute("length"        , "" + cs.getLength());
-              xml.attribute("fileCount"     , "" + cs.getFileCount());
-              xml.attribute("directoryCount", "" + cs.getDirectoryCount());
-              xml.attribute("quota"         , "" + cs.getQuota());
-              xml.attribute("spaceConsumed" , "" + cs.getSpaceConsumed());
-              xml.attribute("spaceQuota"    , "" + cs.getSpaceQuota());
+               final PrintWriter out = response.getWriter();
+               final XMLOutputter xml = new XMLOutputter(out, "UTF-8");
+               xml.declaration();
+               try {
+                  //get content summary
+                  final ClientProtocol nnproxy = createNameNodeProxy();
+                  final ContentSummary cs = nnproxy.getContentSummary(path);
+
+                  //write xml
+                  xml.startTag(ContentSummary.class.getName());
+                  if (cs != null) {
+                     xml.attribute("length", "" + cs.getLength());
+                     xml.attribute("fileCount", "" + cs.getFileCount());
+                     xml.attribute("directoryCount", "" + cs.getDirectoryCount());
+                     xml.attribute("quota", "" + cs.getQuota());
+                     xml.attribute("spaceConsumed", "" + cs.getSpaceConsumed());
+                     xml.attribute("spaceQuota", "" + cs.getSpaceQuota());
+                  }
+                  xml.endTag();
+               } catch (IOException ioe) {
+                  writeXml(ioe, path, xml);
+               }
+               xml.endDocument();
+               return null;
             }
-            xml.endTag();
-          } catch(IOException ioe) {
-            writeXml(ioe, path, xml);
-          }
-          xml.endDocument();
-          return null;
-        }
-      });
-    } catch (InterruptedException e) {
-      throw new IOException(e);
-    }
-  }
+         });
+      } catch (InterruptedException e) {
+         throw new IOException(e);
+      }
+   }
 }

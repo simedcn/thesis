@@ -25,32 +25,33 @@ import java.util.Iterator;
  */
 class MetricsBuffer implements Iterable<MetricsBuffer.Entry> {
 
-  private final Iterable<Entry> mutable;
+   private final Iterable<Entry> mutable;
 
-  MetricsBuffer(Iterable<MetricsBuffer.Entry> mutable) {
-    this.mutable = mutable;
-  }
+   MetricsBuffer(Iterable<MetricsBuffer.Entry> mutable) {
+      this.mutable = mutable;
+   }
 
-  public Iterator<Entry> iterator() {
-    return mutable.iterator();
-  }
+   public Iterator<Entry> iterator() {
+      return mutable.iterator();
+   }
 
-  static class Entry {
-    private final String sourceName;
-    private final Iterable<MetricsRecordImpl> records;
+   static class Entry {
+      private final String sourceName;
 
-    Entry(String name, Iterable<MetricsRecordImpl> records) {
-      sourceName = name;
-      this.records = records;
-    }
+      private final Iterable<MetricsRecordImpl> records;
 
-    String name() {
-      return sourceName;
-    }
+      Entry(String name, Iterable<MetricsRecordImpl> records) {
+         sourceName = name;
+         this.records = records;
+      }
 
-    Iterable<MetricsRecordImpl> records() {
-      return records;
-    }
-  }
+      String name() {
+         return sourceName;
+      }
+
+      Iterable<MetricsRecordImpl> records() {
+         return records;
+      }
+   }
 
 }

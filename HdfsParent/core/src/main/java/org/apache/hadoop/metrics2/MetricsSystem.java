@@ -23,79 +23,84 @@ package org.apache.hadoop.metrics2;
  */
 public interface MetricsSystem extends MetricsSystemMXBean {
 
-  /**
-   * Register a metrics source
-   * @param <T>   the type of the source
-   * @param source  to register
-   * @param name  of the source. Must be unique.
-   * @param desc  the description of the source.
-   * @return the source
-   * @exception MetricsException
-   */
-  <T extends MetricsSource> T register(String name, String desc, T source);
+   /**
+    * Register a metrics source
+    * @param <T>   the type of the source
+    * @param source  to register
+    * @param name  of the source. Must be unique.
+    * @param desc  the description of the source.
+    * @return the source
+    * @exception MetricsException
+    */
+   <T extends MetricsSource> T register(String name, String desc, T source);
 
-  /**
-   * Register a metrics sink
-   * @param <T>   the type of the sink
-   * @param sink  to register
-   * @param name  of the sink. Must be unique.
-   * @param desc  the description of the sink
-   * @return the sink
-   * @exception MetricsException
-   */
-  <T extends MetricsSink> T register(String name, String desc, T sink);
+   /**
+    * Register a metrics sink
+    * @param <T>   the type of the sink
+    * @param sink  to register
+    * @param name  of the sink. Must be unique.
+    * @param desc  the description of the sink
+    * @return the sink
+    * @exception MetricsException
+    */
+   <T extends MetricsSink> T register(String name, String desc, T sink);
 
-  /**
-   * Register a callback interface for JMX events
-   * @param callback  the callback object implementing the MBean interface.
-   */
-  void register(Callback callback);
+   /**
+    * Register a callback interface for JMX events
+    * @param callback  the callback object implementing the MBean interface.
+    */
+   void register(Callback callback);
 
-  /**
-   * Shutdown the metrics system completely (usually during server shutdown.)
-   * The MetricsSystemMXBean will be unregistered.
-   */
-  void shutdown();
+   /**
+    * Shutdown the metrics system completely (usually during server shutdown.)
+    * The MetricsSystemMXBean will be unregistered.
+    */
+   void shutdown();
 
-  /**
-   * The metrics system callback interface
-   */
-  @SuppressWarnings("PublicInnerClass")
-  static interface Callback {
+   /**
+    * The metrics system callback interface
+    */
+   static interface Callback {
 
-    /**
-     * Called before start()
-     */
-    void preStart();
+      /**
+       * Called before start()
+       */
+      void preStart();
 
-    /**
-     * Called after start()
-     */
-    void postStart();
+      /**
+       * Called after start()
+       */
+      void postStart();
 
-    /**
-     * Called before stop()
-     */
-    void preStop();
+      /**
+       * Called before stop()
+       */
+      void preStop();
 
-    /**
-     * Called after stop()
-     */
-    void postStop();
+      /**
+       * Called after stop()
+       */
+      void postStop();
 
-  }
+   }
 
-  /**
-   * Convenient abstract class for implementing callback interface
-   */
-  @SuppressWarnings("PublicInnerClass")
-  public static abstract class AbstractCallback implements Callback {
+   /**
+    * Convenient abstract class for implementing callback interface
+    */
+   public static abstract class AbstractCallback implements Callback {
 
-    public void preStart() {}
-    public void postStart() {}
-    public void preStop() {}
-    public void postStop() {}
+      public void preStart() {
+      }
 
-  }
+      public void postStart() {
+      }
+
+      public void preStop() {
+      }
+
+      public void postStop() {
+      }
+
+   }
 
 }

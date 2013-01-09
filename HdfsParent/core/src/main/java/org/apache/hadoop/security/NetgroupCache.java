@@ -27,64 +27,61 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 /**
  * Class that caches the netgroups and inverts group-to-user map
  * to user-to-group map
  */
 public class NetgroupCache {
 
-  private static final Log LOG = LogFactory.getLog(NetgroupCache.class);
+   @SuppressWarnings("unused")
+   private static final Log LOG = LogFactory.getLog(NetgroupCache.class);
 
-  private static boolean netgroupToUsersMapUpdated = true;
-  private static Map<String, Set<String>> netgroupToUsersMap =
-    new ConcurrentHashMap<String, Set<String>>();
+   private static boolean netgroupToUsersMapUpdated = true;
 
-  private static Map<String, Set<String>> userToNetgroupsMap =
-    new ConcurrentHashMap<String, Set<String>>();
+   private static Map<String, Set<String>> netgroupToUsersMap = new ConcurrentHashMap<String, Set<String>>();
 
+   private static Map<String, Set<String>> userToNetgroupsMap = new ConcurrentHashMap<String, Set<String>>();
 
-  public void getNetgroups(final String user,
-      List<String> groups) {
-    if(netgroupToUsersMapUpdated) {
-      netgroupToUsersMapUpdated = false; // at the beginning to avoid race
-      //update userToNetgroupsMap
-      for(String netgroup : netgroupToUsersMap.keySet()) {
-        for(String netuser : netgroupToUsersMap.get(netgroup)) {
-          // add to userToNetgroupsMap
-          if(!userToNetgroupsMap.containsKey(netuser)) {
-            userToNetgroupsMap.put(netuser, new HashSet<String>());
-          }
-          userToNetgroupsMap.get(netuser).add(netgroup);
-        }
+   public void getNetgroups(final String user, List<String> groups) {
+      if (netgroupToUsersMapUpdated) {
+         netgroupToUsersMapUpdated = false; // at the beginning to avoid race
+         //update userToNetgroupsMap
+         for (String netgroup : netgroupToUsersMap.keySet()) {
+            for (String netuser : netgroupToUsersMap.get(netgroup)) {
+               // add to userToNetgroupsMap
+               if (!userToNetgroupsMap.containsKey(netuser)) {
+                  userToNetgroupsMap.put(netuser, new HashSet<String>());
+               }
+               userToNetgroupsMap.get(netuser).add(netgroup);
+            }
+         }
       }
-    }
-    if(userToNetgroupsMap.containsKey(user)) {
-      for(String netgroup : userToNetgroupsMap.get(user)) {
-        groups.add(netgroup);
+      if (userToNetgroupsMap.containsKey(user)) {
+         for (String netgroup : userToNetgroupsMap.get(user)) {
+            groups.add(netgroup);
+         }
       }
-    }
-  }
+   }
 
-  public List<String> getNetgroupNames() {
-    return new LinkedList<String>(netgroupToUsersMap.keySet());
-  }
+   public List<String> getNetgroupNames() {
+      return new LinkedList<String>(netgroupToUsersMap.keySet());
+   }
 
-  public boolean isCached(String group) {
-    return netgroupToUsersMap.containsKey(group);
-  }
+   public boolean isCached(String group) {
+      return netgroupToUsersMap.containsKey(group);
+   }
 
-  public void clear() {
-    netgroupToUsersMap.clear();
-  }
+   public void clear() {
+      netgroupToUsersMap.clear();
+   }
 
-  public void add(String group, List<String> users) {
-    if(!isCached(group)) {
-      netgroupToUsersMap.put(group, new HashSet<String>());
-      for(String user: users) {
-        netgroupToUsersMap.get(group).add(user);
+   public void add(String group, List<String> users) {
+      if (!isCached(group)) {
+         netgroupToUsersMap.put(group, new HashSet<String>());
+         for (String user : users) {
+            netgroupToUsersMap.get(group).add(user);
+         }
       }
-    }
-    netgroupToUsersMapUpdated = true; // at the end to avoid race
-  }
+      netgroupToUsersMapUpdated = true; // at the end to avoid race
+   }
 }

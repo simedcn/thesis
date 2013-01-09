@@ -19,31 +19,32 @@ package org.apache.hadoop.hdfs.web.resources;
 
 /** Modification time parameter. */
 public class ModificationTimeParam extends LongParam {
-  /** Parameter name. */
-  public static final String NAME = "modificationtime";
-  /** Default parameter value. */
-  public static final String DEFAULT = "-1";
+   /** Parameter name. */
+   public static final String NAME = "modificationtime";
 
-  private static final Domain DOMAIN = new Domain(NAME);
+   /** Default parameter value. */
+   public static final String DEFAULT = "-1";
 
-  /**
-   * Constructor.
-   * @param value the parameter value.
-   */
-  public ModificationTimeParam(final Long value) {
-    super(DOMAIN, value, -1L, null);
-  }
+   private static final Domain DOMAIN = new Domain(NAME);
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public ModificationTimeParam(final String str) {
-    this(DOMAIN.parse(str));
-  }
+   /**
+    * Constructor.
+    * @param value the parameter value.
+    */
+   public ModificationTimeParam(final Long value) {
+      super(DOMAIN, value, -1L, null);
+   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public ModificationTimeParam(final String str) {
+      this(DOMAIN.parse(str));
+   }
+
+   @Override
+   public String getName() {
+      return NAME;
+   }
 }

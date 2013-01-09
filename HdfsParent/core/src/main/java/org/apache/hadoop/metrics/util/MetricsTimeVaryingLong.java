@@ -38,91 +38,88 @@ import org.apache.commons.logging.LogFactory;
  * @deprecated in favor of {@link org.apache.hadoop.metrics2.lib.MetricMutableCounterLong}.
  */
 @Deprecated
-@InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
-public class MetricsTimeVaryingLong extends MetricsBase{
+@InterfaceAudience.LimitedPrivate({ "HDFS", "MapReduce" })
+public class MetricsTimeVaryingLong extends MetricsBase {
 
-  private static final Log LOG =
-    LogFactory.getLog("org.apache.hadoop.metrics.util");
- 
-  private long currentValue;
-  private long previousIntervalValue;
-  
-  /**
-   * Constructor - create a new metric
-   * @param nam the name of the metrics to be used to publish the metric
-   * @param registry - where the metrics object will be registered
-   */
-  public MetricsTimeVaryingLong(final String nam, MetricsRegistry registry, final String description) {
-    super(nam, description);
-    currentValue = 0;
-    previousIntervalValue = 0;
-    registry.add(nam, this);
-  }
-  
-  
-  /**
-   * Constructor - create a new metric
-   * @param nam the name of the metrics to be used to publish the metric
-   * @param registry - where the metrics object will be registered
-   * A description of {@link #NO_DESCRIPTION} is used
-   */
-  public MetricsTimeVaryingLong(final String nam, MetricsRegistry registry) {
-    this(nam, registry, NO_DESCRIPTION);
-  }
-  
-  /**
-   * Inc metrics for incr vlaue
-   * @param incr - number of operations
-   */
-  public synchronized void inc(final long incr) {
-    currentValue += incr;
-  }
-  
-  /**
-   * Inc metrics by one
-   */
-  public synchronized void inc() {
-    currentValue++;
-  }
+   private static final Log LOG = LogFactory.getLog("org.apache.hadoop.metrics.util");
 
-  private synchronized void intervalHeartBeat() {
-     previousIntervalValue = currentValue;
-     currentValue = 0;
-  }
-  
-  /**
-   * Push the delta  metrics to the mr.
-   * The delta is since the last push/interval.
-   * 
-   * Note this does NOT push to JMX
-   * (JMX gets the info via {@link #previousIntervalValue}
-   *
-   * @param mr
-   */
-  public synchronized void pushMetric(final MetricsRecord mr) {
-    intervalHeartBeat();
-    try {
-      mr.incrMetric(getName(), getPreviousIntervalValue());
-    } catch (Exception e) {
-      LOG.info("pushMetric failed for " + getName() + "\n" +
-          StringUtils.stringifyException(e));
-    }
-  }
-  
-  
-  /**
-   * The Value at the Previous interval
-   * @return prev interval value
-   */
-  public synchronized long getPreviousIntervalValue() { 
-    return previousIntervalValue;
-  } 
-  
-  /**
-   * The Value at the current interval
-   * @return prev interval value
-   */
-  public synchronized long getCurrentIntervalValue() { 
-    return currentValue;
-  } 
+   private long currentValue;
+
+   private long previousIntervalValue;
+
+   /**
+    * Constructor - create a new metric
+    * @param nam the name of the metrics to be used to publish the metric
+    * @param registry - where the metrics object will be registered
+    */
+   public MetricsTimeVaryingLong(final String nam, MetricsRegistry registry, final String description) {
+      super(nam, description);
+      currentValue = 0;
+      previousIntervalValue = 0;
+      registry.add(nam, this);
+   }
+
+   /**
+    * Constructor - create a new metric
+    * @param nam the name of the metrics to be used to publish the metric
+    * @param registry - where the metrics object will be registered
+    * A description of {@link #NO_DESCRIPTION} is used
+    */
+   public MetricsTimeVaryingLong(final String nam, MetricsRegistry registry) {
+      this(nam, registry, NO_DESCRIPTION);
+   }
+
+   /**
+    * Inc metrics for incr vlaue
+    * @param incr - number of operations
+    */
+   public synchronized void inc(final long incr) {
+      currentValue += incr;
+   }
+
+   /**
+    * Inc metrics by one
+    */
+   public synchronized void inc() {
+      currentValue++;
+   }
+
+   private synchronized void intervalHeartBeat() {
+      previousIntervalValue = currentValue;
+      currentValue = 0;
+   }
+
+   /**
+    * Push the delta  metrics to the mr.
+    * The delta is since the last push/interval.
+    * 
+    * Note this does NOT push to JMX
+    * (JMX gets the info via {@link #previousIntervalValue}
+    *
+    * @param mr
+    */
+   public synchronized void pushMetric(final MetricsRecord mr) {
+      intervalHeartBeat();
+      try {
+         mr.incrMetric(getName(), getPreviousIntervalValue());
+      } catch (Exception e) {
+         LOG.info("pushMetric failed for " + getName() + "\n" + StringUtils.stringifyException(e));
+      }
+   }
+
+   /**
+    * The Value at the Previous interval
+    * @return prev interval value
+    */
+   public synchronized long getPreviousIntervalValue() {
+      return previousIntervalValue;
+   }
+
+   /**
+    * The Value at the current interval
+    * @return prev interval value
+    */
+   public synchronized long getCurrentIntervalValue() {
+      return currentValue;
+   }
 }

@@ -42,242 +42,246 @@ import org.apache.commons.logging.LogFactory;
  *       (2) implementing {@link LinkedElement} interface.
  */
 public class LightWeightGSet<K, E extends K> implements GSet<K, E> {
-  /**
-   * Elements of {@link LightWeightGSet}.
-   */
-  public static interface LinkedElement {
-    /** Set the next element. */
-    public void setNext(LinkedElement next);
+   /**
+    * Elements of {@link LightWeightGSet}.
+    */
+   public static interface LinkedElement {
+      /** Set the next element. */
+      public void setNext(LinkedElement next);
 
-    /** Get the next element. */
-    public LinkedElement getNext();
-  }
+      /** Get the next element. */
+      public LinkedElement getNext();
+   }
 
-  public static final Log LOG = LogFactory.getLog(GSet.class);
-  static final int MAX_ARRAY_LENGTH = 1 << 30; //prevent int overflow problem
-  static final int MIN_ARRAY_LENGTH = 1;
+   public static final Log LOG = LogFactory.getLog(GSet.class);
 
-  /**
-   * An internal array of entries, which are the rows of the hash table.
-   * The size must be a power of two.
-   */
-  private final LinkedElement[] entries;
-  /** A mask for computing the array index from the hash value of an element. */
-  private final int hash_mask;
-  /** The size of the set (not the entry array). */
-  private int size = 0;
-  /** Modification version for fail-fast.
-   * @see ConcurrentModificationException
-   */
-  private volatile int modification = 0;
+   static final int MAX_ARRAY_LENGTH = 1 << 30; //prevent int overflow problem
 
-  /**
-   * @param recommended_length Recommended size of the internal array.
-   */
-  public LightWeightGSet(final int recommended_length) {
-    final int actual = actualArrayLength(recommended_length);
-    LOG.info("recommended=" + recommended_length + ", actual=" + actual);
+   static final int MIN_ARRAY_LENGTH = 1;
 
-    entries = new LinkedElement[actual];
-    hash_mask = entries.length - 1;
-  }
+   /**
+    * An internal array of entries, which are the rows of the hash table.
+    * The size must be a power of two.
+    */
+   private final LinkedElement[] entries;
 
-  //compute actual length
-  private static int actualArrayLength(int recommended) {
-    if (recommended > MAX_ARRAY_LENGTH) {
-      return MAX_ARRAY_LENGTH;
-    } else if (recommended < MIN_ARRAY_LENGTH) {
-      return MIN_ARRAY_LENGTH;
-    } else {
-      final int a = Integer.highestOneBit(recommended);
-      return a == recommended? a: a << 1;
-    }
-  }
+   /** A mask for computing the array index from the hash value of an element. */
+   private final int hash_mask;
 
-  @Override
-  public int size() {
-    return size;
-  }
+   /** The size of the set (not the entry array). */
+   private int size = 0;
 
-  private int getIndex(final K key) {
-    return key.hashCode() & hash_mask;
-  }
+   /** Modification version for fail-fast.
+    * @see ConcurrentModificationException
+    */
+   private volatile int modification = 0;
 
-  private E convert(final LinkedElement e){
-    @SuppressWarnings("unchecked")
-    final E r = (E)e;
-    return r;
-  }
+   /**
+    * @param recommended_length Recommended size of the internal array.
+    */
+   public LightWeightGSet(final int recommended_length) {
+      final int actual = actualArrayLength(recommended_length);
+      LOG.info("recommended=" + recommended_length + ", actual=" + actual);
 
-  @Override
-  public E get(final K key) {
-    //validate key
-    if (key == null) {
-      throw new NullPointerException("key == null");
-    }
+      entries = new LinkedElement[actual];
+      hash_mask = entries.length - 1;
+   }
 
-    //find element
-    final int index = getIndex(key);
-    for(LinkedElement e = entries[index]; e != null; e = e.getNext()) {
-      if (e.equals(key)) {
-        return convert(e);
+   //compute actual length
+   private static int actualArrayLength(int recommended) {
+      if (recommended > MAX_ARRAY_LENGTH) {
+         return MAX_ARRAY_LENGTH;
+      } else if (recommended < MIN_ARRAY_LENGTH) {
+         return MIN_ARRAY_LENGTH;
+      } else {
+         final int a = Integer.highestOneBit(recommended);
+         return a == recommended ? a : a << 1;
       }
-    }
-    //element not found
-    return null;
-  }
+   }
 
-  @Override
-  public boolean contains(final K key) {
-    return get(key) != null;
-  }
+   @Override
+   public int size() {
+      return size;
+   }
 
-  @Override
-  public E put(final E element) {
-    //validate element
-    if (element == null) {
-      throw new NullPointerException("Null element is not supported.");
-    }
-    if (!(element instanceof LinkedElement)) {
-      throw new IllegalArgumentException(
-          "!(element instanceof LinkedElement), element.getClass()="
-          + element.getClass());
-    }
-    final LinkedElement e = (LinkedElement)element;
+   private int getIndex(final K key) {
+      return key.hashCode() & hash_mask;
+   }
 
-    //find index
-    final int index = getIndex(element);
+   private E convert(final LinkedElement e) {
+      @SuppressWarnings("unchecked")
+      final E r = (E) e;
+      return r;
+   }
 
-    //remove if it already exists
-    final E existing = remove(index, element);
+   @Override
+   public E get(final K key) {
+      //validate key
+      if (key == null) {
+         throw new NullPointerException("key == null");
+      }
 
-    //insert the element to the head of the linked list
-    modification++;
-    size++;
-    e.setNext(entries[index]);
-    entries[index] = e;
-
-    return existing;
-  }
-
-  /**
-   * Remove the element corresponding to the key,
-   * given key.hashCode() == index.
-   *
-   * @return If such element exists, return it.
-   *         Otherwise, return null.
-   */
-  private E remove(final int index, final K key) {
-    if (entries[index] == null) {
-      return null;
-    } else if (entries[index].equals(key)) {
-      //remove the head of the linked list
-      modification++;
-      size--;
-      final LinkedElement e = entries[index];
-      entries[index] = e.getNext();
-      e.setNext(null);
-      return convert(e);
-    } else {
-      //head != null and key is not equal to head
-      //search the element
-      LinkedElement prev = entries[index];
-      for(LinkedElement curr = prev.getNext(); curr != null; ) {
-        if (curr.equals(key)) {
-          //found the element, remove it
-          modification++;
-          size--;
-          prev.setNext(curr.getNext());
-          curr.setNext(null);
-          return convert(curr);
-        } else {
-          prev = curr;
-          curr = curr.getNext();
-        }
+      //find element
+      final int index = getIndex(key);
+      for (LinkedElement e = entries[index]; e != null; e = e.getNext()) {
+         if (e.equals(key)) {
+            return convert(e);
+         }
       }
       //element not found
       return null;
-    }
-  }
+   }
 
-  @Override
-  public E remove(final K key) {
-    //validate key
-    if (key == null) {
-      throw new NullPointerException("key == null");
-    }
-    return remove(getIndex(key), key);
-  }
+   @Override
+   public boolean contains(final K key) {
+      return get(key) != null;
+   }
 
-  @Override
-  public Iterator<E> iterator() {
-    return new SetIterator();
-  }
-
-  @Override
-  public String toString() {
-    final StringBuilder b = new StringBuilder(getClass().getSimpleName());
-    b.append("(size=").append(size)
-     .append(String.format(", %08x", hash_mask))
-     .append(", modification=").append(modification)
-     .append(", entries.length=").append(entries.length)
-     .append(")");
-    return b.toString();
-  }
-
-  /** Print detailed information of this object. */
-  public void printDetails(final PrintStream out) {
-    out.print(this + ", entries = [");
-    for(int i = 0; i < entries.length; i++) {
-      if (entries[i] != null) {
-        LinkedElement e = entries[i];
-        out.print("\n  " + i + ": " + e);
-        for(e = e.getNext(); e != null; e = e.getNext()) {
-          out.print(" -> " + e);
-        }
+   @Override
+   public E put(final E element) {
+      //validate element
+      if (element == null) {
+         throw new NullPointerException("Null element is not supported.");
       }
-    }
-    out.println("\n]");
-  }
+      if (!(element instanceof LinkedElement)) {
+         throw new IllegalArgumentException("!(element instanceof LinkedElement), element.getClass()="
+               + element.getClass());
+      }
+      final LinkedElement e = (LinkedElement) element;
 
-  private class SetIterator implements Iterator<E> {
-    /** The starting modification for fail-fast. */
-    private final int startModification = modification;
-    /** The current index of the entry array. */
-    private int index = -1;
-    /** The next element to return. */
-    private LinkedElement next = nextNonemptyEntry();
+      //find index
+      final int index = getIndex(element);
 
-    /** Find the next nonempty entry starting at (index + 1). */
-    private LinkedElement nextNonemptyEntry() {
-      for(index++; index < entries.length && entries[index] == null; index++);
-      return index < entries.length? entries[index]: null;
-    }
+      //remove if it already exists
+      final E existing = remove(index, element);
 
-    @Override
-    public boolean hasNext() {
-      return next != null;
-    }
+      //insert the element to the head of the linked list
+      modification++;
+      size++;
+      e.setNext(entries[index]);
+      entries[index] = e;
 
-    @Override
-    public E next() {
-      if (modification != startModification) {
-        throw new ConcurrentModificationException("modification=" + modification
-            + " != startModification = " + startModification);
+      return existing;
+   }
+
+   /**
+    * Remove the element corresponding to the key,
+    * given key.hashCode() == index.
+    *
+    * @return If such element exists, return it.
+    *         Otherwise, return null.
+    */
+   private E remove(final int index, final K key) {
+      if (entries[index] == null) {
+         return null;
+      } else if (entries[index].equals(key)) {
+         //remove the head of the linked list
+         modification++;
+         size--;
+         final LinkedElement e = entries[index];
+         entries[index] = e.getNext();
+         e.setNext(null);
+         return convert(e);
+      } else {
+         //head != null and key is not equal to head
+         //search the element
+         LinkedElement prev = entries[index];
+         for (LinkedElement curr = prev.getNext(); curr != null;) {
+            if (curr.equals(key)) {
+               //found the element, remove it
+               modification++;
+               size--;
+               prev.setNext(curr.getNext());
+               curr.setNext(null);
+               return convert(curr);
+            } else {
+               prev = curr;
+               curr = curr.getNext();
+            }
+         }
+         //element not found
+         return null;
+      }
+   }
+
+   @Override
+   public E remove(final K key) {
+      //validate key
+      if (key == null) {
+         throw new NullPointerException("key == null");
+      }
+      return remove(getIndex(key), key);
+   }
+
+   @Override
+   public Iterator<E> iterator() {
+      return new SetIterator();
+   }
+
+   @Override
+   public String toString() {
+      final StringBuilder b = new StringBuilder(getClass().getSimpleName());
+      b.append("(size=").append(size).append(String.format(", %08x", hash_mask)).append(", modification=")
+            .append(modification).append(", entries.length=").append(entries.length).append(")");
+      return b.toString();
+   }
+
+   /** Print detailed information of this object. */
+   public void printDetails(final PrintStream out) {
+      out.print(this + ", entries = [");
+      for (int i = 0; i < entries.length; i++) {
+         if (entries[i] != null) {
+            LinkedElement e = entries[i];
+            out.print("\n  " + i + ": " + e);
+            for (e = e.getNext(); e != null; e = e.getNext()) {
+               out.print(" -> " + e);
+            }
+         }
+      }
+      out.println("\n]");
+   }
+
+   private class SetIterator implements Iterator<E> {
+      /** The starting modification for fail-fast. */
+      private final int startModification = modification;
+
+      /** The current index of the entry array. */
+      private int index = -1;
+
+      /** The next element to return. */
+      private LinkedElement next = nextNonemptyEntry();
+
+      /** Find the next nonempty entry starting at (index + 1). */
+      private LinkedElement nextNonemptyEntry() {
+         for (index++; index < entries.length && entries[index] == null; index++)
+            ;
+         return index < entries.length ? entries[index] : null;
       }
 
-      final E e = convert(next);
+      @Override
+      public boolean hasNext() {
+         return next != null;
+      }
 
-      //find the next element
-      final LinkedElement n = next.getNext();
-      next = n != null? n: nextNonemptyEntry();
+      @Override
+      public E next() {
+         if (modification != startModification) {
+            throw new ConcurrentModificationException("modification=" + modification + " != startModification = "
+                  + startModification);
+         }
 
-      return e;
-    }
+         final E e = convert(next);
 
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException("Remove is not supported.");
-    }
-  }
+         //find the next element
+         final LinkedElement n = next.getNext();
+         next = n != null ? n : nextNonemptyEntry();
+
+         return e;
+      }
+
+      @Override
+      public void remove() {
+         throw new UnsupportedOperationException("Remove is not supported.");
+      }
+   }
 }

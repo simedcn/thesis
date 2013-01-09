@@ -42,53 +42,52 @@ import org.apache.hadoop.io.IOUtils;
  */
 public class AtomicFileOutputStream extends FilterOutputStream {
 
-  private static final String TMP_EXTENSION = ".tmp";
-  
-  private final static Log LOG = LogFactory.getLog(
-      AtomicFileOutputStream.class);
-  
-  private final File origFile;
-  private final File tmpFile;
-  
-  public AtomicFileOutputStream(File f) throws FileNotFoundException {
-    // Code unfortunately must be duplicated below since we can't assign anything
-    // before calling super
-    super(new FileOutputStream(new File(f.getParentFile(), f.getName() + TMP_EXTENSION)));
-    origFile = f.getAbsoluteFile();
-    tmpFile = new File(f.getParentFile(), f.getName() + TMP_EXTENSION).getAbsoluteFile();
-  }
+   private static final String TMP_EXTENSION = ".tmp";
 
-  @Override
-  public void close() throws IOException {
-    boolean triedToClose = false, success = false;
-    try {
-      flush();
-      ((FileOutputStream)out).getChannel().force(true);
+   private final static Log LOG = LogFactory.getLog(AtomicFileOutputStream.class);
 
-      triedToClose = true;
-      super.close();
-      success = true;
-    } finally {
-      if (success) {
-        boolean renamed = tmpFile.renameTo(origFile);
-        if (!renamed) {
-          // On windows, renameTo does not replace.
-          if (!origFile.delete() || !tmpFile.renameTo(origFile)) {
-            throw new IOException("Could not rename temporary file " +
-                tmpFile + " to " + origFile);
-          }
-        }
-      } else {
-        if (!triedToClose) {
-          // If we failed when flushing, try to close it to not leak an FD
-          IOUtils.closeStream(out);
-        }
-        // close wasn't successful, try to delete the tmp file
-        if (!tmpFile.delete()) {
-          LOG.warn("Unable to delete tmp file " + tmpFile);
-        }
+   private final File origFile;
+
+   private final File tmpFile;
+
+   public AtomicFileOutputStream(File f) throws FileNotFoundException {
+      // Code unfortunately must be duplicated below since we can't assign anything
+      // before calling super
+      super(new FileOutputStream(new File(f.getParentFile(), f.getName() + TMP_EXTENSION)));
+      origFile = f.getAbsoluteFile();
+      tmpFile = new File(f.getParentFile(), f.getName() + TMP_EXTENSION).getAbsoluteFile();
+   }
+
+   @Override
+   public void close() throws IOException {
+      boolean triedToClose = false, success = false;
+      try {
+         flush();
+         ((FileOutputStream) out).getChannel().force(true);
+
+         triedToClose = true;
+         super.close();
+         success = true;
+      } finally {
+         if (success) {
+            boolean renamed = tmpFile.renameTo(origFile);
+            if (!renamed) {
+               // On windows, renameTo does not replace.
+               if (!origFile.delete() || !tmpFile.renameTo(origFile)) {
+                  throw new IOException("Could not rename temporary file " + tmpFile + " to " + origFile);
+               }
+            }
+         } else {
+            if (!triedToClose) {
+               // If we failed when flushing, try to close it to not leak an FD
+               IOUtils.closeStream(out);
+            }
+            // close wasn't successful, try to delete the tmp file
+            if (!tmpFile.delete()) {
+               LOG.warn("Unable to delete tmp file " + tmpFile);
+            }
+         }
       }
-    }
-  }
+   }
 
 }

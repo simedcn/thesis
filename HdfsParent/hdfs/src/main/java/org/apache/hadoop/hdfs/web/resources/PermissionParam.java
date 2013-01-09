@@ -21,39 +21,40 @@ import org.apache.hadoop.fs.permission.FsPermission;
 
 /** Permission parameter, use a Short to represent a FsPermission. */
 public class PermissionParam extends ShortParam {
-  /** Parameter name. */
-  public static final String NAME = "permission";
-  /** Default parameter value. */
-  public static final String DEFAULT = NULL;
+   /** Parameter name. */
+   public static final String NAME = "permission";
 
-  private static final Domain DOMAIN = new Domain(NAME, 8);
+   /** Default parameter value. */
+   public static final String DEFAULT = NULL;
 
-  private static final short DEFAULT_PERMISSION = 0755;
-  
-  /**
-   * Constructor.
-   * @param value the parameter value.
-   */
-  public PermissionParam(final FsPermission value) {
-    super(DOMAIN, value == null? null: value.toShort(), null, null);
-  }
+   private static final Domain DOMAIN = new Domain(NAME, 8);
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public PermissionParam(final String str) {
-    super(DOMAIN, DOMAIN.parse(str), (short)0, (short)0777);
-  }
+   private static final short DEFAULT_PERMISSION = 0755;
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   /**
+    * Constructor.
+    * @param value the parameter value.
+    */
+   public PermissionParam(final FsPermission value) {
+      super(DOMAIN, value == null ? null : value.toShort(), null, null);
+   }
 
-  /** @return the represented FsPermission. */
-  public FsPermission getFsPermission() {
-    final Short v = getValue();
-    return new FsPermission(v != null? v: DEFAULT_PERMISSION);
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public PermissionParam(final String str) {
+      super(DOMAIN, DOMAIN.parse(str), (short) 0, (short) 0777);
+   }
+
+   @Override
+   public String getName() {
+      return NAME;
+   }
+
+   /** @return the represented FsPermission. */
+   public FsPermission getFsPermission() {
+      final Short v = getValue();
+      return new FsPermission(v != null ? v : DEFAULT_PERMISSION);
+   }
 }

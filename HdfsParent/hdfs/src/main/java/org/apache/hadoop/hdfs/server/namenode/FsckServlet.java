@@ -35,36 +35,33 @@ import org.apache.hadoop.security.UserGroupInformation;
  * This class is used in Namesystem's web server to do fsck on namenode.
  */
 public class FsckServlet extends DfsServlet {
-  /** for java.io.Serializable */
-  private static final long serialVersionUID = 1L;
+   /** for java.io.Serializable */
+   private static final long serialVersionUID = 1L;
 
-  /** Handle fsck request */
-  public void doGet(HttpServletRequest request, HttpServletResponse response
-      ) throws IOException {
-    @SuppressWarnings("unchecked")
-    final Map<String,String[]> pmap = request.getParameterMap();
-    final PrintWriter out = response.getWriter();
-    final InetAddress remoteAddress = 
-      InetAddress.getByName(request.getRemoteAddr());
-    final ServletContext context = getServletContext();
-    final Configuration conf = 
-      (Configuration) context.getAttribute(JspHelper.CURRENT_CONF);
-    final UserGroupInformation ugi = getUGI(request, conf);
-    try {
-      ugi.doAs(new PrivilegedExceptionAction<Object>() {
-        @Override
-        public Object run() throws Exception {
-          final NameNode nn = (NameNode) context.getAttribute("name.node");
-          final int totalDatanodes = nn.namesystem.getNumberOfDatanodes(DatanodeReportType.LIVE); 
-          final short minReplication = nn.namesystem.getMinReplication();
+   /** Handle fsck request */
+   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+      @SuppressWarnings("unchecked")
+      final Map<String, String[]> pmap = request.getParameterMap();
+      final PrintWriter out = response.getWriter();
+      final InetAddress remoteAddress = InetAddress.getByName(request.getRemoteAddr());
+      final ServletContext context = getServletContext();
+      final Configuration conf = (Configuration) context.getAttribute(JspHelper.CURRENT_CONF);
+      final UserGroupInformation ugi = getUGI(request, conf);
+      try {
+         ugi.doAs(new PrivilegedExceptionAction<Object>() {
+            @Override
+            public Object run() throws Exception {
+               final NameNode nn = (NameNode) context.getAttribute("name.node");
+               final int totalDatanodes = nn.namesystem.getNumberOfDatanodes(DatanodeReportType.LIVE);
+               final short minReplication = nn.namesystem.getMinReplication();
 
-          new NamenodeFsck(conf, nn, nn.getNetworkTopology(), pmap, out,
-              totalDatanodes, minReplication, remoteAddress).fsck();
-                    return null;
-          }
-      });
-    } catch (InterruptedException e) {
-        response.sendError(400, e.getMessage());
-    }
-  }
+               new NamenodeFsck(conf, nn, nn.getNetworkTopology(), pmap, out, totalDatanodes, minReplication,
+                     remoteAddress).fsck();
+               return null;
+            }
+         });
+      } catch (InterruptedException e) {
+         response.sendError(400, e.getMessage());
+      }
+   }
 }

@@ -23,8 +23,13 @@ package org.apache.hadoop.fs.s3;
  */
 public class S3Exception extends RuntimeException {
 
-  public S3Exception(Throwable t) {
-    super(t);
-  }
+   /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public S3Exception(Throwable t) {
+      super(t);
+   }
 
 }

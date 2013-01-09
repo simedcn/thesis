@@ -23,15 +23,15 @@ package org.apache.hadoop.metrics2;
  */
 public interface MetricsSink extends MetricsPlugin {
 
-  /**
-   * Put a metrics record in the sink
-   * @param record  the record to put
-   */
-  void putMetrics(MetricsRecord record);
+   /**
+    * Put a metrics record in the sink
+    * @param record  the record to put
+    */
+   void putMetrics(MetricsRecord record);
 
-  /**
-   * Flush any buffered metrics
-   */
-  void flush();
+   /**
+    * Flush any buffered metrics
+    */
+   void flush();
 
 }

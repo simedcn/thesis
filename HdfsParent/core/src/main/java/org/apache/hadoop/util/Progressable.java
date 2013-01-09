@@ -28,8 +28,8 @@ package org.apache.hadoop.util;
  * has occured and time-out the operation.</p>
  */
 public interface Progressable {
-  /**
-   * Report progress to the Hadoop framework.
-   */
-  public void progress();
+   /**
+    * Report progress to the Hadoop framework.
+    */
+   public void progress();
 }

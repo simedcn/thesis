@@ -34,74 +34,74 @@ import org.apache.hadoop.metrics2.MetricsVisitor;
  */
 class MBeanInfoBuilder implements MetricsVisitor {
 
-  private final String name, description;
-  private List<MBeanAttributeInfo> attrs;
-  private Iterable<MetricsRecordImpl> recs;
-  private int curRecNo;
+   private final String name, description;
 
-  MBeanInfoBuilder(String name, String desc) {
-    this.name = name;
-    description = desc;
-    attrs = new ArrayList<MBeanAttributeInfo>();
-  }
+   private List<MBeanAttributeInfo> attrs;
 
-  MBeanInfoBuilder reset(Iterable<MetricsRecordImpl> recs) {
-    this.recs = recs;
-    attrs.clear();
-    return this;
-  }
+   private Iterable<MetricsRecordImpl> recs;
 
-  MBeanAttributeInfo newAttrInfo(String name, String desc, String type) {
-    return new MBeanAttributeInfo(getAttrName(name), type, desc,
-                                  true, false, false); // read-only, non-is
-  }
+   private int curRecNo;
 
-  MBeanAttributeInfo newAttrInfo(Metric m, String type) {
-    return newAttrInfo(m.name(), m.description(), type);
-  }
+   MBeanInfoBuilder(String name, String desc) {
+      this.name = name;
+      description = desc;
+      attrs = new ArrayList<MBeanAttributeInfo>();
+   }
 
-  public void gauge(MetricGauge<Integer> metric, int value) {
-    attrs.add(newAttrInfo(metric, "java.lang.Integer"));
-  }
+   MBeanInfoBuilder reset(Iterable<MetricsRecordImpl> recs) {
+      this.recs = recs;
+      attrs.clear();
+      return this;
+   }
 
-  public void gauge(MetricGauge<Long> metric, long value) {
-    attrs.add(newAttrInfo(metric, "java.lang.Long"));
-  }
+   MBeanAttributeInfo newAttrInfo(String name, String desc, String type) {
+      return new MBeanAttributeInfo(getAttrName(name), type, desc, true, false, false); // read-only, non-is
+   }
 
-  public void gauge(MetricGauge<Float> metric, float value) {
-    attrs.add(newAttrInfo(metric, "java.lang.Float"));
-  }
+   MBeanAttributeInfo newAttrInfo(Metric m, String type) {
+      return newAttrInfo(m.name(), m.description(), type);
+   }
 
-  public void gauge(MetricGauge<Double> metric, double value) {
-    attrs.add(newAttrInfo(metric, "java.lang.Double"));
-  }
+   public void gauge(MetricGauge<Integer> metric, int value) {
+      attrs.add(newAttrInfo(metric, "java.lang.Integer"));
+   }
 
-  public void counter(MetricCounter<Integer> metric, int value) {
-    attrs.add(newAttrInfo(metric, "java.lang.Integer"));
-  }
+   public void gauge(MetricGauge<Long> metric, long value) {
+      attrs.add(newAttrInfo(metric, "java.lang.Long"));
+   }
 
-  public void counter(MetricCounter<Long> metric, long value) {
-    attrs.add(newAttrInfo(metric, "java.lang.Long"));
-  }
+   public void gauge(MetricGauge<Float> metric, float value) {
+      attrs.add(newAttrInfo(metric, "java.lang.Float"));
+   }
 
-  String getAttrName(String name) {
-    return curRecNo > 0 ? name +"."+ curRecNo : name;
-  }
+   public void gauge(MetricGauge<Double> metric, double value) {
+      attrs.add(newAttrInfo(metric, "java.lang.Double"));
+   }
 
-  MBeanInfo get() {
-    curRecNo = 0;
-    for (MetricsRecordImpl rec : recs) {
-      for (MetricsTag t : rec.tags()) {
-        attrs.add(newAttrInfo("tag."+ t.name(), t.description(),
-                  "java.lang.String"));
+   public void counter(MetricCounter<Integer> metric, int value) {
+      attrs.add(newAttrInfo(metric, "java.lang.Integer"));
+   }
+
+   public void counter(MetricCounter<Long> metric, long value) {
+      attrs.add(newAttrInfo(metric, "java.lang.Long"));
+   }
+
+   String getAttrName(String name) {
+      return curRecNo > 0 ? name + "." + curRecNo : name;
+   }
+
+   MBeanInfo get() {
+      curRecNo = 0;
+      for (MetricsRecordImpl rec : recs) {
+         for (MetricsTag t : rec.tags()) {
+            attrs.add(newAttrInfo("tag." + t.name(), t.description(), "java.lang.String"));
+         }
+         for (Metric m : rec.metrics()) {
+            m.visit(this);
+         }
+         ++curRecNo;
       }
-      for (Metric m : rec.metrics()) {
-        m.visit(this);
-      }
-      ++curRecNo;
-    }
-    MBeanAttributeInfo[] attrsArray = new MBeanAttributeInfo[attrs.size()];
-    return new MBeanInfo(name, description, attrs.toArray(attrsArray),
-                         null, null, null); // no ops/ctors/notifications
-  }
+      MBeanAttributeInfo[] attrsArray = new MBeanAttributeInfo[attrs.size()];
+      return new MBeanInfo(name, description, attrs.toArray(attrsArray), null, null, null); // no ops/ctors/notifications
+   }
 }

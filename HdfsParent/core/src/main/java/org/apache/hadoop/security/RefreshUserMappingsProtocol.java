@@ -26,25 +26,23 @@ import org.apache.hadoop.ipc.VersionedProtocol;
  * Protocol use 
  *
  */
-@KerberosInfo(
-    serverPrincipal=CommonConfigurationKeys.HADOOP_SECURITY_SERVICE_USER_NAME_KEY)
+@KerberosInfo(serverPrincipal = CommonConfigurationKeys.HADOOP_SECURITY_SERVICE_USER_NAME_KEY)
 public interface RefreshUserMappingsProtocol extends VersionedProtocol {
-  
-  /**
-   * Version 1: Initial version.
-   */
-  public static final long versionID = 1L;
 
-  /**
-   * Refresh user to group mappings.
-   * @throws IOException
-   */
-  public void refreshUserToGroupsMappings() throws IOException;
-  
-  /**
-   * Refresh superuser proxy group list
-   * @throws IOException
-   */
-  public void refreshSuperUserGroupsConfiguration() 
-  throws IOException;
+   /**
+    * Version 1: Initial version.
+    */
+   public static final long versionID = 1L;
+
+   /**
+    * Refresh user to group mappings.
+    * @throws IOException
+    */
+   public void refreshUserToGroupsMappings() throws IOException;
+
+   /**
+    * Refresh superuser proxy group list
+    * @throws IOException
+    */
+   public void refreshSuperUserGroupsConfiguration() throws IOException;
 }

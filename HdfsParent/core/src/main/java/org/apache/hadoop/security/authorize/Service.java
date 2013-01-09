@@ -27,27 +27,28 @@ import java.security.Permission;
  * {@link Permission} required to access the service.
  */
 public class Service {
-  private String key;
-  private Class<?> protocol;
-  
-  public Service(String key, Class<?> protocol) {
-    this.key = key;
-    this.protocol = protocol;
-  }
-  
-  /**
-   * Get the configuration key for the service.
-   * @return the configuration key for the service
-   */
-  public String getServiceKey() {
-    return key;
-  }
-  
-  /**
-   * Get the protocol for the service
-   * @return the {@link Class} for the protocol
-   */
-  public Class<?> getProtocol() {
-    return protocol;
-  }
+   private String key;
+
+   private Class<?> protocol;
+
+   public Service(String key, Class<?> protocol) {
+      this.key = key;
+      this.protocol = protocol;
+   }
+
+   /**
+    * Get the configuration key for the service.
+    * @return the configuration key for the service
+    */
+   public String getServiceKey() {
+      return key;
+   }
+
+   /**
+    * Get the protocol for the service
+    * @return the {@link Class} for the protocol
+    */
+   public Class<?> getProtocol() {
+      return protocol;
+   }
 }

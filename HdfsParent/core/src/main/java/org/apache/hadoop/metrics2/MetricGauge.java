@@ -24,14 +24,14 @@ package org.apache.hadoop.metrics2;
  */
 public abstract class MetricGauge<T extends Number> extends Metric {
 
-  /**
-   * Construct a gauge metric
-   * @param name  of the metric
-   * @param description of the metric
-   */
-  public MetricGauge(String name, String description) {
-    super(name, description);
-  }
+   /**
+    * Construct a gauge metric
+    * @param name  of the metric
+    * @param description of the metric
+    */
+   public MetricGauge(String name, String description) {
+      super(name, description);
+   }
 
-  public abstract T value();
+   public abstract T value();
 }

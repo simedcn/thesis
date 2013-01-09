@@ -32,70 +32,70 @@ import org.apache.log4j.spi.LoggingEvent;
 @InterfaceStability.Stable
 public class EventCounter extends AppenderSkeleton {
 
-  private static final int FATAL = 0;
-  private static final int ERROR = 1;
-  private static final int WARN = 2;
-  private static final int INFO = 3;
+   private static final int FATAL = 0;
 
-  private static class EventCounts {
+   private static final int ERROR = 1;
 
-    private final long[] counts = {0, 0, 0, 0};
+   private static final int WARN = 2;
 
-    private synchronized void incr(int i) {
-      ++counts[i];
-    }
+   private static final int INFO = 3;
 
-    private synchronized long get(int i) {
-      return counts[i];
-    }
-  }
+   private static class EventCounts {
 
-  private static EventCounts counts = new EventCounts();
+      private final long[] counts = { 0, 0, 0, 0 };
 
-  @InterfaceAudience.Private
-  public static long getFatal() {
-    return counts.get(FATAL);
-  }
+      private synchronized void incr(int i) {
+         ++counts[i];
+      }
 
-  @InterfaceAudience.Private
-  public static long getError() {
-    return counts.get(ERROR);
-  }
+      private synchronized long get(int i) {
+         return counts[i];
+      }
+   }
 
-  @InterfaceAudience.Private
-  public static long getWarn() {
-    return counts.get(WARN);
-  }
+   private static EventCounts counts = new EventCounts();
 
-  @InterfaceAudience.Private
-  public static long getInfo() {
-    return counts.get(INFO);
-  }
+   @InterfaceAudience.Private
+   public static long getFatal() {
+      return counts.get(FATAL);
+   }
 
-  @Override
-  public void append(LoggingEvent event) {
-    Level level = event.getLevel();
-    if (level == Level.INFO) {
-      counts.incr(INFO);
-    }
-    else if (level == Level.WARN) {
-      counts.incr(WARN);
-    }
-    else if (level == Level.ERROR) {
-      counts.incr(ERROR);
-    }
-    else if (level == Level.FATAL) {
-      counts.incr(FATAL);
-    }
+   @InterfaceAudience.Private
+   public static long getError() {
+      return counts.get(ERROR);
+   }
 
-  }
+   @InterfaceAudience.Private
+   public static long getWarn() {
+      return counts.get(WARN);
+   }
 
-  @Override
-  public void close() {
-  }
+   @InterfaceAudience.Private
+   public static long getInfo() {
+      return counts.get(INFO);
+   }
 
-  @Override
-  public boolean requiresLayout() {
-    return false;
-  }
+   @Override
+   public void append(LoggingEvent event) {
+      Level level = event.getLevel();
+      if (level == Level.INFO) {
+         counts.incr(INFO);
+      } else if (level == Level.WARN) {
+         counts.incr(WARN);
+      } else if (level == Level.ERROR) {
+         counts.incr(ERROR);
+      } else if (level == Level.FATAL) {
+         counts.incr(FATAL);
+      }
+
+   }
+
+   @Override
+   public void close() {
+   }
+
+   @Override
+   public boolean requiresLayout() {
+      return false;
+   }
 }

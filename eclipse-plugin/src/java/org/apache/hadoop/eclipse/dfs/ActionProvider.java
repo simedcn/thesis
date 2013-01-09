@@ -143,8 +143,6 @@ public class ActionProvider extends CommonActionProvider {
 
     private final String title;
 
-    private DFSActions action;
-
     public DFSAction(String id, String title) {
       this.id = id;
       this.title = title;

@@ -25,62 +25,61 @@ import org.apache.hadoop.metrics2.MetricsRecordBuilder;
  */
 public class MetricMutableGaugeLong extends MetricMutableGauge<Long> {
 
-  private volatile long value;
+   private volatile long value;
 
-  /**
-   * Construct a mutable long gauge metric
-   * @param name  of the gauge
-   * @param description of the gauge
-   * @param initValue the initial value of the gauge
-   */
-  public MetricMutableGaugeLong(String name, String description,
-                                long initValue) {
-    super(name, description);
-    this.value = initValue;
-  }
+   /**
+    * Construct a mutable long gauge metric
+    * @param name  of the gauge
+    * @param description of the gauge
+    * @param initValue the initial value of the gauge
+    */
+   public MetricMutableGaugeLong(String name, String description, long initValue) {
+      super(name, description);
+      this.value = initValue;
+   }
 
-  public synchronized void incr() {
-    ++value;
-    setChanged();
-  }
+   public synchronized void incr() {
+      ++value;
+      setChanged();
+   }
 
-  /**
-   * Increment by delta
-   * @param delta of the increment
-   */
-  public synchronized void incr(long delta) {
-    value += delta;
-    setChanged();
-  }
+   /**
+    * Increment by delta
+    * @param delta of the increment
+    */
+   public synchronized void incr(long delta) {
+      value += delta;
+      setChanged();
+   }
 
-  public synchronized void decr() {
-    --value;
-    setChanged();
-  }
+   public synchronized void decr() {
+      --value;
+      setChanged();
+   }
 
-  /**
-   * decrement by delta
-   * @param delta of the decrement
-   */
-  public synchronized void decr(long delta) {
-    value -= delta;
-    setChanged();
-  }
+   /**
+    * decrement by delta
+    * @param delta of the decrement
+    */
+   public synchronized void decr(long delta) {
+      value -= delta;
+      setChanged();
+   }
 
-  /**
-   * Set the value of the metric
-   * @param value to set
-   */
-  public void set(long value) {
-    this.value = value;
-    setChanged();
-  }
+   /**
+    * Set the value of the metric
+    * @param value to set
+    */
+   public void set(long value) {
+      this.value = value;
+      setChanged();
+   }
 
-  public void snapshot(MetricsRecordBuilder builder, boolean all) {
-    if (all || changed()) {
-      builder.addGauge(name, description, value);
-      clearChanged();
-    }
-  }
+   public void snapshot(MetricsRecordBuilder builder, boolean all) {
+      if (all || changed()) {
+         builder.addGauge(name, description, value);
+         clearChanged();
+      }
+   }
 
 }

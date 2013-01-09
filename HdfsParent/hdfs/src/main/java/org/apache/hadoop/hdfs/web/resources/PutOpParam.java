@@ -21,64 +21,62 @@ import java.net.HttpURLConnection;
 
 /** Http POST operation parameter. */
 public class PutOpParam extends HttpOpParam<PutOpParam.Op> {
-  /** Put operations. */
-  public static enum Op implements HttpOpParam.Op {
-    CREATE(true, HttpURLConnection.HTTP_CREATED),
+   /** Put operations. */
+   public static enum Op implements HttpOpParam.Op {
+      CREATE(true, HttpURLConnection.HTTP_CREATED),
 
-    MKDIRS(false, HttpURLConnection.HTTP_OK),
-    RENAME(false, HttpURLConnection.HTTP_OK),
-    SETREPLICATION(false, HttpURLConnection.HTTP_OK),
+      MKDIRS(false, HttpURLConnection.HTTP_OK), RENAME(false, HttpURLConnection.HTTP_OK), SETREPLICATION(false,
+            HttpURLConnection.HTTP_OK),
 
-    SETOWNER(false, HttpURLConnection.HTTP_OK),
-    SETPERMISSION(false, HttpURLConnection.HTTP_OK),
-    SETTIMES(false, HttpURLConnection.HTTP_OK),
-    
-    RENEWDELEGATIONTOKEN(false, HttpURLConnection.HTTP_OK),
-    CANCELDELEGATIONTOKEN(false, HttpURLConnection.HTTP_OK),
-    
-    NULL(false, HttpURLConnection.HTTP_NOT_IMPLEMENTED);
+      SETOWNER(false, HttpURLConnection.HTTP_OK), SETPERMISSION(false, HttpURLConnection.HTTP_OK), SETTIMES(false,
+            HttpURLConnection.HTTP_OK),
 
-    final boolean doOutput;
-    final int expectedHttpResponseCode;
+      RENEWDELEGATIONTOKEN(false, HttpURLConnection.HTTP_OK), CANCELDELEGATIONTOKEN(false, HttpURLConnection.HTTP_OK),
 
-    Op(final boolean doOutput, final int expectedHttpResponseCode) {
-      this.doOutput = doOutput;
-      this.expectedHttpResponseCode = expectedHttpResponseCode;
-    }
+      NULL(false, HttpURLConnection.HTTP_NOT_IMPLEMENTED);
 
-    @Override
-    public HttpOpParam.Type getType() {
-      return HttpOpParam.Type.PUT;
-    }
+      final boolean doOutput;
 
-    @Override
-    public boolean getDoOutput() {
-      return doOutput;
-    }
+      final int expectedHttpResponseCode;
 
-    @Override
-    public int getExpectedHttpResponseCode() {
-      return expectedHttpResponseCode;
-    }
+      Op(final boolean doOutput, final int expectedHttpResponseCode) {
+         this.doOutput = doOutput;
+         this.expectedHttpResponseCode = expectedHttpResponseCode;
+      }
 
-    @Override
-    public String toQueryString() {
-      return NAME + "=" + this;
-    }
-  }
+      @Override
+      public HttpOpParam.Type getType() {
+         return HttpOpParam.Type.PUT;
+      }
 
-  private static final Domain<Op> DOMAIN = new Domain<Op>(NAME, Op.class);
+      @Override
+      public boolean getDoOutput() {
+         return doOutput;
+      }
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public PutOpParam(final String str) {
-    super(DOMAIN, DOMAIN.parse(str));
-  }
+      @Override
+      public int getExpectedHttpResponseCode() {
+         return expectedHttpResponseCode;
+      }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+      @Override
+      public String toQueryString() {
+         return NAME + "=" + this;
+      }
+   }
+
+   private static final Domain<Op> DOMAIN = new Domain<Op>(NAME, Op.class);
+
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public PutOpParam(final String str) {
+      super(DOMAIN, DOMAIN.parse(str));
+   }
+
+   @Override
+   public String getName() {
+      return NAME;
+   }
 }

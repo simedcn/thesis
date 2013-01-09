@@ -26,9 +26,9 @@ import org.apache.hadoop.fs.GlobPattern;
  */
 public class GlobFilter extends AbstractPatternFilter {
 
-  @Override
-  protected Pattern compile(String s) {
-    return GlobPattern.compile(s);
-  }
+   @Override
+   protected Pattern compile(String s) {
+      return GlobPattern.compile(s);
+   }
 
 }

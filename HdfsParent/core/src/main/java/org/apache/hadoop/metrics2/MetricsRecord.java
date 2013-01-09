@@ -22,34 +22,34 @@ package org.apache.hadoop.metrics2;
  * An immutable snapshot of metrics with a timestamp
  */
 public interface MetricsRecord {
-  /**
-   * Get the timestamp of the metrics
-   * @return  the timestamp
-   */
-  long timestamp();
+   /**
+    * Get the timestamp of the metrics
+    * @return  the timestamp
+    */
+   long timestamp();
 
-  /**
-   * Get the record name of the metrics
-   * @return  the record name
-   */
-  String name();
+   /**
+    * Get the record name of the metrics
+    * @return  the record name
+    */
+   String name();
 
-  /**
-   * Get the context name of the metrics
-   * @return  the context name
-   */
-  String context();
+   /**
+    * Get the context name of the metrics
+    * @return  the context name
+    */
+   String context();
 
-  /**
-   * Get the tags of the record
-   * @return  the tags
-   */
-  Iterable<MetricsTag> tags();
+   /**
+    * Get the tags of the record
+    * @return  the tags
+    */
+   Iterable<MetricsTag> tags();
 
-  /**
-   * Get the metrics of the record
-   * @return  the metrics
-   */
-  Iterable<Metric> metrics();
+   /**
+    * Get the metrics of the record
+    * @return  the metrics
+    */
+   Iterable<Metric> metrics();
 
 }

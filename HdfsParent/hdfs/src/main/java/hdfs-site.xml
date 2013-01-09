@@ -4,4 +4,24 @@
 		<name>dfs.replication</name>
 		<value>1</value>
 	</property>
+	<property>
+		<name>dfs.permissions</name>
+		<value>false</value>
+		<description>
+			If "true", enable permission checking in HDFS.
+			If "false",
+			permission checking is turned off,
+			but all other behavior is
+			unchanged.
+			Switching from one parameter value to the other does not
+			change the mode,
+			owner or group of files or directories.
+ 	</description>
+	</property>
+
+	<property>
+		<name>dfs.block.size</name>
+		<value>65536</value>
+		<description>The default block size for new files. 64k</description>
+	</property>
 </configuration>

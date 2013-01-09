@@ -25,21 +25,22 @@ package org.apache.hadoop.util;
  */
 @Deprecated
 public class LinuxMemoryCalculatorPlugin extends MemoryCalculatorPlugin {
-  private LinuxResourceCalculatorPlugin resourceCalculatorPlugin;
-  // Use everything from LinuxResourceCalculatorPlugin
-  public LinuxMemoryCalculatorPlugin() {
-    resourceCalculatorPlugin = new LinuxResourceCalculatorPlugin();
-  }
+   private LinuxResourceCalculatorPlugin resourceCalculatorPlugin;
 
-  /** {@inheritDoc} */
-  @Override
-  public long getPhysicalMemorySize() {
-    return resourceCalculatorPlugin.getPhysicalMemorySize();
-  }
+   // Use everything from LinuxResourceCalculatorPlugin
+   public LinuxMemoryCalculatorPlugin() {
+      resourceCalculatorPlugin = new LinuxResourceCalculatorPlugin();
+   }
 
-  /** {@inheritDoc} */
-  @Override
-  public long getVirtualMemorySize() {
-    return resourceCalculatorPlugin.getVirtualMemorySize();
-  }
+   /** {@inheritDoc} */
+   @Override
+   public long getPhysicalMemorySize() {
+      return resourceCalculatorPlugin.getPhysicalMemorySize();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public long getVirtualMemorySize() {
+      return resourceCalculatorPlugin.getVirtualMemorySize();
+   }
 }

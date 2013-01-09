@@ -27,87 +27,88 @@ import org.apache.hadoop.io.Writable;
  * a persistent storage.
  */
 abstract class EditLogOutputStream extends OutputStream {
-  // these are statistics counters
-  private long numSync;        // number of sync(s) to disk
-  private long totalTimeSync;  // total time to sync
+   // these are statistics counters
+   private long numSync; // number of sync(s) to disk
 
-  EditLogOutputStream() throws IOException {
-    numSync = totalTimeSync = 0;
-  }
+   private long totalTimeSync; // total time to sync
 
-  /**
-   * Get this stream name.
-   * 
-   * @return name of the stream
-   */
-  abstract String getName();
+   EditLogOutputStream() throws IOException {
+      numSync = totalTimeSync = 0;
+   }
 
-  /** {@inheritDoc} */
-  abstract public void write(int b) throws IOException;
+   /**
+    * Get this stream name.
+    * 
+    * @return name of the stream
+    */
+   abstract String getName();
 
-  /**
-   * Write edits log record into the stream.
-   * The record is represented by operation name and
-   * an array of Writable arguments.
-   * 
-   * @param op operation
-   * @param writables array of Writable arguments
-   * @throws IOException
-   */
-  abstract void write(byte op, Writable ... writables) throws IOException;
+   /** {@inheritDoc} */
+   abstract public void write(int b) throws IOException;
 
-  /**
-   * Create and initialize new edits log storage.
-   * 
-   * @throws IOException
-   */
-  abstract void create() throws IOException;
+   /**
+    * Write edits log record into the stream.
+    * The record is represented by operation name and
+    * an array of Writable arguments.
+    * 
+    * @param op operation
+    * @param writables array of Writable arguments
+    * @throws IOException
+    */
+   abstract void write(byte op, Writable... writables) throws IOException;
 
-  /** {@inheritDoc} */
-  abstract public void close() throws IOException;
+   /**
+    * Create and initialize new edits log storage.
+    * 
+    * @throws IOException
+    */
+   abstract void create() throws IOException;
 
-  /**
-   * All data that has been written to the stream so far will be flushed.
-   * New data can be still written to the stream while flushing is performed.
-   */
-  abstract void setReadyToFlush() throws IOException;
+   /** {@inheritDoc} */
+   abstract public void close() throws IOException;
 
-  /**
-   * Flush and sync all data that is ready to be flush 
-   * {@link #setReadyToFlush()} into underlying persistent store.
-   * @throws IOException
-   */
-  abstract protected void flushAndSync() throws IOException;
+   /**
+    * All data that has been written to the stream so far will be flushed.
+    * New data can be still written to the stream while flushing is performed.
+    */
+   abstract void setReadyToFlush() throws IOException;
 
-  /**
-   * Flush data to persistent store.
-   * Collect sync metrics.
-   */
-  public void flush() throws IOException {
-    numSync++;
-    long start = FSNamesystem.now();
-    flushAndSync();
-    long end = FSNamesystem.now();
-    totalTimeSync += (end - start);
-  }
+   /**
+    * Flush and sync all data that is ready to be flush 
+    * {@link #setReadyToFlush()} into underlying persistent store.
+    * @throws IOException
+    */
+   abstract protected void flushAndSync() throws IOException;
 
-  /**
-   * Return the size of the current edits log.
-   * Length is used to check when it is large enough to start a checkpoint.
-   */
-  abstract long length() throws IOException;
+   /**
+    * Flush data to persistent store.
+    * Collect sync metrics.
+    */
+   public void flush() throws IOException {
+      numSync++;
+      long start = FSNamesystem.now();
+      flushAndSync();
+      long end = FSNamesystem.now();
+      totalTimeSync += (end - start);
+   }
 
-  /**
-   * Return total time spent in {@link #flushAndSync()}
-   */
-  long getTotalSyncTime() {
-    return totalTimeSync;
-  }
+   /**
+    * Return the size of the current edits log.
+    * Length is used to check when it is large enough to start a checkpoint.
+    */
+   abstract long length() throws IOException;
 
-  /**
-   * Return number of calls to {@link #flushAndSync()}
-   */
-  long getNumSync() {
-    return numSync;
-  }
+   /**
+    * Return total time spent in {@link #flushAndSync()}
+    */
+   long getTotalSyncTime() {
+      return totalTimeSync;
+   }
+
+   /**
+    * Return number of calls to {@link #flushAndSync()}
+    */
+   long getNumSync() {
+      return numSync;
+   }
 }

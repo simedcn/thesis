@@ -31,31 +31,31 @@ import org.apache.hadoop.security.UserGroupInformation;
  * about a token, including its kind (or type).
  */
 public abstract class TokenIdentifier implements Writable {
-  /**
-   * Get the token kind
-   * @return the kind of the token
-   */
-  public abstract Text getKind();
+   /**
+    * Get the token kind
+    * @return the kind of the token
+    */
+   public abstract Text getKind();
 
-  /**
-   * Get the Ugi with the username encoded in the token identifier
-   * 
-   * @return the username. null is returned if username in the identifier is
-   *         empty or null.
-   */
-  public abstract UserGroupInformation getUser();
+   /**
+    * Get the Ugi with the username encoded in the token identifier
+    * 
+    * @return the username. null is returned if username in the identifier is
+    *         empty or null.
+    */
+   public abstract UserGroupInformation getUser();
 
-  /**
-   * Get the bytes for the token identifier
-   * @return the bytes of the identifier
-   */
-  public byte[] getBytes() {
-    DataOutputBuffer buf = new DataOutputBuffer(4096);
-    try {
-      this.write(buf);
-    } catch (IOException ie) {
-      throw new RuntimeException("i/o error in getBytes", ie);
-    }
-    return Arrays.copyOf(buf.getData(), buf.getLength());
-  }
+   /**
+    * Get the bytes for the token identifier
+    * @return the bytes of the identifier
+    */
+   public byte[] getBytes() {
+      DataOutputBuffer buf = new DataOutputBuffer(4096);
+      try {
+         this.write(buf);
+      } catch (IOException ie) {
+         throw new RuntimeException("i/o error in getBytes", ie);
+      }
+      return Arrays.copyOf(buf.getData(), buf.getLength());
+   }
 }

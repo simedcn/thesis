@@ -32,40 +32,40 @@ import org.apache.hadoop.util.NativeCodeLoader;
  * memberships of a given user.
  */
 public class JniBasedUnixGroupsMapping implements GroupMappingServiceProvider {
-  
-  private static final Log LOG = LogFactory.getLog(
-    JniBasedUnixGroupsMapping.class);
-  
-  native String[] getGroupForUser(String user);
-  
-  static {
-    if (!NativeCodeLoader.isNativeCodeLoaded()) {
-      LOG.info("Bailing out since native library couldn't be loaded");
-      throw new RuntimeException();
-    }
-    LOG.info("Using JniBasedUnixGroupsMapping for Group resolution");
-  }
 
-  @Override
-  public List<String> getGroups(String user) throws IOException {
-    String[] groups = null;
-    try {
-      groups = getGroupForUser(user);
-    } catch (Exception e) {
-      LOG.warn("Got exception while trying to obtain the groups for user " + user);
-    }
-    if (groups != null && groups.length != 0) {
-      return Arrays.asList(groups);
-    }
-    return Arrays.asList(new String[0]);
-  }
-  @Override
-  public void cacheGroupsRefresh() throws IOException {
-    // does nothing in this provider of user to groups mapping
-  }
+   private static final Log LOG = LogFactory.getLog(JniBasedUnixGroupsMapping.class);
 
-  @Override
-  public void cacheGroupsAdd(List<String> groups) throws IOException {
-    // does nothing in this provider of user to groups mapping
-  }
+   native String[] getGroupForUser(String user);
+
+   static {
+      if (!NativeCodeLoader.isNativeCodeLoaded()) {
+         LOG.info("Bailing out since native library couldn't be loaded");
+         throw new RuntimeException();
+      }
+      LOG.info("Using JniBasedUnixGroupsMapping for Group resolution");
+   }
+
+   @Override
+   public List<String> getGroups(String user) throws IOException {
+      String[] groups = null;
+      try {
+         groups = getGroupForUser(user);
+      } catch (Exception e) {
+         LOG.warn("Got exception while trying to obtain the groups for user " + user);
+      }
+      if (groups != null && groups.length != 0) {
+         return Arrays.asList(groups);
+      }
+      return Arrays.asList(new String[0]);
+   }
+
+   @Override
+   public void cacheGroupsRefresh() throws IOException {
+      // does nothing in this provider of user to groups mapping
+   }
+
+   @Override
+   public void cacheGroupsAdd(List<String> groups) throws IOException {
+      // does nothing in this provider of user to groups mapping
+   }
 }

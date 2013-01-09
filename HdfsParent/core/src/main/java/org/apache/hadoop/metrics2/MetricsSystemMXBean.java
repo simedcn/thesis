@@ -23,30 +23,30 @@ package org.apache.hadoop.metrics2;
  */
 public interface MetricsSystemMXBean {
 
-  /**
-   * Start the metrics system
-   * @exception MetricsException
-   */
-  public void start();
+   /**
+    * Start the metrics system
+    * @exception MetricsException
+    */
+   public void start();
 
-  /**
-   * Stop the metrics system
-   * @exception MetricsException
-   */
-  public void stop();
+   /**
+    * Stop the metrics system
+    * @exception MetricsException
+    */
+   public void stop();
 
-  /**
-   * Force a refresh of MBeans
-   * @exception MetricsException
-   */
-  public void refreshMBeans();
+   /**
+    * Force a refresh of MBeans
+    * @exception MetricsException
+    */
+   public void refreshMBeans();
 
-  /**
-   * @return the current config
-   * Note, avoid getConfig, as it'll turn it into an attribute,
-   * which doesn't support multiple lines in the values.
-   * @exception MetricsException
-   */
-  public String currentConfig();
+   /**
+    * @return the current config
+    * Note, avoid getConfig, as it'll turn it into an attribute,
+    * which doesn't support multiple lines in the values.
+    * @exception MetricsException
+    */
+   public String currentConfig();
 
 }

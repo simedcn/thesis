@@ -32,28 +32,29 @@ package org.apache.hadoop.fs.s3native;
  * @see NativeFileSystemStore#list(String, int, String)
  */
 class PartialListing {
-  
-  private final String priorLastKey;
-  private final FileMetadata[] files;
-  private final String[] commonPrefixes;
-  
-  public PartialListing(String priorLastKey, FileMetadata[] files,
-      String[] commonPrefixes) {
-    this.priorLastKey = priorLastKey;
-    this.files = files;
-    this.commonPrefixes = commonPrefixes;
-  }
 
-  public FileMetadata[] getFiles() {
-    return files;
-  }
+   private final String priorLastKey;
 
-  public String[] getCommonPrefixes() {
-    return commonPrefixes;
-  }
+   private final FileMetadata[] files;
 
-  public String getPriorLastKey() {
-    return priorLastKey;
-  }
-  
+   private final String[] commonPrefixes;
+
+   public PartialListing(String priorLastKey, FileMetadata[] files, String[] commonPrefixes) {
+      this.priorLastKey = priorLastKey;
+      this.files = files;
+      this.commonPrefixes = commonPrefixes;
+   }
+
+   public FileMetadata[] getFiles() {
+      return files;
+   }
+
+   public String[] getCommonPrefixes() {
+      return commonPrefixes;
+   }
+
+   public String getPriorLastKey() {
+      return priorLastKey;
+   }
+
 }

@@ -22,9 +22,13 @@ package org.apache.hadoop.fs.s3;
  * in {@link S3FileSystem}.
  */
 public class VersionMismatchException extends S3FileSystemException {
-  public VersionMismatchException(String clientVersion, String dataVersion) {
-    super("Version mismatch: client expects version " + clientVersion +
-        ", but data has version " +
-        (dataVersion == null ? "[unversioned]" : dataVersion));
-  }
+   /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public VersionMismatchException(String clientVersion, String dataVersion) {
+      super("Version mismatch: client expects version " + clientVersion + ", but data has version "
+            + (dataVersion == null ? "[unversioned]" : dataVersion));
+   }
 }

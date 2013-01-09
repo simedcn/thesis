@@ -31,20 +31,19 @@ import org.apache.hadoop.io.compress.Decompressor;
  */
 public class BuiltInZlibInflater extends Inflater implements Decompressor {
 
-  public BuiltInZlibInflater(boolean nowrap) {
-    super(nowrap);
-  }
+   public BuiltInZlibInflater(boolean nowrap) {
+      super(nowrap);
+   }
 
-  public BuiltInZlibInflater() {
-    super();
-  }
+   public BuiltInZlibInflater() {
+      super();
+   }
 
-  public synchronized int decompress(byte[] b, int off, int len) 
-    throws IOException {
-    try {
-      return super.inflate(b, off, len);
-    } catch (DataFormatException dfe) {
-      throw new IOException(dfe.getMessage());
-    }
-  }
+   public synchronized int decompress(byte[] b, int off, int len) throws IOException {
+      try {
+         return super.inflate(b, off, len);
+      } catch (DataFormatException dfe) {
+         throw new IOException(dfe.getMessage());
+      }
+   }
 }

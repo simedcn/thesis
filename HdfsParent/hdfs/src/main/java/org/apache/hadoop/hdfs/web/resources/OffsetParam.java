@@ -19,31 +19,32 @@ package org.apache.hadoop.hdfs.web.resources;
 
 /** Offset parameter. */
 public class OffsetParam extends LongParam {
-  /** Parameter name. */
-  public static final String NAME = "offset";
-  /** Default parameter value. */
-  public static final String DEFAULT = "0";
+   /** Parameter name. */
+   public static final String NAME = "offset";
 
-  private static final Domain DOMAIN = new Domain(NAME);
+   /** Default parameter value. */
+   public static final String DEFAULT = "0";
 
-  /**
-   * Constructor.
-   * @param value the parameter value.
-   */
-  public OffsetParam(final Long value) {
-    super(DOMAIN, value, 0L, null);
-  }
+   private static final Domain DOMAIN = new Domain(NAME);
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public OffsetParam(final String str) {
-    this(DOMAIN.parse(str));
-  }
+   /**
+    * Constructor.
+    * @param value the parameter value.
+    */
+   public OffsetParam(final Long value) {
+      super(DOMAIN, value, 0L, null);
+   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public OffsetParam(final String str) {
+      this(DOMAIN.parse(str));
+   }
+
+   @Override
+   public String getName() {
+      return NAME;
+   }
 }

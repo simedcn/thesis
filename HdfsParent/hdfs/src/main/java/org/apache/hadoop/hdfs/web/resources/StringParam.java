@@ -21,34 +21,34 @@ import java.util.regex.Pattern;
 
 /** String parameter. */
 abstract class StringParam extends Param<String, StringParam.Domain> {
-  StringParam(final Domain domain, String str) {
-    super(domain, domain.parse(str));
-  }
+   StringParam(final Domain domain, String str) {
+      super(domain, domain.parse(str));
+   }
 
-  /** The domain of the parameter. */
-  static final class Domain extends Param.Domain<String> {
-    /** The pattern defining the domain; null . */
-    private final Pattern pattern;
+   /** The domain of the parameter. */
+   static final class Domain extends Param.Domain<String> {
+      /** The pattern defining the domain; null . */
+      private final Pattern pattern;
 
-    Domain(final String paramName, final Pattern pattern) {
-      super(paramName);
-      this.pattern = pattern;
-    }
-
-    @Override
-    public final String getDomain() {
-      return pattern == null ? "<String>" : pattern.pattern();
-    }
-
-    @Override
-    final String parse(final String str) {
-      if (pattern != null) {
-        if (!pattern.matcher(str).matches()) {
-          throw new IllegalArgumentException("Invalid value: \"" + str
-              + "\" does not belong to the domain " + getDomain());
-        }
+      Domain(final String paramName, final Pattern pattern) {
+         super(paramName);
+         this.pattern = pattern;
       }
-      return str;
-    }
-  }
+
+      @Override
+      public final String getDomain() {
+         return pattern == null ? "<String>" : pattern.pattern();
+      }
+
+      @Override
+      final String parse(final String str) {
+         if (pattern != null) {
+            if (!pattern.matcher(str).matches()) {
+               throw new IllegalArgumentException("Invalid value: \"" + str + "\" does not belong to the domain "
+                     + getDomain());
+            }
+         }
+         return str;
+      }
+   }
 }

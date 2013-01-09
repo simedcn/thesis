@@ -36,57 +36,60 @@ import org.apache.hadoop.io.WritableFactory;
  * on the receiving side and current status of the upgrade.
  */
 public class UpgradeCommand extends DatanodeCommand {
-  final static int UC_ACTION_UNKNOWN = DatanodeProtocol.DNA_UNKNOWN;
-  public final static int UC_ACTION_REPORT_STATUS = 100; // report upgrade status
-  public final static int UC_ACTION_START_UPGRADE = 101; // start upgrade
+   final static int UC_ACTION_UNKNOWN = DatanodeProtocol.DNA_UNKNOWN;
 
-  private int version;
-  private short upgradeStatus;
+   public final static int UC_ACTION_REPORT_STATUS = 100; // report upgrade status
 
-  public UpgradeCommand() {
-    super(UC_ACTION_UNKNOWN);
-    this.version = 0;
-    this.upgradeStatus = 0;
-  }
+   public final static int UC_ACTION_START_UPGRADE = 101; // start upgrade
 
-  public UpgradeCommand(int action, int version, short status) {
-    super(action);
-    this.version = version;
-    this.upgradeStatus = status;
-  }
+   private int version;
 
-  public int getVersion() {
-    return this.version;
-  }
+   private short upgradeStatus;
 
-  public short getCurrentStatus() {
-    return this.upgradeStatus;
-  }
+   public UpgradeCommand() {
+      super(UC_ACTION_UNKNOWN);
+      this.version = 0;
+      this.upgradeStatus = 0;
+   }
 
-  /////////////////////////////////////////////////
-  // Writable
-  /////////////////////////////////////////////////
-  static {                                      // register a ctor
-    WritableFactories.setFactory
-      (UpgradeCommand.class,
-       new WritableFactory() {
-         public Writable newInstance() { return new UpgradeCommand(); }
-       });
-  }
+   public UpgradeCommand(int action, int version, short status) {
+      super(action);
+      this.version = version;
+      this.upgradeStatus = status;
+   }
 
-  /**
-   */
-  public void write(DataOutput out) throws IOException {
-    super.write(out);
-    out.writeInt(this.version);
-    out.writeShort(this.upgradeStatus);
-  }
+   public int getVersion() {
+      return this.version;
+   }
 
-  /**
-   */
-  public void readFields(DataInput in) throws IOException {
-    super.readFields(in);
-    this.version = in.readInt();
-    this.upgradeStatus = in.readShort();
-  }
+   public short getCurrentStatus() {
+      return this.upgradeStatus;
+   }
+
+   /////////////////////////////////////////////////
+   // Writable
+   /////////////////////////////////////////////////
+   static { // register a ctor
+      WritableFactories.setFactory(UpgradeCommand.class, new WritableFactory() {
+         public Writable newInstance() {
+            return new UpgradeCommand();
+         }
+      });
+   }
+
+   /**
+    */
+   public void write(DataOutput out) throws IOException {
+      super.write(out);
+      out.writeInt(this.version);
+      out.writeShort(this.upgradeStatus);
+   }
+
+   /**
+    */
+   public void readFields(DataInput in) throws IOException {
+      super.readFields(in);
+      this.version = in.readInt();
+      this.upgradeStatus = in.readShort();
+   }
 }

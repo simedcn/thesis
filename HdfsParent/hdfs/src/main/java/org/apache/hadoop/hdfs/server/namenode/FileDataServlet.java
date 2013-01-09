@@ -39,102 +39,95 @@ import org.apache.hadoop.security.UserGroupInformation;
  */
 public class FileDataServlet extends DfsServlet {
 
-  /** Create a redirection URI */
-  protected URI createUri(String parent, HdfsFileStatus i, UserGroupInformation ugi,
-      ClientProtocol nnproxy, HttpServletRequest request, String dt)
-      throws IOException, URISyntaxException {
-    String scheme = request.getScheme();
-    final DatanodeID host = pickSrcDatanode(parent, i, nnproxy);
-    final String hostname;
-    if (host instanceof DatanodeInfo) {
-      hostname = ((DatanodeInfo)host).getHostName();
-    } else {
-      hostname = host.getHost();
-    }
-    
-    String dtParam="";
-    if (dt != null) {
-      dtParam = JspHelper.getDelegationTokenUrlParam(dt);
-    }
-    
-    return new URI(scheme, null, hostname,
-        "https".equals(scheme)
-          ? (Integer)getServletContext().getAttribute("datanode.https.port")
-          : host.getInfoPort(),
-        "/streamFile" + i.getFullName(parent), 
-        "ugi=" + ugi.getShortUserName() + dtParam, null);
-  }
+   /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
 
-  private static JspHelper jspHelper = null;
+   /** Create a redirection URI */
+   protected URI createUri(String parent, HdfsFileStatus i, UserGroupInformation ugi, ClientProtocol nnproxy,
+         HttpServletRequest request, String dt) throws IOException, URISyntaxException {
+      String scheme = request.getScheme();
+      final DatanodeID host = pickSrcDatanode(parent, i, nnproxy);
+      final String hostname;
+      if (host instanceof DatanodeInfo) {
+         hostname = ((DatanodeInfo) host).getHostName();
+      } else {
+         hostname = host.getHost();
+      }
 
-  /** Select a datanode to service this request.
-   * Currently, this looks at no more than the first five blocks of a file,
-   * selecting a datanode randomly from the most represented.
-   */
-  private static DatanodeID pickSrcDatanode(String parent, HdfsFileStatus i,
-      ClientProtocol nnproxy) throws IOException {
-    // a race condition can happen by initializing a static member this way.
-    // A proper fix should make JspHelper a singleton. Since it doesn't affect 
-    // correctness, we leave it as is for now.
-    if (jspHelper == null)
-      jspHelper = new JspHelper();
-    final LocatedBlocks blks = nnproxy.getBlockLocations(
-        i.getFullPath(new Path(parent)).toUri().getPath(), 0, 1);
-    if (i.getLen() == 0 || blks.getLocatedBlocks().size() <= 0) {
-      // pick a random datanode
-      return jspHelper.randomNode();
-    }
-    return JspHelper.bestNode(blks.get(0));
-  }
+      String dtParam = "";
+      if (dt != null) {
+         dtParam = JspHelper.getDelegationTokenUrlParam(dt);
+      }
 
-  /**
-   * Service a GET request as described below.
-   * Request:
-   * {@code
-   * GET http://<nn>:<port>/data[/<path>] HTTP/1.1
-   * }
-   */
-  public void doGet(final HttpServletRequest request,
-                    final HttpServletResponse response)
-    throws IOException {
-    Configuration conf =
-	(Configuration) getServletContext().getAttribute(JspHelper.CURRENT_CONF);
-    final UserGroupInformation ugi = getUGI(request, conf);
+      return new URI(scheme, null, hostname, "https".equals(scheme) ? (Integer) getServletContext().getAttribute(
+            "datanode.https.port") : host.getInfoPort(), "/streamFile" + i.getFullName(parent), "ugi="
+            + ugi.getShortUserName() + dtParam, null);
+   }
 
-    try {
-      ugi.doAs(new PrivilegedExceptionAction<Void>() {
+   private static JspHelper jspHelper = null;
+
+   /** Select a datanode to service this request.
+    * Currently, this looks at no more than the first five blocks of a file,
+    * selecting a datanode randomly from the most represented.
+    */
+   private static DatanodeID pickSrcDatanode(String parent, HdfsFileStatus i, ClientProtocol nnproxy)
+         throws IOException {
+      // a race condition can happen by initializing a static member this way.
+      // A proper fix should make JspHelper a singleton. Since it doesn't affect 
+      // correctness, we leave it as is for now.
+      if (jspHelper == null)
+         jspHelper = new JspHelper();
+      final LocatedBlocks blks = nnproxy.getBlockLocations(i.getFullPath(new Path(parent)).toUri().getPath(), 0, 1);
+      if (i.getLen() == 0 || blks.getLocatedBlocks().size() <= 0) {
+         // pick a random datanode
+         return jspHelper.randomNode();
+      }
+      return JspHelper.bestNode(blks.get(0));
+   }
+
+   /**
+    * Service a GET request as described below.
+    * Request:
+    * {@code
+    * GET http://<nn>:<port>/data[/<path>] HTTP/1.1
+    * }
+    */
+   public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+      Configuration conf = (Configuration) getServletContext().getAttribute(JspHelper.CURRENT_CONF);
+      final UserGroupInformation ugi = getUGI(request, conf);
+
+      try {
+         ugi.doAs(new PrivilegedExceptionAction<Void>() {
             @Override
             public Void run() throws IOException {
-              ClientProtocol nn = createNameNodeProxy();
-              final String path = 
-                request.getPathInfo() != null ? request.getPathInfo() : "/";
-              
-              String delegationToken = 
-                request.getParameter(JspHelper.DELEGATION_PARAMETER_NAME);
-              
-              HdfsFileStatus info = nn.getFileInfo(path);
-              if ((info != null) && !info.isDir()) {
-                try {
-                  response.sendRedirect(createUri(path, info, ugi, nn,
-                        request, delegationToken).toURL().toString());
-                } catch (URISyntaxException e) {
-                  response.getWriter().println(e.toString());
-                }
-              } else if (info == null){
-                response.sendError(400, "File not found " + path);
-              } else {
-                response.sendError(400, path + " is a directory");
-              }
-              return null;
-            }
-          });
+               ClientProtocol nn = createNameNodeProxy();
+               final String path = request.getPathInfo() != null ? request.getPathInfo() : "/";
 
-    } catch (IOException e) {
-      response.sendError(400, e.getMessage());
-    } catch (InterruptedException e) {
-      response.sendError(400, e.getMessage());
-    }
-  }
+               String delegationToken = request.getParameter(JspHelper.DELEGATION_PARAMETER_NAME);
+
+               HdfsFileStatus info = nn.getFileInfo(path);
+               if ((info != null) && !info.isDir()) {
+                  try {
+                     response.sendRedirect(createUri(path, info, ugi, nn, request, delegationToken).toURL().toString());
+                  } catch (URISyntaxException e) {
+                     response.getWriter().println(e.toString());
+                  }
+               } else if (info == null) {
+                  response.sendError(400, "File not found " + path);
+               } else {
+                  response.sendError(400, path + " is a directory");
+               }
+               return null;
+            }
+         });
+
+      } catch (IOException e) {
+         response.sendError(400, e.getMessage());
+      } catch (InterruptedException e) {
+         response.sendError(400, e.getMessage());
+      }
+   }
 
 }
-

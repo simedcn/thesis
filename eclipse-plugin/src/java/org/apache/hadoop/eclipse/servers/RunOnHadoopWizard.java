@@ -74,6 +74,7 @@ public class RunOnHadoopWizard extends Wizard {
    */
   private ILaunchConfigurationWorkingCopy iConf;
 
+  @SuppressWarnings("unused")
   private IProgressMonitor progressMonitor;
 
   public RunOnHadoopWizard(IFile resource,
@@ -104,6 +105,7 @@ public class RunOnHadoopWizard extends Wizard {
    */
   /* @inheritDoc */
   @Override
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public boolean performFinish() {
 
     /*

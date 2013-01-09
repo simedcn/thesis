@@ -26,6 +26,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface TokenInfo {
-  /** The type of TokenSelector to be used */
-  Class<? extends TokenSelector<? extends TokenIdentifier>> value();
+   /** The type of TokenSelector to be used */
+   Class<? extends TokenSelector<? extends TokenIdentifier>> value();
 }

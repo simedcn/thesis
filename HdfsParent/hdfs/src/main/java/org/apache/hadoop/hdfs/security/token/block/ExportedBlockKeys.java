@@ -30,83 +30,87 @@ import org.apache.hadoop.io.WritableFactory;
  * Object for passing block keys
  */
 public class ExportedBlockKeys implements Writable {
-  public static final ExportedBlockKeys DUMMY_KEYS = new ExportedBlockKeys();
-  private boolean isBlockTokenEnabled;
-  private long keyUpdateInterval;
-  private long tokenLifetime;
-  private BlockKey currentKey;
-  private BlockKey[] allKeys;
+   public static final ExportedBlockKeys DUMMY_KEYS = new ExportedBlockKeys();
 
-  public ExportedBlockKeys() {
-    this(false, 0, 0, new BlockKey(), new BlockKey[0]);
-  }
+   private boolean isBlockTokenEnabled;
 
-  ExportedBlockKeys(boolean isBlockTokenEnabled, long keyUpdateInterval,
-      long tokenLifetime, BlockKey currentKey, BlockKey[] allKeys) {
-    this.isBlockTokenEnabled = isBlockTokenEnabled;
-    this.keyUpdateInterval = keyUpdateInterval;
-    this.tokenLifetime = tokenLifetime;
-    this.currentKey = currentKey == null ? new BlockKey() : currentKey;
-    this.allKeys = allKeys == null ? new BlockKey[0] : allKeys;
-  }
+   private long keyUpdateInterval;
 
-  public boolean isBlockTokenEnabled() {
-    return isBlockTokenEnabled;
-  }
+   private long tokenLifetime;
 
-  public long getKeyUpdateInterval() {
-    return keyUpdateInterval;
-  }
+   private BlockKey currentKey;
 
-  public long getTokenLifetime() {
-    return tokenLifetime;
-  }
+   private BlockKey[] allKeys;
 
-  public BlockKey getCurrentKey() {
-    return currentKey;
-  }
+   public ExportedBlockKeys() {
+      this(false, 0, 0, new BlockKey(), new BlockKey[0]);
+   }
 
-  public BlockKey[] getAllKeys() {
-    return allKeys;
-  }
-  
-  // ///////////////////////////////////////////////
-  // Writable
-  // ///////////////////////////////////////////////
-  static { // register a ctor
-    WritableFactories.setFactory(ExportedBlockKeys.class,
-        new WritableFactory() {
-          public Writable newInstance() {
+   ExportedBlockKeys(boolean isBlockTokenEnabled, long keyUpdateInterval, long tokenLifetime, BlockKey currentKey,
+         BlockKey[] allKeys) {
+      this.isBlockTokenEnabled = isBlockTokenEnabled;
+      this.keyUpdateInterval = keyUpdateInterval;
+      this.tokenLifetime = tokenLifetime;
+      this.currentKey = currentKey == null ? new BlockKey() : currentKey;
+      this.allKeys = allKeys == null ? new BlockKey[0] : allKeys;
+   }
+
+   public boolean isBlockTokenEnabled() {
+      return isBlockTokenEnabled;
+   }
+
+   public long getKeyUpdateInterval() {
+      return keyUpdateInterval;
+   }
+
+   public long getTokenLifetime() {
+      return tokenLifetime;
+   }
+
+   public BlockKey getCurrentKey() {
+      return currentKey;
+   }
+
+   public BlockKey[] getAllKeys() {
+      return allKeys;
+   }
+
+   // ///////////////////////////////////////////////
+   // Writable
+   // ///////////////////////////////////////////////
+   static { // register a ctor
+      WritableFactories.setFactory(ExportedBlockKeys.class, new WritableFactory() {
+         public Writable newInstance() {
             return new ExportedBlockKeys();
-          }
-        });
-  }
+         }
+      });
+   }
 
-  /**
-   */
-  public void write(DataOutput out) throws IOException {
-    out.writeBoolean(isBlockTokenEnabled);
-    out.writeLong(keyUpdateInterval);
-    out.writeLong(tokenLifetime);
-    currentKey.write(out);
-    out.writeInt(allKeys.length);
-    for (int i = 0; i < allKeys.length; i++) {
-      allKeys[i].write(out);
-    }
-  }
+   /**
+    */
+   public void write(DataOutput out) throws IOException {
+      out.writeBoolean(isBlockTokenEnabled);
+      out.writeLong(keyUpdateInterval);
+      out.writeLong(tokenLifetime);
+      currentKey.write(out);
+      out.writeInt(allKeys.length);
+      for (int i = 0; i < allKeys.length; i++) {
+         allKeys[i].write(out);
+      }
+   }
 
-  /**
-   */
-  public void readFields(DataInput in) throws IOException {
-    isBlockTokenEnabled = in.readBoolean();
-    keyUpdateInterval = in.readLong();
-    tokenLifetime = in.readLong();
-    currentKey.readFields(in);
-    this.allKeys = new BlockKey[in.readInt()];
-    for (int i = 0; i < allKeys.length; i++) {
-      allKeys[i] = new BlockKey();
-      allKeys[i].readFields(in);
-    }
-  }
+   /**
+    */
+   public void readFields(DataInput in) throws IOException {
+      isBlockTokenEnabled = in.readBoolean();
+      keyUpdateInterval = in.readLong();
+      tokenLifetime = in.readLong();
+      currentKey.readFields(in);
+      this.allKeys = new BlockKey[in.readInt()];
+      for (int i = 0; i < allKeys.length; i++) {
+         allKeys[i] = new BlockKey();
+         allKeys[i].readFields(in);
+      }
+   }
 
 }

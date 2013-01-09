@@ -23,19 +23,19 @@ import org.apache.hadoop.metrics2.MetricsVisitor;
 
 class MetricCounterLong extends MetricCounter<Long> {
 
-  final long value;
+   final long value;
 
-  MetricCounterLong(String name, String description, long value) {
-    super(name, description);
-    this.value = value;
-  }
+   MetricCounterLong(String name, String description, long value) {
+      super(name, description);
+      this.value = value;
+   }
 
-  public Long value() {
-    return value;
-  }
+   public Long value() {
+      return value;
+   }
 
-  public void visit(MetricsVisitor visitor) {
-    visitor.counter(this, value);
-  }
+   public void visit(MetricsVisitor visitor) {
+      visitor.counter(this, value);
+   }
 
 }

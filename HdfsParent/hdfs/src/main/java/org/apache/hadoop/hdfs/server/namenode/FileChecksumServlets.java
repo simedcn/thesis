@@ -42,68 +42,64 @@ import org.znerd.xmlenc.XMLOutputter;
 
 /** Servlets for file checksum */
 public class FileChecksumServlets {
-  /** Redirect file checksum queries to an appropriate datanode. */
-  public static class RedirectServlet extends DfsServlet {
-    /** For java.io.Serializable */
-    private static final long serialVersionUID = 1L;
-  
-    /** {@inheritDoc} */
-    public void doGet(HttpServletRequest request, HttpServletResponse response
-        ) throws ServletException, IOException {
-      final ServletContext context = getServletContext();
-      Configuration conf = (Configuration) context.getAttribute(JspHelper.CURRENT_CONF);
-      final UserGroupInformation ugi = getUGI(request, conf);
-      String tokenString = request.getParameter(JspHelper.DELEGATION_PARAMETER_NAME);
-      final NameNode namenode = (NameNode)context.getAttribute("name.node");
-      final DatanodeID datanode = namenode.namesystem.getRandomDatanode();
-      try {
-        final URI uri = 
-          createRedirectUri("/getFileChecksum", ugi, datanode, request, tokenString);
-        response.sendRedirect(uri.toURL().toString());
-      } catch(URISyntaxException e) {
-        throw new ServletException(e); 
-        //response.getWriter().println(e.toString());
-      } catch (IOException e) {
-        response.sendError(400, e.getMessage());
-      }
-    }
-  }
-  
-  /** Get FileChecksum */
-  public static class GetServlet extends DfsServlet {
-    /** For java.io.Serializable */
-    private static final long serialVersionUID = 1L;
-    
-    /** {@inheritDoc} */
-    public void doGet(HttpServletRequest request, HttpServletResponse response
-        ) throws ServletException, IOException {
-      final PrintWriter out = response.getWriter();
-      final String filename = getFilename(request, response);
-      final XMLOutputter xml = new XMLOutputter(out, "UTF-8");
-      xml.declaration();
+   /** Redirect file checksum queries to an appropriate datanode. */
+   public static class RedirectServlet extends DfsServlet {
+      /** For java.io.Serializable */
+      private static final long serialVersionUID = 1L;
 
-      final Configuration conf = new Configuration(DataNode.getDataNode().getConf());
-      final int socketTimeout = conf.getInt("dfs.socket.timeout", HdfsConstants.READ_TIMEOUT);
-      final SocketFactory socketFactory = NetUtils.getSocketFactory(conf, ClientProtocol.class);
-
-      try {
-        ClientProtocol nnproxy = getUGI(request, conf).doAs
-        (new PrivilegedExceptionAction<ClientProtocol>() {
-          @Override
-          public ClientProtocol run() throws IOException {
-            return DFSClient.createNamenode(conf);
-          }
-        });
-        
-        final MD5MD5CRC32FileChecksum checksum = DFSClient.getFileChecksum(
-            filename, nnproxy, socketFactory, socketTimeout);
-        MD5MD5CRC32FileChecksum.write(xml, checksum);
-      } catch(IOException ioe) {
-        writeXml(ioe, filename, xml);
-      } catch (InterruptedException e) {
-        writeXml(e, filename, xml);
+      /** {@inheritDoc} */
+      public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+         final ServletContext context = getServletContext();
+         Configuration conf = (Configuration) context.getAttribute(JspHelper.CURRENT_CONF);
+         final UserGroupInformation ugi = getUGI(request, conf);
+         String tokenString = request.getParameter(JspHelper.DELEGATION_PARAMETER_NAME);
+         final NameNode namenode = (NameNode) context.getAttribute("name.node");
+         final DatanodeID datanode = namenode.namesystem.getRandomDatanode();
+         try {
+            final URI uri = createRedirectUri("/getFileChecksum", ugi, datanode, request, tokenString);
+            response.sendRedirect(uri.toURL().toString());
+         } catch (URISyntaxException e) {
+            throw new ServletException(e);
+            //response.getWriter().println(e.toString());
+         } catch (IOException e) {
+            response.sendError(400, e.getMessage());
+         }
       }
-      xml.endDocument();
-    }
-  }
+   }
+
+   /** Get FileChecksum */
+   public static class GetServlet extends DfsServlet {
+      /** For java.io.Serializable */
+      private static final long serialVersionUID = 1L;
+
+      /** {@inheritDoc} */
+      public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+         final PrintWriter out = response.getWriter();
+         final String filename = getFilename(request, response);
+         final XMLOutputter xml = new XMLOutputter(out, "UTF-8");
+         xml.declaration();
+
+         final Configuration conf = new Configuration(DataNode.getDataNode().getConf());
+         final int socketTimeout = conf.getInt("dfs.socket.timeout", HdfsConstants.READ_TIMEOUT);
+         final SocketFactory socketFactory = NetUtils.getSocketFactory(conf, ClientProtocol.class);
+
+         try {
+            ClientProtocol nnproxy = getUGI(request, conf).doAs(new PrivilegedExceptionAction<ClientProtocol>() {
+               @Override
+               public ClientProtocol run() throws IOException {
+                  return DFSClient.createNamenode(conf);
+               }
+            });
+
+            final MD5MD5CRC32FileChecksum checksum = DFSClient.getFileChecksum(filename, nnproxy, socketFactory,
+                  socketTimeout);
+            MD5MD5CRC32FileChecksum.write(xml, checksum);
+         } catch (IOException ioe) {
+            writeXml(ioe, filename, xml);
+         } catch (InterruptedException e) {
+            writeXml(e, filename, xml);
+         }
+         xml.endDocument();
+      }
+   }
 }

@@ -28,31 +28,33 @@ import org.apache.hadoop.metrics2.lib.MetricsRegistry;
 
 class UgiInstrumentation implements MetricsSource {
 
-  final MetricsRegistry registry = new MetricsRegistry("ugi").setContext("ugi");
-  final MetricMutableStat loginSuccess = registry.newStat("loginSuccess");
-  final MetricMutableStat loginFailure = registry.newStat("loginFailure");
+   final MetricsRegistry registry = new MetricsRegistry("ugi").setContext("ugi");
 
-  @Override
-  public void getMetrics(MetricsBuilder builder, boolean all) {
-    registry.snapshot(builder.addRecord(registry.name()), all);
-  }
+   final MetricMutableStat loginSuccess = registry.newStat("loginSuccess");
 
-  //@Override
-  void addLoginSuccess(long elapsed) {
-    loginSuccess.add(elapsed);
-  }
+   final MetricMutableStat loginFailure = registry.newStat("loginFailure");
 
-  //@Override
-  void addLoginFailure(long elapsed) {
-    loginFailure.add(elapsed);
-  }
+   @Override
+   public void getMetrics(MetricsBuilder builder, boolean all) {
+      registry.snapshot(builder.addRecord(registry.name()), all);
+   }
 
-  static UgiInstrumentation create(Configuration conf) {
-    return create(conf, DefaultMetricsSystem.INSTANCE);
-  }
+   //@Override
+   void addLoginSuccess(long elapsed) {
+      loginSuccess.add(elapsed);
+   }
 
-  static UgiInstrumentation create(Configuration conf, MetricsSystem ms) {
-    return ms.register("ugi", "User/group metrics", new UgiInstrumentation());
-  }
+   //@Override
+   void addLoginFailure(long elapsed) {
+      loginFailure.add(elapsed);
+   }
+
+   static UgiInstrumentation create(Configuration conf) {
+      return create(conf, DefaultMetricsSystem.INSTANCE);
+   }
+
+   static UgiInstrumentation create(Configuration conf, MetricsSystem ms) {
+      return ms.register("ugi", "User/group metrics", new UgiInstrumentation());
+   }
 
 }

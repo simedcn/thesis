@@ -41,115 +41,116 @@ import org.apache.commons.logging.LogFactory;
  * @param <K> name to be added to the cache
  */
 class NameCache<K> {
-  /**
-   * Class for tracking use count of a name
-   */
-  private class UseCount {
-    int count;
-    final K value;  // Internal value for the name
+   /**
+    * Class for tracking use count of a name
+    */
+   private class UseCount {
+      int count;
 
-    UseCount(final K value) {
-      count = 1;
-      this.value = value;
-    }
-    
-    void increment() {
-      count++;
-    }
-    
-    int get() {
-      return count;
-    }
-  }
+      final K value; // Internal value for the name
 
-  static final Log LOG = LogFactory.getLog(NameCache.class.getName());
-
-  /** indicates initialization is in progress */
-  private boolean initialized = false;
-
-  /** names used more than {@code useThreshold} is added to the cache */
-  private final int useThreshold;
-
-  /** of times a cache look up was successful */
-  private int lookups = 0;
-
-  /** Cached names */
-  final HashMap<K, K> cache = new HashMap<K, K>();
-
-  /** Names and with number of occurrences tracked during initialization */
-  Map<K, UseCount> transientMap = new HashMap<K, UseCount>();
-
-  /**
-   * Constructor
-   * @param useThreshold names occurring more than this is promoted to the
-   *          cache
-   */
-  NameCache(int useThreshold) {
-    this.useThreshold = useThreshold;
-  }
-  
-  /**
-   * Add a given name to the cache or track use count.
-   * exist. If the name already exists, then the internal value is returned.
-   * 
-   * @param name name to be looked up
-   * @return internal value for the name if found; otherwise null
-   */
-  K put(final K name) {
-    K internal = cache.get(name);
-    if (internal != null) {
-      lookups++;
-      return internal;
-    }
-
-    // Track the usage count only during initialization
-    if (!initialized) {
-      UseCount useCount = transientMap.get(name);
-      if (useCount != null) {
-        useCount.increment();
-        if (useCount.get() >= useThreshold) {
-          promote(name);
-        }
-        return useCount.value;
+      UseCount(final K value) {
+         count = 1;
+         this.value = value;
       }
-      useCount = new UseCount(name);
-      transientMap.put(name, useCount);
-    }
-    return null;
-  }
-  
-  /**
-   * Lookup count when a lookup for a name returned cached object
-   * @return number of successful lookups
-   */
-  int getLookupCount() {
-    return lookups;
-  }
 
-  /**
-   * Size of the cache
-   * @return Number of names stored in the cache
-   */
-  int size() {
-    return cache.size();
-  }
+      void increment() {
+         count++;
+      }
 
-  /**
-   * Mark the name cache as initialized. The use count is no longer tracked
-   * and the transient map used for initializing the cache is discarded to
-   * save heap space.
-   */
-  void initialized() {
-    LOG.info("initialized with " + size() + " entries " + lookups + " lookups");
-    this.initialized = true;
-    transientMap.clear();
-    transientMap = null;
-  }
-  
-  /** Promote a frequently used name to the cache */
-  private void promote(final K name) {
-    transientMap.remove(name);
-    cache.put(name, name);
-    lookups += useThreshold;
-  }
+      int get() {
+         return count;
+      }
+   }
+
+   static final Log LOG = LogFactory.getLog(NameCache.class.getName());
+
+   /** indicates initialization is in progress */
+   private boolean initialized = false;
+
+   /** names used more than {@code useThreshold} is added to the cache */
+   private final int useThreshold;
+
+   /** of times a cache look up was successful */
+   private int lookups = 0;
+
+   /** Cached names */
+   final HashMap<K, K> cache = new HashMap<K, K>();
+
+   /** Names and with number of occurrences tracked during initialization */
+   Map<K, UseCount> transientMap = new HashMap<K, UseCount>();
+
+   /**
+    * Constructor
+    * @param useThreshold names occurring more than this is promoted to the
+    *          cache
+    */
+   NameCache(int useThreshold) {
+      this.useThreshold = useThreshold;
+   }
+
+   /**
+    * Add a given name to the cache or track use count.
+    * exist. If the name already exists, then the internal value is returned.
+    * 
+    * @param name name to be looked up
+    * @return internal value for the name if found; otherwise null
+    */
+   K put(final K name) {
+      K internal = cache.get(name);
+      if (internal != null) {
+         lookups++;
+         return internal;
+      }
+
+      // Track the usage count only during initialization
+      if (!initialized) {
+         UseCount useCount = transientMap.get(name);
+         if (useCount != null) {
+            useCount.increment();
+            if (useCount.get() >= useThreshold) {
+               promote(name);
+            }
+            return useCount.value;
+         }
+         useCount = new UseCount(name);
+         transientMap.put(name, useCount);
+      }
+      return null;
+   }
+
+   /**
+    * Lookup count when a lookup for a name returned cached object
+    * @return number of successful lookups
+    */
+   int getLookupCount() {
+      return lookups;
+   }
+
+   /**
+    * Size of the cache
+    * @return Number of names stored in the cache
+    */
+   int size() {
+      return cache.size();
+   }
+
+   /**
+    * Mark the name cache as initialized. The use count is no longer tracked
+    * and the transient map used for initializing the cache is discarded to
+    * save heap space.
+    */
+   void initialized() {
+      LOG.info("initialized with " + size() + " entries " + lookups + " lookups");
+      this.initialized = true;
+      transientMap.clear();
+      transientMap = null;
+   }
+
+   /** Promote a frequently used name to the cache */
+   private void promote(final K name) {
+      transientMap.remove(name);
+      cache.put(name, name);
+      lookups += useThreshold;
+   }
 }

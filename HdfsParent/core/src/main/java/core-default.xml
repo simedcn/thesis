@@ -482,6 +482,4 @@
   <description> NativeIO maintains a cache from UID to UserName. This is
   the timeout for an entry in that cache. </description>
 </property>
-
-
 </configuration>

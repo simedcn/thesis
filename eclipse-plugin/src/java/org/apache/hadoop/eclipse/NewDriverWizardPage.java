@@ -48,6 +48,7 @@ import org.eclipse.ui.dialogs.SelectionDialog;
  */
 
 public class NewDriverWizardPage extends NewTypeWizardPage {
+  @SuppressWarnings({ "unused" })
   private Button isCreateMapMethod;
 
   private Text reducerText;
@@ -84,8 +85,9 @@ public class NewDriverWizardPage extends NewTypeWizardPage {
   }
 
   @Override
-  protected void createTypeMembers(final IType newType, ImportsManager imports,
-      final IProgressMonitor monitor) throws CoreException {
+  protected void createTypeMembers(final IType newType,
+      ImportsManager imports, final IProgressMonitor monitor)
+      throws CoreException {
     super.createTypeMembers(newType, imports, monitor);
     imports.addImport("org.apache.hadoop.fs.Path");
     imports.addImport("org.apache.hadoop.io.Text");
@@ -101,30 +103,38 @@ public class NewDriverWizardPage extends NewTypeWizardPage {
     getContainer().getShell().getDisplay().syncExec(new Runnable() {
       public void run() {
 
-        String method = "public static void main(String[] args) {\n JobClient client = new JobClient();";
-        method += "JobConf conf = new JobConf("
-            + newType.getFullyQualifiedName() + ".class);\n\n";
+        String method =
+            "public static void main(String[] args) {\n JobClient client = new JobClient();";
+        method +=
+            "JobConf conf = new JobConf(" + newType.getFullyQualifiedName()
+                + ".class);\n\n";
 
-        method += "// TODO: specify output types\nconf.setOutputKeyClass(Text.class);\nconf.setOutputValueClass(IntWritable.class);\n\n";
+        method +=
+            "// TODO: specify output types\nconf.setOutputKeyClass(Text.class);\nconf.setOutputValueClass(IntWritable.class);\n\n";
 
-        method += "// TODO: specify input and output DIRECTORIES (not files)\nconf.setInputPath(new Path(\"src\"));\nconf.setOutputPath(new Path(\"out\"));\n\n";
+        method +=
+            "// TODO: specify input and output DIRECTORIES (not files)\nconf.setInputPath(new Path(\"src\"));\nconf.setOutputPath(new Path(\"out\"));\n\n";
 
         if (mapperText.getText().length() > 0) {
-          method += "conf.setMapperClass(" + mapperText.getText()
-              + ".class);\n\n";
+          method +=
+              "conf.setMapperClass(" + mapperText.getText() + ".class);\n\n";
         } else {
-          method += "// TODO: specify a mapper\nconf.setMapperClass(org.apache.hadoop.mapred.lib.IdentityMapper.class);\n\n";
+          method +=
+              "// TODO: specify a mapper\nconf.setMapperClass(org.apache.hadoop.mapred.lib.IdentityMapper.class);\n\n";
         }
         if (reducerText.getText().length() > 0) {
-          method += "conf.setReducerClass(" + reducerText.getText()
-              + ".class);\n\n";
+          method +=
+              "conf.setReducerClass(" + reducerText.getText()
+                  + ".class);\n\n";
         } else {
-          method += "// TODO: specify a reducer\nconf.setReducerClass(org.apache.hadoop.mapred.lib.IdentityReducer.class);\n\n";
+          method +=
+              "// TODO: specify a reducer\nconf.setReducerClass(org.apache.hadoop.mapred.lib.IdentityReducer.class);\n\n";
         }
 
         method += "client.setConf(conf);\n";
-        method += "try {\n\tJobClient.runJob(conf);\n} catch (Exception e) {\n"
-            + "\te.printStackTrace();\n}\n";
+        method +=
+            "try {\n\tJobClient.runJob(conf);\n} catch (Exception e) {\n"
+                + "\te.printStackTrace();\n}\n";
         method += "}\n";
 
         try {
@@ -137,6 +147,7 @@ public class NewDriverWizardPage extends NewTypeWizardPage {
     });
   }
 
+  @SuppressWarnings("rawtypes")
   public void createControl(Composite parent) {
     // super.createControl(parent);
 
@@ -192,13 +203,15 @@ public class NewDriverWizardPage extends NewTypeWizardPage {
   }
 
   private void createMapperControls(Composite composite) {
-    this.mapperText = createBrowseClassControl(composite, "Ma&pper:",
-        "&Browse...", "org.apache.hadoop.mapred.Mapper", "Mapper Selection");
+    this.mapperText =
+        createBrowseClassControl(composite, "Ma&pper:", "&Browse...",
+            "org.apache.hadoop.mapred.Mapper", "Mapper Selection");
   }
 
   private void createReducerControls(Composite composite) {
-    this.reducerText = createBrowseClassControl(composite, "&Reducer:",
-        "Browse&...", "org.apache.hadoop.mapred.Reducer", "Reducer Selection");
+    this.reducerText =
+        createBrowseClassControl(composite, "&Reducer:", "Browse&...",
+            "org.apache.hadoop.mapred.Reducer", "Reducer Selection");
   }
 
   private Text createBrowseClassControl(final Composite composite,
@@ -222,14 +235,16 @@ public class NewDriverWizardPage extends NewTypeWizardPage {
       public void handleEvent(Event event) {
         IType baseType;
         try {
-          baseType = getPackageFragmentRoot().getJavaProject().findType(
-              baseClassName);
+          baseType =
+              getPackageFragmentRoot().getJavaProject().findType(
+                  baseClassName);
 
           // edit this to limit the scope
-          SelectionDialog dialog = JavaUI.createTypeDialog(
-              composite.getShell(), new ProgressMonitorDialog(composite
-                  .getShell()), SearchEngine.createHierarchyScope(baseType),
-              IJavaElementSearchConstants.CONSIDER_CLASSES, false);
+          SelectionDialog dialog =
+              JavaUI.createTypeDialog(composite.getShell(),
+                  new ProgressMonitorDialog(composite.getShell()),
+                  SearchEngine.createHierarchyScope(baseType),
+                  IJavaElementSearchConstants.CONSIDER_CLASSES, false);
 
           dialog.setMessage("&Choose a type:");
           dialog.setBlockOnOpen(true);

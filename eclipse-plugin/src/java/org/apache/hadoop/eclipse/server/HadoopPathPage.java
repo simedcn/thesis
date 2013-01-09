@@ -91,6 +91,7 @@ public class HadoopPathPage implements IEditorPart {
 
   }
 
+  @SuppressWarnings("rawtypes")
   public Object getAdapter(Class adapter) {
     // TODO Auto-generated method stub
     return null;

@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
 
-
 /**
  * This exception is thrown when a datanode tries to register or communicate
  * with the namenode when it does not appear on the list of included nodes, 
@@ -31,7 +30,12 @@ import org.apache.hadoop.hdfs.protocol.DatanodeID;
  */
 public class DisallowedDatanodeException extends IOException {
 
-  public DisallowedDatanodeException(DatanodeID nodeID) {
-    super("Datanode denied communication with namenode: " + nodeID.getName());
-  }
+   /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public DisallowedDatanodeException(DatanodeID nodeID) {
+      super("Datanode denied communication with namenode: " + nodeID.getName());
+   }
 }

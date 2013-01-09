@@ -25,9 +25,9 @@ import java.util.regex.Pattern;
  */
 public class RegexFilter extends AbstractPatternFilter {
 
-  @Override
-  protected Pattern compile(String s) {
-    return Pattern.compile(s);
-  }
+   @Override
+   protected Pattern compile(String s) {
+      return Pattern.compile(s);
+   }
 
 }

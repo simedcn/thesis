@@ -21,7 +21,12 @@ package org.apache.hadoop.fs;
 /** Thrown for unexpected filesystem errors, presumed to reflect disk errors
  * in the native filesystem. */
 public class FSError extends Error {
-  FSError(Throwable cause) {
-    super(cause);
-  }
+   /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   FSError(Throwable cause) {
+      super(cause);
+   }
 }

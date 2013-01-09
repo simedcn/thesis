@@ -102,236 +102,234 @@ import org.codehaus.jackson.JsonGenerator;
  *  The bean's name and modelerType will be returned for all beans.
  */
 public class JMXJsonServlet extends HttpServlet {
-  private static final Log LOG = LogFactory.getLog(JMXJsonServlet.class);
+   private static final Log LOG = LogFactory.getLog(JMXJsonServlet.class);
 
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  // ----------------------------------------------------- Instance Variables
-  /**
-   * MBean server.
-   */
-  protected transient MBeanServer mBeanServer = null;
+   // ----------------------------------------------------- Instance Variables
+   /**
+    * MBean server.
+    */
+   protected transient MBeanServer mBeanServer = null;
 
-  // --------------------------------------------------------- Public Methods
-  /**
-   * Initialize this servlet.
-   */
-  @Override
-  public void init() throws ServletException {
-    // Retrieve the MBean server
-    mBeanServer = ManagementFactory.getPlatformMBeanServer();
-  }
+   // --------------------------------------------------------- Public Methods
+   /**
+    * Initialize this servlet.
+    */
+   @Override
+   public void init() throws ServletException {
+      // Retrieve the MBean server
+      mBeanServer = ManagementFactory.getPlatformMBeanServer();
+   }
 
-  /**
-   * Process a GET request for the specified resource.
-   * 
-   * @param request
-   *          The servlet request we are processing
-   * @param response
-   *          The servlet response we are creating
-   */
-  @Override
-  public void doGet(HttpServletRequest request, HttpServletResponse response) {
-    try {
-      // Do the authorization
-      if (!HttpServer.hasAdministratorAccess(getServletContext(), request,
-          response)) {
-        return;
-      }
-
-      response.setContentType("application/json; charset=utf8");
-
-      PrintWriter writer = response.getWriter();
-
-      JsonFactory jsonFactory = new JsonFactory();
-      JsonGenerator jg = jsonFactory.createJsonGenerator(writer);
-      jg.useDefaultPrettyPrinter();
-      jg.writeStartObject();
-      if (mBeanServer == null) {
-        jg.writeStringField("result", "ERROR");
-        jg.writeStringField("message", "No MBeanServer could be found");
-        jg.close();
-        return;
-      }
-      String qry = request.getParameter("qry");
-      if (qry == null) {
-        qry = "*:*";
-      }
-      listBeans(jg, new ObjectName(qry));
-      jg.close();
-    } catch (IOException e) {
-      LOG.error("Caught an exception while processing JMX request", e);
-      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    } catch (MalformedObjectNameException e) {
-      LOG.error("Caught an exception while processing JMX request", e);
-      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    }
-  }
-
-  // --------------------------------------------------------- Private Methods
-  private void listBeans(JsonGenerator jg, ObjectName qry) throws IOException {
-    LOG.debug("Listing beans for "+qry);
-    Set<ObjectName> names = null;
-    names = mBeanServer.queryNames(qry, null);
-
-    jg.writeArrayFieldStart("beans");
-    Iterator<ObjectName> it = names.iterator();
-    while (it.hasNext()) {
-      ObjectName oname = it.next();
-      MBeanInfo minfo;
-      String code;
+   /**
+    * Process a GET request for the specified resource.
+    * 
+    * @param request
+    *          The servlet request we are processing
+    * @param response
+    *          The servlet response we are creating
+    */
+   @Override
+   public void doGet(HttpServletRequest request, HttpServletResponse response) {
       try {
-        minfo = mBeanServer.getMBeanInfo(oname);
-        code = minfo.getClassName();
-        try {
-          if ("org.apache.commons.modeler.BaseModelMBean".equals(code)) {
-            code = (String) mBeanServer.getAttribute(oname, "modelerType");
-          }
-        } catch (AttributeNotFoundException e) {
-          //Ignored the modelerType attribute was not found, so use the class name instead.
-        } catch (MBeanException e) {
-          //The code inside the attribute getter threw an exception so log it, and
-          // fall back on the class name
-          LOG.error("getting attribute modelerType of "+oname+" threw an exception", e);
-        } catch (RuntimeException e) {
-          //For some reason even with an MBeanException available to them Runtime exceptions
-          //can still find their way through, so treat them the same as MBeanException
-          LOG.error("getting attribute modelerType of "+oname+" threw an exception", e);
-        } catch (ReflectionException e) {
-          //This happens when the code inside the JMX bean (setter?? from the java docs)
-          //threw an exception, so log it and fall back on the class name
-          LOG.error("getting attribute modelerType of "+oname+" threw an exception", e);
-        }
-      } catch (InstanceNotFoundException e) {
-        //Ignored for some reason the bean was not found so don't output it
-        continue;
-      } catch (IntrospectionException e) {
-        //This is an internal error, something odd happened with reflection so log it and
-        //don't output the bean.
-        LOG.error("Problem while trying to process JMX query: "+qry+" with MBean "+oname, e); 
-        continue;
+         // Do the authorization
+         if (!HttpServer.hasAdministratorAccess(getServletContext(), request, response)) {
+            return;
+         }
+
+         response.setContentType("application/json; charset=utf8");
+
+         PrintWriter writer = response.getWriter();
+
+         JsonFactory jsonFactory = new JsonFactory();
+         JsonGenerator jg = jsonFactory.createJsonGenerator(writer);
+         jg.useDefaultPrettyPrinter();
+         jg.writeStartObject();
+         if (mBeanServer == null) {
+            jg.writeStringField("result", "ERROR");
+            jg.writeStringField("message", "No MBeanServer could be found");
+            jg.close();
+            return;
+         }
+         String qry = request.getParameter("qry");
+         if (qry == null) {
+            qry = "*:*";
+         }
+         listBeans(jg, new ObjectName(qry));
+         jg.close();
+      } catch (IOException e) {
+         LOG.error("Caught an exception while processing JMX request", e);
+         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      } catch (MalformedObjectNameException e) {
+         LOG.error("Caught an exception while processing JMX request", e);
+         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      }
+   }
+
+   // --------------------------------------------------------- Private Methods
+   private void listBeans(JsonGenerator jg, ObjectName qry) throws IOException {
+      LOG.debug("Listing beans for " + qry);
+      Set<ObjectName> names = null;
+      names = mBeanServer.queryNames(qry, null);
+
+      jg.writeArrayFieldStart("beans");
+      Iterator<ObjectName> it = names.iterator();
+      while (it.hasNext()) {
+         ObjectName oname = it.next();
+         MBeanInfo minfo;
+         String code;
+         try {
+            minfo = mBeanServer.getMBeanInfo(oname);
+            code = minfo.getClassName();
+            try {
+               if ("org.apache.commons.modeler.BaseModelMBean".equals(code)) {
+                  code = (String) mBeanServer.getAttribute(oname, "modelerType");
+               }
+            } catch (AttributeNotFoundException e) {
+               //Ignored the modelerType attribute was not found, so use the class name instead.
+            } catch (MBeanException e) {
+               //The code inside the attribute getter threw an exception so log it, and
+               // fall back on the class name
+               LOG.error("getting attribute modelerType of " + oname + " threw an exception", e);
+            } catch (RuntimeException e) {
+               //For some reason even with an MBeanException available to them Runtime exceptions
+               //can still find their way through, so treat them the same as MBeanException
+               LOG.error("getting attribute modelerType of " + oname + " threw an exception", e);
+            } catch (ReflectionException e) {
+               //This happens when the code inside the JMX bean (setter?? from the java docs)
+               //threw an exception, so log it and fall back on the class name
+               LOG.error("getting attribute modelerType of " + oname + " threw an exception", e);
+            }
+         } catch (InstanceNotFoundException e) {
+            //Ignored for some reason the bean was not found so don't output it
+            continue;
+         } catch (IntrospectionException e) {
+            //This is an internal error, something odd happened with reflection so log it and
+            //don't output the bean.
+            LOG.error("Problem while trying to process JMX query: " + qry + " with MBean " + oname, e);
+            continue;
+         } catch (ReflectionException e) {
+            //This happens when the code inside the JMX bean threw an exception, so log it and
+            //don't output the bean.
+            LOG.error("Problem while trying to process JMX query: " + qry + " with MBean " + oname, e);
+            continue;
+         }
+
+         jg.writeStartObject();
+         jg.writeStringField("name", oname.toString());
+         // can't be null - I think
+
+         jg.writeStringField("modelerType", code);
+
+         MBeanAttributeInfo attrs[] = minfo.getAttributes();
+         for (int i = 0; i < attrs.length; i++) {
+            writeAttribute(jg, oname, attrs[i]);
+         }
+         //  LOG.error("Caught Error writing value ",t);
+         //  ExceptionUtils.handleThrowable(t);
+         //}
+         jg.writeEndObject();
+      }
+      jg.writeEndArray();
+   }
+
+   private void writeAttribute(JsonGenerator jg, ObjectName oname, MBeanAttributeInfo attr) throws IOException {
+      if (!attr.isReadable()) {
+         return;
+      }
+      String attName = attr.getName();
+      if ("modelerType".equals(attName)) {
+         return;
+      }
+      if (attName.indexOf("=") >= 0 || attName.indexOf(":") >= 0 || attName.indexOf(" ") >= 0) {
+         return;
+      }
+      Object value = null;
+      try {
+         value = mBeanServer.getAttribute(oname, attName);
+      } catch (RuntimeMBeanException e) {
+         // UnsupportedOperationExceptions happen in the normal course of business,
+         // so no need to log them as errors all the time.
+         if (e.getCause() instanceof UnsupportedOperationException) {
+            LOG.debug("getting attribute " + attName + " of " + oname + " threw an exception", e);
+         } else {
+            LOG.error("getting attribute " + attName + " of " + oname + " threw an exception", e);
+         }
+         return;
+      } catch (AttributeNotFoundException e) {
+         //Ignored the attribute was not found, which should never happen because the bean
+         //just told us that it has this attribute, but if this happens just don't output
+         //the attribute.
+         return;
+      } catch (MBeanException e) {
+         //The code inside the attribute getter threw an exception so log it, and
+         // skip outputting the attribute
+         LOG.error("getting attribute " + attName + " of " + oname + " threw an exception", e);
+         return;
+      } catch (RuntimeException e) {
+         //For some reason even with an MBeanException available to them Runtime exceptions
+         //can still find their way through, so treat them the same as MBeanException
+         LOG.error("getting attribute " + attName + " of " + oname + " threw an exception", e);
+         return;
       } catch (ReflectionException e) {
-        //This happens when the code inside the JMX bean threw an exception, so log it and
-        //don't output the bean.
-        LOG.error("Problem while trying to process JMX query: "+qry+" with MBean "+oname, e);
-        continue;
+         //This happens when the code inside the JMX bean (setter?? from the java docs)
+         //threw an exception, so log it and skip outputting the attribute
+         LOG.error("getting attribute " + attName + " of " + oname + " threw an exception", e);
+         return;
+      } catch (InstanceNotFoundException e) {
+         //Ignored the mbean itself was not found, which should never happen because we
+         //just accessed it (perhaps something unregistered in-between) but if this
+         //happens just don't output the attribute.
+         return;
       }
 
-      jg.writeStartObject();
-      jg.writeStringField("name", oname.toString());
-      // can't be null - I think
+      writeAttribute(jg, attName, value);
+   }
 
-      jg.writeStringField("modelerType", code);
+   private void writeAttribute(JsonGenerator jg, String attName, Object value) throws IOException {
+      jg.writeFieldName(attName);
+      writeObject(jg, value);
+   }
 
-      MBeanAttributeInfo attrs[] = minfo.getAttributes();
-      for (int i = 0; i < attrs.length; i++) {
-        writeAttribute(jg, oname, attrs[i]);
-      }
-      //  LOG.error("Caught Error writing value ",t);
-      //  ExceptionUtils.handleThrowable(t);
-      //}
-      jg.writeEndObject();
-    }
-    jg.writeEndArray();
-  }
-  
-  private void writeAttribute(JsonGenerator jg, ObjectName oname, MBeanAttributeInfo attr) throws IOException {
-    if (!attr.isReadable()) {
-      return;
-    }
-    String attName = attr.getName();
-    if ("modelerType".equals(attName)) {
-      return;
-    }
-    if (attName.indexOf("=") >= 0 || attName.indexOf(":") >= 0
-        || attName.indexOf(" ") >= 0) {
-      return;
-    }
-    Object value = null;
-    try {
-      value = mBeanServer.getAttribute(oname, attName);
-    } catch (RuntimeMBeanException e) {
-      // UnsupportedOperationExceptions happen in the normal course of business,
-      // so no need to log them as errors all the time.
-      if (e.getCause() instanceof UnsupportedOperationException) {
-        LOG.debug("getting attribute "+attName+" of "+oname+" threw an exception", e);
+   private void writeObject(JsonGenerator jg, Object value) throws IOException {
+      if (value == null) {
+         jg.writeNull();
       } else {
-        LOG.error("getting attribute "+attName+" of "+oname+" threw an exception", e);
+         Class<?> c = value.getClass();
+         if (c.isArray()) {
+            jg.writeStartArray();
+            int len = Array.getLength(value);
+            for (int j = 0; j < len; j++) {
+               Object item = Array.get(value, j);
+               writeObject(jg, item);
+            }
+            jg.writeEndArray();
+         } else if (value instanceof Number) {
+            Number n = (Number) value;
+            jg.writeNumber(n.toString());
+         } else if (value instanceof Boolean) {
+            Boolean b = (Boolean) value;
+            jg.writeBoolean(b);
+         } else if (value instanceof CompositeData) {
+            CompositeData cds = (CompositeData) value;
+            CompositeType comp = cds.getCompositeType();
+            Set<String> keys = comp.keySet();
+            jg.writeStartObject();
+            for (String key : keys) {
+               writeAttribute(jg, key, cds.get(key));
+            }
+            jg.writeEndObject();
+         } else if (value instanceof TabularData) {
+            TabularData tds = (TabularData) value;
+            jg.writeStartArray();
+            for (Object entry : tds.values()) {
+               writeObject(jg, entry);
+            }
+            jg.writeEndArray();
+         } else {
+            jg.writeString(value.toString());
+         }
       }
-      return;
-    } catch (AttributeNotFoundException e) {
-      //Ignored the attribute was not found, which should never happen because the bean
-      //just told us that it has this attribute, but if this happens just don't output
-      //the attribute.
-      return;
-    } catch (MBeanException e) {
-      //The code inside the attribute getter threw an exception so log it, and
-      // skip outputting the attribute
-      LOG.error("getting attribute "+attName+" of "+oname+" threw an exception", e);
-      return;
-    } catch (RuntimeException e) {
-      //For some reason even with an MBeanException available to them Runtime exceptions
-      //can still find their way through, so treat them the same as MBeanException
-      LOG.error("getting attribute "+attName+" of "+oname+" threw an exception", e);
-      return;
-    } catch (ReflectionException e) {
-      //This happens when the code inside the JMX bean (setter?? from the java docs)
-      //threw an exception, so log it and skip outputting the attribute
-      LOG.error("getting attribute "+attName+" of "+oname+" threw an exception", e);
-      return;
-    } catch (InstanceNotFoundException e) {
-      //Ignored the mbean itself was not found, which should never happen because we
-      //just accessed it (perhaps something unregistered in-between) but if this
-      //happens just don't output the attribute.
-      return;
-    }
-
-    writeAttribute(jg, attName, value);
-  }
-  
-  private void writeAttribute(JsonGenerator jg, String attName, Object value) throws IOException {
-    jg.writeFieldName(attName);
-    writeObject(jg, value);
-  }
-  
-  private void writeObject(JsonGenerator jg, Object value) throws IOException {
-    if(value == null) {
-      jg.writeNull();
-    } else {
-      Class<?> c = value.getClass();
-      if (c.isArray()) {
-        jg.writeStartArray();
-        int len = Array.getLength(value);
-        for (int j = 0; j < len; j++) {
-          Object item = Array.get(value, j);
-          writeObject(jg, item);
-        }
-        jg.writeEndArray();
-      } else if(value instanceof Number) {
-        Number n = (Number)value;
-        jg.writeNumber(n.toString());
-      } else if(value instanceof Boolean) {
-        Boolean b = (Boolean)value;
-        jg.writeBoolean(b);
-      } else if(value instanceof CompositeData) {
-        CompositeData cds = (CompositeData)value;
-        CompositeType comp = cds.getCompositeType();
-        Set<String> keys = comp.keySet();
-        jg.writeStartObject();
-        for(String key: keys) {
-          writeAttribute(jg, key, cds.get(key));
-        }
-        jg.writeEndObject();
-      } else if(value instanceof TabularData) {
-        TabularData tds = (TabularData)value;
-        jg.writeStartArray();
-        for(Object entry : tds.values()) {
-          writeObject(jg, entry);
-        }
-        jg.writeEndArray();
-      } else {
-        jg.writeString(value.toString());
-      }
-    }
-  }
+   }
 }

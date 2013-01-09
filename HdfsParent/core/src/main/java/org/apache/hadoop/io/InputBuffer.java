@@ -20,7 +20,6 @@ package org.apache.hadoop.io;
 
 import java.io.*;
 
-
 /** A reusable {@link InputStream} implementation that reads from an in-memory
  * buffer.
  *
@@ -42,48 +41,57 @@ import java.io.*;
  */
 public class InputBuffer extends FilterInputStream {
 
-  private static class Buffer extends ByteArrayInputStream {
-    public Buffer() {
-      super(new byte[] {});
-    }
+   private static class Buffer extends ByteArrayInputStream {
+      public Buffer() {
+         super(new byte[] {});
+      }
 
-    public void reset(byte[] input, int start, int length) {
-      this.buf = input;
-      this.count = start+length;
-      this.mark = start;
-      this.pos = start;
-    }
+      public void reset(byte[] input, int start, int length) {
+         this.buf = input;
+         this.count = start + length;
+         this.mark = start;
+         this.pos = start;
+      }
 
-    public int getPosition() { return pos; }
-    public int getLength() { return count; }
-  }
+      public int getPosition() {
+         return pos;
+      }
 
-  private Buffer buffer;
-  
-  /** Constructs a new empty buffer. */
-  public InputBuffer() {
-    this(new Buffer());
-  }
+      public int getLength() {
+         return count;
+      }
+   }
 
-  private InputBuffer(Buffer buffer) {
-    super(buffer);
-    this.buffer = buffer;
-  }
+   private Buffer buffer;
 
-  /** Resets the data that the buffer reads. */
-  public void reset(byte[] input, int length) {
-    buffer.reset(input, 0, length);
-  }
+   /** Constructs a new empty buffer. */
+   public InputBuffer() {
+      this(new Buffer());
+   }
 
-  /** Resets the data that the buffer reads. */
-  public void reset(byte[] input, int start, int length) {
-    buffer.reset(input, start, length);
-  }
+   private InputBuffer(Buffer buffer) {
+      super(buffer);
+      this.buffer = buffer;
+   }
 
-  /** Returns the current position in the input. */
-  public int getPosition() { return buffer.getPosition(); }
+   /** Resets the data that the buffer reads. */
+   public void reset(byte[] input, int length) {
+      buffer.reset(input, 0, length);
+   }
 
-  /** Returns the length of the input. */
-  public int getLength() { return buffer.getLength(); }
+   /** Resets the data that the buffer reads. */
+   public void reset(byte[] input, int start, int length) {
+      buffer.reset(input, start, length);
+   }
+
+   /** Returns the current position in the input. */
+   public int getPosition() {
+      return buffer.getPosition();
+   }
+
+   /** Returns the length of the input. */
+   public int getLength() {
+      return buffer.getLength();
+   }
 
 }

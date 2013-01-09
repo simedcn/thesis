@@ -32,6 +32,7 @@ package org.apache.hadoop.record;
  * </code>
  */
 public interface Index {
-  boolean done();
-  void incr();
+   boolean done();
+
+   void incr();
 }

@@ -27,43 +27,43 @@ import org.apache.hadoop.io.WritableFactories;
 import org.apache.hadoop.io.WritableFactory;
 
 public class KeyUpdateCommand extends DatanodeCommand {
-  private ExportedBlockKeys keys;
+   private ExportedBlockKeys keys;
 
-  KeyUpdateCommand() {
-    this(new ExportedBlockKeys());
-  }
+   KeyUpdateCommand() {
+      this(new ExportedBlockKeys());
+   }
 
-  public KeyUpdateCommand(ExportedBlockKeys keys) {
-    super(DatanodeProtocol.DNA_ACCESSKEYUPDATE);
-    this.keys = keys;
-  }
+   public KeyUpdateCommand(ExportedBlockKeys keys) {
+      super(DatanodeProtocol.DNA_ACCESSKEYUPDATE);
+      this.keys = keys;
+   }
 
-  public ExportedBlockKeys getExportedKeys() {
-    return this.keys;
-  }
+   public ExportedBlockKeys getExportedKeys() {
+      return this.keys;
+   }
 
-  // ///////////////////////////////////////////////
-  // Writable
-  // ///////////////////////////////////////////////
-  static { // register a ctor
-    WritableFactories.setFactory(KeyUpdateCommand.class, new WritableFactory() {
-      public Writable newInstance() {
-        return new KeyUpdateCommand();
-      }
-    });
-  }
+   // ///////////////////////////////////////////////
+   // Writable
+   // ///////////////////////////////////////////////
+   static { // register a ctor
+      WritableFactories.setFactory(KeyUpdateCommand.class, new WritableFactory() {
+         public Writable newInstance() {
+            return new KeyUpdateCommand();
+         }
+      });
+   }
 
-  /**
-   */
-  public void write(DataOutput out) throws IOException {
-    super.write(out);
-    keys.write(out);
-  }
+   /**
+    */
+   public void write(DataOutput out) throws IOException {
+      super.write(out);
+      keys.write(out);
+   }
 
-  /**
-   */
-  public void readFields(DataInput in) throws IOException {
-    super.readFields(in);
-    keys.readFields(in);
-  }
+   /**
+    */
+   public void readFields(DataInput in) throws IOException {
+      super.readFields(in);
+      keys.readFields(in);
+   }
 }

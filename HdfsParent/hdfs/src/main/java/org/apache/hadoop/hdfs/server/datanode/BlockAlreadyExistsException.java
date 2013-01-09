@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.hadoop.hdfs.server.datanode;
 
 import java.io.IOException;
@@ -26,13 +25,13 @@ import java.io.IOException;
  * and is not set to be recovered/overwritten.  
  */
 class BlockAlreadyExistsException extends IOException {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  public BlockAlreadyExistsException() {
-    super();
-  }
+   public BlockAlreadyExistsException() {
+      super();
+   }
 
-  public BlockAlreadyExistsException(String msg) {
-    super(msg);
-  }
+   public BlockAlreadyExistsException(String msg) {
+      super(msg);
+   }
 }

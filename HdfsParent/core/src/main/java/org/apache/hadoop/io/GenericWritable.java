@@ -75,78 +75,78 @@ import org.apache.hadoop.util.ReflectionUtils;
  */
 public abstract class GenericWritable implements Writable, Configurable {
 
-  private static final byte NOT_SET = -1;
+   private static final byte NOT_SET = -1;
 
-  private byte type = NOT_SET;
+   private byte type = NOT_SET;
 
-  private Writable instance;
+   private Writable instance;
 
-  private Configuration conf = null;
-  
-  /**
-   * Set the instance that is wrapped.
-   * 
-   * @param obj
-   */
-  public void set(Writable obj) {
-    instance = obj;
-    Class<? extends Writable> instanceClazz = instance.getClass();
-    Class<? extends Writable>[] clazzes = getTypes();
-    for (int i = 0; i < clazzes.length; i++) {
-      Class<? extends Writable> clazz = clazzes[i];
-      if (clazz.equals(instanceClazz)) {
-        type = (byte) i;
-        return;
+   private Configuration conf = null;
+
+   /**
+    * Set the instance that is wrapped.
+    * 
+    * @param obj
+    */
+   public void set(Writable obj) {
+      instance = obj;
+      Class<? extends Writable> instanceClazz = instance.getClass();
+      Class<? extends Writable>[] clazzes = getTypes();
+      for (int i = 0; i < clazzes.length; i++) {
+         Class<? extends Writable> clazz = clazzes[i];
+         if (clazz.equals(instanceClazz)) {
+            type = (byte) i;
+            return;
+         }
       }
-    }
-    throw new RuntimeException("The type of instance is: "
-                               + instance.getClass() + ", which is NOT registered.");
-  }
+      throw new RuntimeException("The type of instance is: " + instance.getClass() + ", which is NOT registered.");
+   }
 
-  /**
-   * Return the wrapped instance.
-   */
-  public Writable get() {
-    return instance;
-  }
-  
-  public String toString() {
-    return "GW[" + (instance != null ? ("class=" + instance.getClass().getName() +
-        ",value=" + instance.toString()) : "(null)") + "]";
-  }
+   /**
+    * Return the wrapped instance.
+    */
+   public Writable get() {
+      return instance;
+   }
 
-  public void readFields(DataInput in) throws IOException {
-    type = in.readByte();
-    Class<? extends Writable> clazz = getTypes()[type & 0xff];
-    try {
-      instance = ReflectionUtils.newInstance(clazz, conf);
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new IOException("Cannot initialize the class: " + clazz);
-    }
-    instance.readFields(in);
-  }
+   public String toString() {
+      return "GW["
+            + (instance != null ? ("class=" + instance.getClass().getName() + ",value=" + instance.toString())
+                  : "(null)") + "]";
+   }
 
-  public void write(DataOutput out) throws IOException {
-    if (type == NOT_SET || instance == null)
-      throw new IOException("The GenericWritable has NOT been set correctly. type="
-                            + type + ", instance=" + instance);
-    out.writeByte(type);
-    instance.write(out);
-  }
+   public void readFields(DataInput in) throws IOException {
+      type = in.readByte();
+      Class<? extends Writable> clazz = getTypes()[type & 0xff];
+      try {
+         instance = ReflectionUtils.newInstance(clazz, conf);
+      } catch (Exception e) {
+         e.printStackTrace();
+         throw new IOException("Cannot initialize the class: " + clazz);
+      }
+      instance.readFields(in);
+   }
 
-  /**
-   * Return all classes that may be wrapped.  Subclasses should implement this
-   * to return a constant array of classes.
-   */
-  abstract protected Class<? extends Writable>[] getTypes();
+   public void write(DataOutput out) throws IOException {
+      if (type == NOT_SET || instance == null)
+         throw new IOException("The GenericWritable has NOT been set correctly. type=" + type + ", instance="
+               + instance);
+      out.writeByte(type);
+      instance.write(out);
+   }
 
-  public Configuration getConf() {
-    return conf;
-  }
+   /**
+    * Return all classes that may be wrapped.  Subclasses should implement this
+    * to return a constant array of classes.
+    */
+   abstract protected Class<? extends Writable>[] getTypes();
 
-  public void setConf(Configuration conf) {
-    this.conf = conf;
-  }
-  
+   public Configuration getConf() {
+      return conf;
+   }
+
+   public void setConf(Configuration conf) {
+      this.conf = conf;
+   }
+
 }

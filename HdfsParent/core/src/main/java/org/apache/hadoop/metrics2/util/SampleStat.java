@@ -23,153 +23,161 @@ package org.apache.hadoop.metrics2.util;
  */
 public class SampleStat {
 
-  private final MinMax minmax = new MinMax();
-  private long numSamples = 0;
-  private double a0, a1, s0, s1;
+   private final MinMax minmax = new MinMax();
 
-  /**
-   * Construct a new running sample stat
-   */
-  public SampleStat() {
-    a0 = s0 = 0.0;
-  }
+   private long numSamples = 0;
 
-  public void reset() {
-    numSamples = 0;
-    a0 = s0 = 0.0;
-    minmax.reset();
-  }
+   private double a0, a1, s0, s1;
 
-  // We want to reuse the object, sometimes.
-  void reset(long numSamples, double a0, double a1, double s0, double s1,
-             MinMax minmax) {
-    this.numSamples = numSamples;
-    this.a0 = a0;
-    this.a1 = a1;
-    this.s0 = s0;
-    this.s1 = s1;
-    this.minmax.reset(minmax);
-  }
+   /**
+    * Construct a new running sample stat
+    */
+   public SampleStat() {
+      a0 = s0 = 0.0;
+   }
 
-  /**
-   * Copy the values to other (saves object creation and gc.)
-   * @param other the destination to hold our values
-   */
-  public void copyTo(SampleStat other) {
-    other.reset(numSamples, a0, a1, s0, s1, minmax);
-  }
+   public void reset() {
+      numSamples = 0;
+      a0 = s0 = 0.0;
+      minmax.reset();
+   }
 
-  /**
-   * Add a sample the running stat.
-   * @param x the sample number
-   * @return  self
-   */
-  public SampleStat add(double x) {
-    minmax.add(x);
-    return add(1, x);
-  }
+   // We want to reuse the object, sometimes.
+   void reset(long numSamples, double a0, double a1, double s0, double s1, MinMax minmax) {
+      this.numSamples = numSamples;
+      this.a0 = a0;
+      this.a1 = a1;
+      this.s0 = s0;
+      this.s1 = s1;
+      this.minmax.reset(minmax);
+   }
 
-  /**
-   * Add some sample and a partial sum to the running stat.
-   * Note, min/max is not evaluated using this method.
-   * @param nSamples  number of samples
-   * @param x the partial sum
-   * @return  self
-   */
-  public SampleStat add(long nSamples, double x) {
-    numSamples += nSamples;
+   /**
+    * Copy the values to other (saves object creation and gc.)
+    * @param other the destination to hold our values
+    */
+   public void copyTo(SampleStat other) {
+      other.reset(numSamples, a0, a1, s0, s1, minmax);
+   }
 
-    if (numSamples == 1) {
-      a0 = a1 = x;
-      s0 = 0.0;
-    }
-    else {
-      // The Welford method for numerical stability
-      a1 = a0 + (x - a0) / numSamples;
-      s1 = s0 + (x - a0) * (x - a1);
-      a0 = a1;
-      s0 = s1;
-    }
-    return this;
-  }
+   /**
+    * Add a sample the running stat.
+    * @param x the sample number
+    * @return  self
+    */
+   public SampleStat add(double x) {
+      minmax.add(x);
+      return add(1, x);
+   }
 
-  /**
-   * @return  the total number of samples
-   */
-  public long numSamples() {
-    return numSamples;
-  }
+   /**
+    * Add some sample and a partial sum to the running stat.
+    * Note, min/max is not evaluated using this method.
+    * @param nSamples  number of samples
+    * @param x the partial sum
+    * @return  self
+    */
+   public SampleStat add(long nSamples, double x) {
+      numSamples += nSamples;
 
-  /**
-   * @return  the arithmetic mean of the samples
-   */
-  public double mean() {
-    return numSamples > 0 ? a1 : 0.0;
-  }
+      if (numSamples == 1) {
+         a0 = a1 = x;
+         s0 = 0.0;
+      } else {
+         // The Welford method for numerical stability
+         a1 = a0 + (x - a0) / numSamples;
+         s1 = s0 + (x - a0) * (x - a1);
+         a0 = a1;
+         s0 = s1;
+      }
+      return this;
+   }
 
-  /**
-   * @return  the variance of the samples
-   */
-  public double variance() {
-    return numSamples > 1 ? s1 / (numSamples - 1) : 0.0;
-  }
+   /**
+    * @return  the total number of samples
+    */
+   public long numSamples() {
+      return numSamples;
+   }
 
-  /**
-   * @return  the standard deviation of the samples
-   */
-  public double stddev() {
-    return Math.sqrt(variance());
-  }
+   /**
+    * @return  the arithmetic mean of the samples
+    */
+   public double mean() {
+      return numSamples > 0 ? a1 : 0.0;
+   }
 
-  /**
-   * @return  the minimum value of the samples
-   */
-  public double min() {
-    return minmax.min();
-  }
+   /**
+    * @return  the variance of the samples
+    */
+   public double variance() {
+      return numSamples > 1 ? s1 / (numSamples - 1) : 0.0;
+   }
 
-  /**
-   * @return  the maximum value of the samples
-   */
-  public double max() {
-    return minmax.max();
-  }
+   /**
+    * @return  the standard deviation of the samples
+    */
+   public double stddev() {
+      return Math.sqrt(variance());
+   }
 
-  /**
-   * Helper to keep running min/max
-   */
-  @SuppressWarnings("PublicInnerClass")
-  public static class MinMax {
+   /**
+    * @return  the minimum value of the samples
+    */
+   public double min() {
+      return minmax.min();
+   }
 
-    // Float.MAX_VALUE is used rather than Double.MAX_VALUE, even though the
-    // min and max variables are of type double.
-    // Float.MAX_VALUE is big enough, and using Double.MAX_VALUE makes 
-    // Ganglia core due to buffer overflow.
-    // The same reasoning applies to the MIN_VALUE counterparts.
-    static final double DEFAULT_MIN_VALUE = Float.MAX_VALUE;
-    static final double DEFAULT_MAX_VALUE = Float.MIN_VALUE;
+   /**
+    * @return  the maximum value of the samples
+    */
+   public double max() {
+      return minmax.max();
+   }
 
-    private double min = DEFAULT_MIN_VALUE;
-    private double max = DEFAULT_MAX_VALUE;
+   /**
+    * Helper to keep running min/max
+    */
+   public static class MinMax {
 
-    public void add(double value) {
-      if (value > max) max = value;
-      if (value < min) min = value;
-    }
+      // Float.MAX_VALUE is used rather than Double.MAX_VALUE, even though the
+      // min and max variables are of type double.
+      // Float.MAX_VALUE is big enough, and using Double.MAX_VALUE makes 
+      // Ganglia core due to buffer overflow.
+      // The same reasoning applies to the MIN_VALUE counterparts.
+      static final double DEFAULT_MIN_VALUE = Float.MAX_VALUE;
 
-    public double min() { return min; }
-    public double max() { return max; }
+      static final double DEFAULT_MAX_VALUE = Float.MIN_VALUE;
 
-    public void reset() {
-      min = DEFAULT_MIN_VALUE;
-      max = DEFAULT_MAX_VALUE;
-    }
+      private double min = DEFAULT_MIN_VALUE;
 
-    public void reset(MinMax other) {
-      min = other.min();
-      max = other.max();
-    }
+      private double max = DEFAULT_MAX_VALUE;
 
-  }
+      public void add(double value) {
+         if (value > max)
+            max = value;
+         if (value < min)
+            min = value;
+      }
+
+      public double min() {
+         return min;
+      }
+
+      public double max() {
+         return max;
+      }
+
+      public void reset() {
+         min = DEFAULT_MIN_VALUE;
+         max = DEFAULT_MAX_VALUE;
+      }
+
+      public void reset(MinMax other) {
+         min = other.min();
+         max = other.max();
+      }
+
+   }
 
 }

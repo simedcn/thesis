@@ -36,68 +36,74 @@ import java.lang.reflect.Array;
  * }
  * </code>
  */
+@SuppressWarnings("rawtypes")
 public class ArrayWritable implements Writable {
-  private Class<? extends Writable> valueClass;
-  private Writable[] values;
+   private Class<? extends Writable> valueClass;
 
-  public ArrayWritable(Class<? extends Writable> valueClass) {
-    if (valueClass == null) { 
-      throw new IllegalArgumentException("null valueClass"); 
-    }    
-    this.valueClass = valueClass;
-  }
+   private Writable[] values;
 
-  public ArrayWritable(Class<? extends Writable> valueClass, Writable[] values) {
-    this(valueClass);
-    this.values = values;
-  }
+   public ArrayWritable(Class<? extends Writable> valueClass) {
+      if (valueClass == null) {
+         throw new IllegalArgumentException("null valueClass");
+      }
+      this.valueClass = valueClass;
+   }
 
-  public ArrayWritable(String[] strings) {
-    this(UTF8.class, new Writable[strings.length]);
-    for (int i = 0; i < strings.length; i++) {
-      values[i] = new UTF8(strings[i]);
-    }
-  }
+   public ArrayWritable(Class<? extends Writable> valueClass, Writable[] values) {
+      this(valueClass);
+      this.values = values;
+   }
 
-  public Class getValueClass() {
-    return valueClass;
-  }
+   @SuppressWarnings("deprecation")
+   public ArrayWritable(String[] strings) {
+      this(UTF8.class, new Writable[strings.length]);
+      for (int i = 0; i < strings.length; i++) {
+         values[i] = new UTF8(strings[i]);
+      }
+   }
 
-  public String[] toStrings() {
-    String[] strings = new String[values.length];
-    for (int i = 0; i < values.length; i++) {
-      strings[i] = values[i].toString();
-    }
-    return strings;
-  }
+   public Class getValueClass() {
+      return valueClass;
+   }
 
-  public Object toArray() {
-    Object result = Array.newInstance(valueClass, values.length);
-    for (int i = 0; i < values.length; i++) {
-      Array.set(result, i, values[i]);
-    }
-    return result;
-  }
+   public String[] toStrings() {
+      String[] strings = new String[values.length];
+      for (int i = 0; i < values.length; i++) {
+         strings[i] = values[i].toString();
+      }
+      return strings;
+   }
 
-  public void set(Writable[] values) { this.values = values; }
+   public Object toArray() {
+      Object result = Array.newInstance(valueClass, values.length);
+      for (int i = 0; i < values.length; i++) {
+         Array.set(result, i, values[i]);
+      }
+      return result;
+   }
 
-  public Writable[] get() { return values; }
+   public void set(Writable[] values) {
+      this.values = values;
+   }
 
-  public void readFields(DataInput in) throws IOException {
-    values = new Writable[in.readInt()];          // construct values
-    for (int i = 0; i < values.length; i++) {
-      Writable value = WritableFactories.newInstance(valueClass);
-      value.readFields(in);                       // read a value
-      values[i] = value;                          // store it in values
-    }
-  }
+   public Writable[] get() {
+      return values;
+   }
 
-  public void write(DataOutput out) throws IOException {
-    out.writeInt(values.length);                 // write values
-    for (int i = 0; i < values.length; i++) {
-      values[i].write(out);
-    }
-  }
+   public void readFields(DataInput in) throws IOException {
+      values = new Writable[in.readInt()]; // construct values
+      for (int i = 0; i < values.length; i++) {
+         Writable value = WritableFactories.newInstance(valueClass);
+         value.readFields(in); // read a value
+         values[i] = value; // store it in values
+      }
+   }
+
+   public void write(DataOutput out) throws IOException {
+      out.writeInt(values.length); // write values
+      for (int i = 0; i < values.length; i++) {
+         values[i].write(out);
+      }
+   }
 
 }
-

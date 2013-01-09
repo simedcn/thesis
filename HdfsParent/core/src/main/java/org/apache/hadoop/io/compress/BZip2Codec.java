@@ -35,267 +35,266 @@ import org.apache.hadoop.io.compress.bzip2.CBZip2OutputStream;
  * CompressionCodec which have a Compressor or Decompressor type argument, throw
  * UnsupportedOperationException.
  */
-public class BZip2Codec implements
-    org.apache.hadoop.io.compress.CompressionCodec {
+public class BZip2Codec implements org.apache.hadoop.io.compress.CompressionCodec {
 
-  private static final String HEADER = "BZ";
-  private static final int HEADER_LEN = HEADER.length();
+   private static final String HEADER = "BZ";
 
-  /**
-  * Creates a new instance of BZip2Codec
-  */
-  public BZip2Codec() {
-  }
+   private static final int HEADER_LEN = HEADER.length();
 
-  /**
-  * Creates CompressionOutputStream for BZip2
-  *
-  * @param out
-  *            The output Stream
-  * @return The BZip2 CompressionOutputStream
-  * @throws java.io.IOException
-  *             Throws IO exception
-  */
-  public CompressionOutputStream createOutputStream(OutputStream out)
-      throws IOException {
-    return new BZip2CompressionOutputStream(out);
-  }
+   /**
+   * Creates a new instance of BZip2Codec
+   */
+   public BZip2Codec() {
+   }
 
-  /**
+   /**
+   * Creates CompressionOutputStream for BZip2
+   *
+   * @param out
+   *            The output Stream
+   * @return The BZip2 CompressionOutputStream
+   * @throws java.io.IOException
+   *             Throws IO exception
+   */
+   public CompressionOutputStream createOutputStream(OutputStream out) throws IOException {
+      return new BZip2CompressionOutputStream(out);
+   }
+
+   /**
+    * This functionality is currently not supported.
+    *
+    * @throws java.lang.UnsupportedOperationException
+    *             Throws UnsupportedOperationException
+    */
+   public CompressionOutputStream createOutputStream(OutputStream out, Compressor compressor) throws IOException {
+      return createOutputStream(out);
+   }
+
+   /**
    * This functionality is currently not supported.
    *
    * @throws java.lang.UnsupportedOperationException
    *             Throws UnsupportedOperationException
    */
-  public CompressionOutputStream createOutputStream(OutputStream out,
-      Compressor compressor) throws IOException {
-    return createOutputStream(out);
-  }
+   public Class<? extends org.apache.hadoop.io.compress.Compressor> getCompressorType() {
+      return BZip2DummyCompressor.class;
+   }
 
-  /**
-  * This functionality is currently not supported.
-  *
-  * @throws java.lang.UnsupportedOperationException
-  *             Throws UnsupportedOperationException
-  */
-  public Class<? extends org.apache.hadoop.io.compress.Compressor> getCompressorType() {
-    return BZip2DummyCompressor.class;
-  }
+   /**
+   * This functionality is currently not supported.
+   *
+   * @throws java.lang.UnsupportedOperationException
+   *             Throws UnsupportedOperationException
+   */
+   public Compressor createCompressor() {
+      return new BZip2DummyCompressor();
+   }
 
-  /**
-  * This functionality is currently not supported.
-  *
-  * @throws java.lang.UnsupportedOperationException
-  *             Throws UnsupportedOperationException
-  */
-  public Compressor createCompressor() {
-    return new BZip2DummyCompressor();
-  }
+   /**
+   * Creates CompressionInputStream to be used to read off uncompressed data.
+   *
+   * @param in
+   *            The InputStream
+   * @return Returns CompressionInputStream for BZip2
+   * @throws java.io.IOException
+   *             Throws IOException
+   */
+   public CompressionInputStream createInputStream(InputStream in) throws IOException {
+      return new BZip2CompressionInputStream(in);
+   }
 
-  /**
-  * Creates CompressionInputStream to be used to read off uncompressed data.
-  *
-  * @param in
-  *            The InputStream
-  * @return Returns CompressionInputStream for BZip2
-  * @throws java.io.IOException
-  *             Throws IOException
-  */
-  public CompressionInputStream createInputStream(InputStream in)
-      throws IOException {
-    return new BZip2CompressionInputStream(in);
-  }
+   /**
+   * This functionality is currently not supported.
+   *
+   * @throws java.lang.UnsupportedOperationException
+   *             Throws UnsupportedOperationException
+   */
+   public CompressionInputStream createInputStream(InputStream in, Decompressor decompressor) throws IOException {
+      return createInputStream(in);
+   }
 
-  /**
-  * This functionality is currently not supported.
-  *
-  * @throws java.lang.UnsupportedOperationException
-  *             Throws UnsupportedOperationException
-  */
-  public CompressionInputStream createInputStream(InputStream in,
-      Decompressor decompressor) throws IOException {
-    return createInputStream(in);
-  }
+   /**
+   * This functionality is currently not supported.
+   *
+   * @throws java.lang.UnsupportedOperationException
+   *             Throws UnsupportedOperationException
+   */
+   public Class<? extends org.apache.hadoop.io.compress.Decompressor> getDecompressorType() {
+      return BZip2DummyDecompressor.class;
+   }
 
-  /**
-  * This functionality is currently not supported.
-  *
-  * @throws java.lang.UnsupportedOperationException
-  *             Throws UnsupportedOperationException
-  */
-  public Class<? extends org.apache.hadoop.io.compress.Decompressor> getDecompressorType() {
-    return BZip2DummyDecompressor.class;
-  }
+   /**
+   * This functionality is currently not supported.
+   *
+   * @throws java.lang.UnsupportedOperationException
+   *             Throws UnsupportedOperationException
+   */
+   public Decompressor createDecompressor() {
+      return new BZip2DummyDecompressor();
+   }
 
-  /**
-  * This functionality is currently not supported.
-  *
-  * @throws java.lang.UnsupportedOperationException
-  *             Throws UnsupportedOperationException
-  */
-  public Decompressor createDecompressor() {
-    return new BZip2DummyDecompressor();
-  }
+   /**
+   * .bz2 is recognized as the default extension for compressed BZip2 files
+   *
+   * @return A String telling the default bzip2 file extension
+   */
+   public String getDefaultExtension() {
+      return ".bz2";
+   }
 
-  /**
-  * .bz2 is recognized as the default extension for compressed BZip2 files
-  *
-  * @return A String telling the default bzip2 file extension
-  */
-  public String getDefaultExtension() {
-    return ".bz2";
-  }
+   private static class BZip2CompressionOutputStream extends CompressionOutputStream {
 
-  private static class BZip2CompressionOutputStream extends CompressionOutputStream {
+      // class data starts here//
+      private CBZip2OutputStream output;
 
-    // class data starts here//
-    private CBZip2OutputStream output;
-    private boolean needsReset; 
-    // class data ends here//
+      private boolean needsReset;
 
-    public BZip2CompressionOutputStream(OutputStream out)
-        throws IOException {
-      super(out);
-      needsReset = true;
-    }
+      // class data ends here//
 
-    private void writeStreamHeader() throws IOException {
-      if (super.out != null) {
-        // The compressed bzip2 stream should start with the
-        // identifying characters BZ. Caller of CBZip2OutputStream
-        // i.e. this class must write these characters.
-        out.write(HEADER.getBytes());
-      }
-    }
-
-    public void finish() throws IOException {
-      if (needsReset) {
-        // In the case that nothing is written to this stream, we still need to
-        // write out the header before closing, otherwise the stream won't be
-        // recognized by BZip2CompressionInputStream.
-        internalReset();
-      }
-      this.output.finish();
-      needsReset = true;
-    }
-
-    private void internalReset() throws IOException {
-      if (needsReset) {
-        needsReset = false;
-        writeStreamHeader();
-        this.output = new CBZip2OutputStream(out);
-      }
-    }    
-    
-    public void resetState() throws IOException {
-      // Cannot write to out at this point because out might not be ready
-      // yet, as in SequenceFile.Writer implementation.
-      needsReset = true;
-    }
-
-    public void write(int b) throws IOException {
-      if (needsReset) {
-        internalReset();
-      }
-      this.output.write(b);
-    }
-
-    public void write(byte[] b, int off, int len) throws IOException {
-      if (needsReset) {
-        internalReset();
-      }
-      this.output.write(b, off, len);
-    }
-
-    public void close() throws IOException {
-      if (needsReset) {
-        // In the case that nothing is written to this stream, we still need to
-        // write out the header before closing, otherwise the stream won't be
-        // recognized by BZip2CompressionInputStream.
-        internalReset();
-      }
-      this.output.flush();
-      this.output.close();
-      needsReset = true;
-    }
-
-  }// end of class BZip2CompressionOutputStream
-
-  private static class BZip2CompressionInputStream extends CompressionInputStream {
-
-    // class data starts here//
-    private CBZip2InputStream input;
-    boolean needsReset;
-    // class data ends here//
-
-    public BZip2CompressionInputStream(InputStream in) throws IOException {
-
-      super(in);
-      needsReset = true;
-    }
-
-    private BufferedInputStream readStreamHeader() throws IOException {
-      // We are flexible enough to allow the compressed stream not to
-      // start with the header of BZ. So it works fine either we have
-      // the header or not.
-      BufferedInputStream bufferedIn = null;
-      if (super.in != null) {
-        bufferedIn = new BufferedInputStream(super.in);
-        bufferedIn.mark(HEADER_LEN);
-        byte[] headerBytes = new byte[HEADER_LEN];
-        int actualRead = bufferedIn.read(headerBytes, 0, HEADER_LEN);
-        if (actualRead != -1) {
-          String header = new String(headerBytes);
-          if (header.compareTo(HEADER) != 0) {
-            bufferedIn.reset();
-          }
-        }
+      public BZip2CompressionOutputStream(OutputStream out) throws IOException {
+         super(out);
+         needsReset = true;
       }
 
-      if (bufferedIn == null) {
-        throw new IOException("Failed to read bzip2 stream.");
+      private void writeStreamHeader() throws IOException {
+         if (super.out != null) {
+            // The compressed bzip2 stream should start with the
+            // identifying characters BZ. Caller of CBZip2OutputStream
+            // i.e. this class must write these characters.
+            out.write(HEADER.getBytes());
+         }
       }
 
-      return bufferedIn;
-
-    }// end of method
-
-    public void close() throws IOException {
-      if (!needsReset) {
-        input.close();
-        needsReset = true;
+      public void finish() throws IOException {
+         if (needsReset) {
+            // In the case that nothing is written to this stream, we still need to
+            // write out the header before closing, otherwise the stream won't be
+            // recognized by BZip2CompressionInputStream.
+            internalReset();
+         }
+         this.output.finish();
+         needsReset = true;
       }
-    }
 
-    public int read(byte[] b, int off, int len) throws IOException {
-      if (needsReset) {
-        internalReset();
+      private void internalReset() throws IOException {
+         if (needsReset) {
+            needsReset = false;
+            writeStreamHeader();
+            this.output = new CBZip2OutputStream(out);
+         }
       }
-      return this.input.read(b, off, len);
 
-    }
-
-    private void internalReset() throws IOException {
-      if (needsReset) {
-        needsReset = false;
-        BufferedInputStream bufferedIn = readStreamHeader();
-        input = new CBZip2InputStream(bufferedIn);
+      public void resetState() throws IOException {
+         // Cannot write to out at this point because out might not be ready
+         // yet, as in SequenceFile.Writer implementation.
+         needsReset = true;
       }
-    }    
-    
-    public void resetState() throws IOException {
-      // Cannot read from bufferedIn at this point because bufferedIn might not be ready
-      // yet, as in SequenceFile.Reader implementation.
-      needsReset = true;
-    }
 
-    public int read() throws IOException {
-      if (needsReset) {
-        internalReset();
+      public void write(int b) throws IOException {
+         if (needsReset) {
+            internalReset();
+         }
+         this.output.write(b);
       }
-      return this.input.read();
-    }
 
-  }// end of BZip2CompressionInputStream
+      public void write(byte[] b, int off, int len) throws IOException {
+         if (needsReset) {
+            internalReset();
+         }
+         this.output.write(b, off, len);
+      }
+
+      public void close() throws IOException {
+         if (needsReset) {
+            // In the case that nothing is written to this stream, we still need to
+            // write out the header before closing, otherwise the stream won't be
+            // recognized by BZip2CompressionInputStream.
+            internalReset();
+         }
+         this.output.flush();
+         this.output.close();
+         needsReset = true;
+      }
+
+   }// end of class BZip2CompressionOutputStream
+
+   private static class BZip2CompressionInputStream extends CompressionInputStream {
+
+      // class data starts here//
+      private CBZip2InputStream input;
+
+      boolean needsReset;
+
+      // class data ends here//
+
+      public BZip2CompressionInputStream(InputStream in) throws IOException {
+
+         super(in);
+         needsReset = true;
+      }
+
+      private BufferedInputStream readStreamHeader() throws IOException {
+         // We are flexible enough to allow the compressed stream not to
+         // start with the header of BZ. So it works fine either we have
+         // the header or not.
+         BufferedInputStream bufferedIn = null;
+         if (super.in != null) {
+            bufferedIn = new BufferedInputStream(super.in);
+            bufferedIn.mark(HEADER_LEN);
+            byte[] headerBytes = new byte[HEADER_LEN];
+            int actualRead = bufferedIn.read(headerBytes, 0, HEADER_LEN);
+            if (actualRead != -1) {
+               String header = new String(headerBytes);
+               if (header.compareTo(HEADER) != 0) {
+                  bufferedIn.reset();
+               }
+            }
+         }
+
+         if (bufferedIn == null) {
+            throw new IOException("Failed to read bzip2 stream.");
+         }
+
+         return bufferedIn;
+
+      }// end of method
+
+      public void close() throws IOException {
+         if (!needsReset) {
+            input.close();
+            needsReset = true;
+         }
+      }
+
+      public int read(byte[] b, int off, int len) throws IOException {
+         if (needsReset) {
+            internalReset();
+         }
+         return this.input.read(b, off, len);
+
+      }
+
+      private void internalReset() throws IOException {
+         if (needsReset) {
+            needsReset = false;
+            BufferedInputStream bufferedIn = readStreamHeader();
+            input = new CBZip2InputStream(bufferedIn);
+         }
+      }
+
+      public void resetState() throws IOException {
+         // Cannot read from bufferedIn at this point because bufferedIn might not be ready
+         // yet, as in SequenceFile.Reader implementation.
+         needsReset = true;
+      }
+
+      public int read() throws IOException {
+         if (needsReset) {
+            internalReset();
+         }
+         return this.input.read();
+      }
+
+   }// end of BZip2CompressionInputStream
 
 }

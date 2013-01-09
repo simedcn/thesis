@@ -24,44 +24,40 @@ import java.util.List;
 import org.apache.hadoop.metrics2.MetricsBuilder;
 import org.apache.hadoop.metrics2.MetricsFilter;
 
-class MetricsBuilderImpl extends ArrayList<MetricsRecordBuilderImpl>
-                         implements MetricsBuilder {
-  private static final long serialVersionUID = 1L;
-  private MetricsFilter recordFilter, metricFilter;
+class MetricsBuilderImpl extends ArrayList<MetricsRecordBuilderImpl> implements MetricsBuilder {
+   private static final long serialVersionUID = 1L;
 
-  @Override
-  public MetricsRecordBuilderImpl addRecord(String name) {
-    boolean acceptable = recordFilter == null || recordFilter.accepts(name);
-    MetricsRecordBuilderImpl rb =
-        new MetricsRecordBuilderImpl(name, recordFilter, metricFilter,
-                                     acceptable);
-    if (acceptable) {
-      add(rb);
-    }
-    return rb;
-  }
+   private MetricsFilter recordFilter, metricFilter;
 
-
-  public List<MetricsRecordImpl> getRecords() {
-    List<MetricsRecordImpl> records =
-        new ArrayList<MetricsRecordImpl>(size());
-    for (MetricsRecordBuilderImpl rb : this) {
-      MetricsRecordImpl mr = rb.getRecord();
-      if (mr != null) {
-        records.add(mr);
+   @Override
+   public MetricsRecordBuilderImpl addRecord(String name) {
+      boolean acceptable = recordFilter == null || recordFilter.accepts(name);
+      MetricsRecordBuilderImpl rb = new MetricsRecordBuilderImpl(name, recordFilter, metricFilter, acceptable);
+      if (acceptable) {
+         add(rb);
       }
-    }
-    return records;
-  }
+      return rb;
+   }
 
-  MetricsBuilderImpl setRecordFilter(MetricsFilter rf) {
-    recordFilter = rf;
-    return this;
-  }
+   public List<MetricsRecordImpl> getRecords() {
+      List<MetricsRecordImpl> records = new ArrayList<MetricsRecordImpl>(size());
+      for (MetricsRecordBuilderImpl rb : this) {
+         MetricsRecordImpl mr = rb.getRecord();
+         if (mr != null) {
+            records.add(mr);
+         }
+      }
+      return records;
+   }
 
-  MetricsBuilderImpl setMetricFilter(MetricsFilter mf) {
-    metricFilter = mf;
-    return this;
-  }
+   MetricsBuilderImpl setRecordFilter(MetricsFilter rf) {
+      recordFilter = rf;
+      return this;
+   }
+
+   MetricsBuilderImpl setMetricFilter(MetricsFilter mf) {
+      metricFilter = mf;
+      return this;
+   }
 
 }

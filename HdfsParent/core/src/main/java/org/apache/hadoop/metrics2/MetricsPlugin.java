@@ -25,10 +25,10 @@ import org.apache.commons.configuration.SubsetConfiguration;
  */
 public interface MetricsPlugin {
 
-  /**
-   * Initialize the plugin
-   * @param conf  the configuration object for the plugin
-   */
-  void init(SubsetConfiguration conf);
+   /**
+    * Initialize the plugin
+    * @param conf  the configuration object for the plugin
+    */
+   void init(SubsetConfiguration conf);
 
 }

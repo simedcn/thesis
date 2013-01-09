@@ -29,17 +29,16 @@ import org.apache.hadoop.security.token.TokenSelector;
  */
 public class BlockTokenSelector implements TokenSelector<BlockTokenIdentifier> {
 
-  @SuppressWarnings("unchecked")
-  public Token<BlockTokenIdentifier> selectToken(Text service,
-      Collection<Token<? extends TokenIdentifier>> tokens) {
-    if (service == null) {
-      return null;
-    }
-    for (Token<? extends TokenIdentifier> token : tokens) {
-      if (BlockTokenIdentifier.KIND_NAME.equals(token.getKind())) {
-        return (Token<BlockTokenIdentifier>) token;
+   @SuppressWarnings("unchecked")
+   public Token<BlockTokenIdentifier> selectToken(Text service, Collection<Token<? extends TokenIdentifier>> tokens) {
+      if (service == null) {
+         return null;
       }
-    }
-    return null;
-  }
+      for (Token<? extends TokenIdentifier> token : tokens) {
+         if (BlockTokenIdentifier.KIND_NAME.equals(token.getKind())) {
+            return (Token<BlockTokenIdentifier>) token;
+         }
+      }
+      return null;
+   }
 }

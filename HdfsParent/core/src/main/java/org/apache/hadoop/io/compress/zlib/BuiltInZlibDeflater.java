@@ -32,62 +32,57 @@ import org.mortbay.log.Log;
  */
 public class BuiltInZlibDeflater extends Deflater implements Compressor {
 
-  public BuiltInZlibDeflater(int level, boolean nowrap) {
-    super(level, nowrap);
-  }
+   public BuiltInZlibDeflater(int level, boolean nowrap) {
+      super(level, nowrap);
+   }
 
-  BuiltInZlibDeflater(Configuration conf) {
-    this(null == conf
-        ? DEFAULT_COMPRESSION
-        : ZlibFactory.getCompressionLevel(conf).compressionLevel());
-    if (conf != null) {
-      final ZlibCompressor.CompressionStrategy strategy =
-        ZlibFactory.getCompressionStrategy(conf);
-      try {
-        setStrategy(strategy.compressionStrategy());
-      } catch (IllegalArgumentException ill) {
-        Log.warn(strategy + " not supported by BuiltInZlibDeflater.");
-        setStrategy(DEFAULT_STRATEGY);
+   BuiltInZlibDeflater(Configuration conf) {
+      this(null == conf ? DEFAULT_COMPRESSION : ZlibFactory.getCompressionLevel(conf).compressionLevel());
+      if (conf != null) {
+         final ZlibCompressor.CompressionStrategy strategy = ZlibFactory.getCompressionStrategy(conf);
+         try {
+            setStrategy(strategy.compressionStrategy());
+         } catch (IllegalArgumentException ill) {
+            Log.warn(strategy + " not supported by BuiltInZlibDeflater.");
+            setStrategy(DEFAULT_STRATEGY);
+         }
       }
-    }
-  }
+   }
 
-  public BuiltInZlibDeflater(int level) {
-    super(level);
-  }
+   public BuiltInZlibDeflater(int level) {
+      super(level);
+   }
 
-  public BuiltInZlibDeflater() {
-    super();
-  }
+   public BuiltInZlibDeflater() {
+      super();
+   }
 
-  public synchronized int compress(byte[] b, int off, int len) 
-    throws IOException {
-    return super.deflate(b, off, len);
-  }
+   public synchronized int compress(byte[] b, int off, int len) throws IOException {
+      return super.deflate(b, off, len);
+   }
 
-  /**
-   * reinit the compressor with the given configuration. It will reset the
-   * compressor's compression level and compression strategy. Different from
-   * <tt>ZlibCompressor</tt>, <tt>BuiltInZlibDeflater</tt> only support three
-   * kind of compression strategy: FILTERED, HUFFMAN_ONLY and DEFAULT_STRATEGY.
-   * It will use DEFAULT_STRATEGY as default if the configured compression
-   * strategy is not supported.
-   */
-  @Override
-  public void reinit(Configuration conf) {
-    reset();
-    if (conf == null) {
-      return;
-    }
-    setLevel(ZlibFactory.getCompressionLevel(conf).compressionLevel());
-    final ZlibCompressor.CompressionStrategy strategy =
-      ZlibFactory.getCompressionStrategy(conf);
-    try {
-      setStrategy(strategy.compressionStrategy());
-    } catch (IllegalArgumentException ill) {
-      Log.warn(strategy + " not supported by BuiltInZlibDeflater.");
-      setStrategy(DEFAULT_STRATEGY);
-    }
-    Log.debug("Reinit compressor with new compression configuration");
-  }
+   /**
+    * reinit the compressor with the given configuration. It will reset the
+    * compressor's compression level and compression strategy. Different from
+    * <tt>ZlibCompressor</tt>, <tt>BuiltInZlibDeflater</tt> only support three
+    * kind of compression strategy: FILTERED, HUFFMAN_ONLY and DEFAULT_STRATEGY.
+    * It will use DEFAULT_STRATEGY as default if the configured compression
+    * strategy is not supported.
+    */
+   @Override
+   public void reinit(Configuration conf) {
+      reset();
+      if (conf == null) {
+         return;
+      }
+      setLevel(ZlibFactory.getCompressionLevel(conf).compressionLevel());
+      final ZlibCompressor.CompressionStrategy strategy = ZlibFactory.getCompressionStrategy(conf);
+      try {
+         setStrategy(strategy.compressionStrategy());
+      } catch (IllegalArgumentException ill) {
+         Log.warn(strategy + " not supported by BuiltInZlibDeflater.");
+         setStrategy(DEFAULT_STRATEGY);
+      }
+      Log.debug("Reinit compressor with new compression configuration");
+   }
 }

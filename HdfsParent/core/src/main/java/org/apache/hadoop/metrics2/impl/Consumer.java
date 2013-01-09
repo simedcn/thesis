@@ -22,5 +22,5 @@ package org.apache.hadoop.metrics2.impl;
  * A simple generic consumer interface
  */
 interface Consumer<T> {
-  void consume(T object) throws InterruptedException;
+   void consume(T object) throws InterruptedException;
 }

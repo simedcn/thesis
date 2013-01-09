@@ -36,163 +36,157 @@ import org.apache.hadoop.metrics2.util.MetricsCache.Record;
  */
 public class GangliaSink30 extends AbstractGangliaSink {
 
-  public final Log LOG = LogFactory.getLog(this.getClass());
+   public final Log LOG = LogFactory.getLog(this.getClass());
 
-  protected MetricsCache metricsCache = new MetricsCache();
+   protected MetricsCache metricsCache = new MetricsCache();
 
-  /*
-   *
-   * (non-Javadoc)
-   *
-   * @see
-   * org.apache.hadoop.metrics2.MetricsSink#putMetrics(org.apache.hadoop.metrics2
-   * .MetricsRecord)
-   */
-  @Override
-  public void putMetrics(MetricsRecord record) {
-    // The method handles both cases whether Ganglia support dense publish of
-    // metrics of sparse (only on change) publish of metrics
-    try {
-      String recordName = record.name();
-      String contextName = record.context();
+   /*
+    *
+    * (non-Javadoc)
+    *
+    * @see
+    * org.apache.hadoop.metrics2.MetricsSink#putMetrics(org.apache.hadoop.metrics2
+    * .MetricsRecord)
+    */
+   @Override
+   public void putMetrics(MetricsRecord record) {
+      // The method handles both cases whether Ganglia support dense publish of
+      // metrics of sparse (only on change) publish of metrics
+      try {
+         String recordName = record.name();
+         String contextName = record.context();
 
-      StringBuilder sb = new StringBuilder();
-      sb.append(contextName);
-      sb.append('.');
-      sb.append(recordName);
+         StringBuilder sb = new StringBuilder();
+         sb.append(contextName);
+         sb.append('.');
+         sb.append(recordName);
 
-      String groupName = sb.toString();
-      sb.append('.');
-      int sbBaseLen = sb.length();
+         String groupName = sb.toString();
+         sb.append('.');
+         int sbBaseLen = sb.length();
 
-      String type = null;
-      GangliaSlope slopeFromMetric = null;
-      GangliaSlope calculatedSlope = null;
-      Record cachedMetrics = null;
-      if (!isSupportSparseMetrics()) {
-        // for sending dense metrics, update metrics cache
-        // and get the updated data
-        cachedMetrics = metricsCache.update(record);
+         String type = null;
+         GangliaSlope slopeFromMetric = null;
+         GangliaSlope calculatedSlope = null;
+         Record cachedMetrics = null;
+         if (!isSupportSparseMetrics()) {
+            // for sending dense metrics, update metrics cache
+            // and get the updated data
+            cachedMetrics = metricsCache.update(record);
 
-        if (cachedMetrics != null && cachedMetrics.metricsEntrySet() != null) {
-          for (Map.Entry<String, Metric> entry : cachedMetrics.metricsEntrySet()) {
-            Metric metric = entry.getValue();
-            sb.append(metric.name());
-            String name = sb.toString();
+            if (cachedMetrics != null && cachedMetrics.metricsEntrySet() != null) {
+               for (Map.Entry<String, Metric> entry : cachedMetrics.metricsEntrySet()) {
+                  Metric metric = entry.getValue();
+                  sb.append(metric.name());
+                  String name = sb.toString();
 
-            // visit the metric to identify the Ganglia type and slope
-            metric.visit(gangliaMetricVisitor);
-            type = gangliaMetricVisitor.getType();
-            slopeFromMetric = gangliaMetricVisitor.getSlope();
+                  // visit the metric to identify the Ganglia type and slope
+                  metric.visit(gangliaMetricVisitor);
+                  type = gangliaMetricVisitor.getType();
+                  slopeFromMetric = gangliaMetricVisitor.getSlope();
 
+                  GangliaConf gConf = getGangliaConfForMetric(name);
+                  calculatedSlope = calculateSlope(gConf, slopeFromMetric);
 
-            GangliaConf gConf = getGangliaConfForMetric(name);
-            calculatedSlope = calculateSlope(gConf, slopeFromMetric);
+                  // send metric to Ganglia
+                  emitMetric(groupName, name, type, metric.value().toString(), gConf, calculatedSlope);
 
-            // send metric to Ganglia
-            emitMetric(groupName, name, type, metric.value().toString(),
-                gConf, calculatedSlope);
+                  // reset the length of the buffer for next iteration
+                  sb.setLength(sbBaseLen);
+               }
+            }
+         } else {
+            // we support sparse updates
 
-            // reset the length of the buffer for next iteration
-            sb.setLength(sbBaseLen);
-          }
-        }
-      } else {
-        // we support sparse updates
+            Collection<Metric> metrics = (Collection<Metric>) record.metrics();
+            if (metrics.size() > 0) {
+               // we got metrics. so send the latest
+               for (Metric metric : record.metrics()) {
+                  sb.append(metric.name());
+                  String name = sb.toString();
 
-        Collection<Metric> metrics = (Collection<Metric>) record.metrics();
-        if (metrics.size() > 0) {
-          // we got metrics. so send the latest
-          for (Metric metric : record.metrics()) {
-            sb.append(metric.name());
-            String name = sb.toString();
+                  // visit the metric to identify the Ganglia type and slope
+                  metric.visit(gangliaMetricVisitor);
+                  type = gangliaMetricVisitor.getType();
+                  slopeFromMetric = gangliaMetricVisitor.getSlope();
 
-            // visit the metric to identify the Ganglia type and slope
-            metric.visit(gangliaMetricVisitor);
-            type = gangliaMetricVisitor.getType();
-            slopeFromMetric = gangliaMetricVisitor.getSlope();
+                  GangliaConf gConf = getGangliaConfForMetric(name);
+                  calculatedSlope = calculateSlope(gConf, slopeFromMetric);
 
+                  // send metric to Ganglia
+                  emitMetric(groupName, name, type, metric.value().toString(), gConf, calculatedSlope);
 
-            GangliaConf gConf = getGangliaConfForMetric(name);
-            calculatedSlope = calculateSlope(gConf, slopeFromMetric);
-
-            // send metric to Ganglia
-            emitMetric(groupName, name, type, metric.value().toString(),
-                gConf, calculatedSlope);
-
-            // reset the length of the buffer for next iteration
-            sb.setLength(sbBaseLen);
-          }
-        }
+                  // reset the length of the buffer for next iteration
+                  sb.setLength(sbBaseLen);
+               }
+            }
+         }
+      } catch (IOException io) {
+         throw new MetricsException("Failed to putMetrics", io);
       }
-    } catch (IOException io) {
-      throw new MetricsException("Failed to putMetrics", io);
-    }
-  }
+   }
 
+   /**
+    * Calculate the slope from properties and metric
+    *
+    * @param gConf Pass
+    * @param slopeFromMetric
+    * @return
+    */
+   private GangliaSlope calculateSlope(GangliaConf gConf, GangliaSlope slopeFromMetric) {
+      if (gConf.getSlope() != null) {
+         // if slope has been specified in properties, use that
+         return gConf.getSlope();
+      } else if (slopeFromMetric != null) {
+         // slope not specified in properties, use derived from Metric
+         return slopeFromMetric;
+      } else {
+         return DEFAULT_SLOPE;
+      }
+   }
 
-  /**
-   * Calculate the slope from properties and metric
-   *
-   * @param gConf Pass
-   * @param slopeFromMetric
-   * @return
-   */
-  private GangliaSlope calculateSlope(GangliaConf gConf, GangliaSlope slopeFromMetric) {
-    if (gConf.getSlope() != null) {
-      // if slope has been specified in properties, use that
-      return gConf.getSlope();
-    } else if (slopeFromMetric != null) {
-      // slope not specified in properties, use derived from Metric
-      return slopeFromMetric;
-    } else {
-      return DEFAULT_SLOPE;
-    }
-  }
+   /**
+    * The method sends metrics to Ganglia servers. The method has been taken from
+    * org.apache.hadoop.metrics.ganglia.GangliaContext30 with minimal changes in
+    * order to keep it in sync.
 
-  /**
-   * The method sends metrics to Ganglia servers. The method has been taken from
-   * org.apache.hadoop.metrics.ganglia.GangliaContext30 with minimal changes in
-   * order to keep it in sync.
+    * @param groupName The group name of the metric
+    * @param name The metric name
+    * @param type The type of the metric
+    * @param value The value of the metric
+    * @param gConf The GangliaConf for this metric
+    * @param gSlope The slope for this metric
+    * @throws IOException
+    */
+   protected void emitMetric(String groupName, String name, String type, String value, GangliaConf gConf,
+         GangliaSlope gSlope) throws IOException {
 
-   * @param groupName The group name of the metric
-   * @param name The metric name
-   * @param type The type of the metric
-   * @param value The value of the metric
-   * @param gConf The GangliaConf for this metric
-   * @param gSlope The slope for this metric
-   * @throws IOException
-   */
-  protected void emitMetric(String groupName, String name, String type,
-      String value, GangliaConf gConf, GangliaSlope gSlope)
-    throws IOException {
+      if (name == null) {
+         LOG.warn("Metric was emitted with no name.");
+         return;
+      } else if (value == null) {
+         LOG.warn("Metric name " + name + " was emitted with a null value.");
+         return;
+      } else if (type == null) {
+         LOG.warn("Metric name " + name + ", value " + value + " has no type.");
+         return;
+      }
 
-    if (name == null) {
-      LOG.warn("Metric was emitted with no name.");
-      return;
-    } else if (value == null) {
-      LOG.warn("Metric name " + name + " was emitted with a null value.");
-      return;
-    } else if (type == null) {
-      LOG.warn("Metric name " + name + ", value " + value + " has no type.");
-      return;
-    }
+      if (LOG.isDebugEnabled()) {
+         LOG.debug("Emitting metric " + name + ", type " + type + ", value " + value + ", slope " + gSlope.name()
+               + " from hostname " + getHostName());
+      }
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Emitting metric " + name + ", type " + type + ", value " + value
-          + ", slope " + gSlope.name()+ " from hostname " + getHostName());
-    }
+      xdr_int(0); // metric_user_defined
+      xdr_string(type);
+      xdr_string(name);
+      xdr_string(value);
+      xdr_string(gConf.getUnits());
+      xdr_int(gSlope.ordinal());
+      xdr_int(gConf.getTmax());
+      xdr_int(gConf.getDmax());
 
-    xdr_int(0); // metric_user_defined
-    xdr_string(type);
-    xdr_string(name);
-    xdr_string(value);
-    xdr_string(gConf.getUnits());
-    xdr_int(gSlope.ordinal());
-    xdr_int(gConf.getTmax());
-    xdr_int(gConf.getDmax());
-
-    // send the metric to Ganglia hosts
-    emitToGangliaHosts();
-  }
+      // send the metric to Ganglia hosts
+      emitToGangliaHosts();
+   }
 }

@@ -21,37 +21,37 @@ import org.apache.hadoop.conf.Configuration;
 
 /** Buffer size parameter. */
 public class BufferSizeParam extends IntegerParam {
-  /** Parameter name. */
-  public static final String NAME = "buffersize";
-  /** Default parameter value. */
-  public static final String DEFAULT = NULL;
+   /** Parameter name. */
+   public static final String NAME = "buffersize";
 
-  private static final Domain DOMAIN = new Domain(NAME);
+   /** Default parameter value. */
+   public static final String DEFAULT = NULL;
 
-  /**
-   * Constructor.
-   * @param value the parameter value.
-   */
-  public BufferSizeParam(final Integer value) {
-    super(DOMAIN, value, 1, null);
-  }
+   private static final Domain DOMAIN = new Domain(NAME);
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public BufferSizeParam(final String str) {
-    this(DOMAIN.parse(str));
-  }
+   /**
+    * Constructor.
+    * @param value the parameter value.
+    */
+   public BufferSizeParam(final Integer value) {
+      super(DOMAIN, value, 1, null);
+   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public BufferSizeParam(final String str) {
+      this(DOMAIN.parse(str));
+   }
 
-  /** @return the value or, if it is null, return the default from conf. */
-  public int getValue(final Configuration conf) {
-    return getValue() != null? getValue()
-        : conf.getInt("io.file.buffer.size", 4096);
-  }
+   @Override
+   public String getName() {
+      return NAME;
+   }
+
+   /** @return the value or, if it is null, return the default from conf. */
+   public int getValue(final Configuration conf) {
+      return getValue() != null ? getValue() : conf.getInt("io.file.buffer.size", 4096);
+   }
 }

@@ -23,80 +23,82 @@ package org.apache.hadoop.metrics2;
  */
 public class MetricsTag {
 
-  private final String name;
-  private final String description;
-  private final String value;
+   private final String name;
 
-  /**
-   * Construct the tag with name, description and value
-   * @param name  of the tag
-   * @param description of the tag
-   * @param value of the tag
-   */
-  public MetricsTag(String name, String description, String value) {
-    this.name = name;
-    this.description = description;
-    this.value = value;
-  }
+   private final String description;
 
-  /**
-   * Get the name of the tag
-   * @return  the name
-   */
-  public String name() {
-    return name;
-  }
+   private final String value;
 
-  /**
-   * Get the description of the tag
-   * @return  the description
-   */
-  public String description() {
-    return description;
-  }
+   /**
+    * Construct the tag with name, description and value
+    * @param name  of the tag
+    * @param description of the tag
+    * @param value of the tag
+    */
+   public MetricsTag(String name, String description, String value) {
+      this.name = name;
+      this.description = description;
+      this.value = value;
+   }
 
-  /**
-   * Get the value of the tag
-   * @return  the value
-   */
-  public String value() {
-    return value;
-  }
+   /**
+    * Get the name of the tag
+    * @return  the name
+    */
+   public String name() {
+      return name;
+   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    final MetricsTag other = (MetricsTag) obj;
-    if (!this.name.equals(other.name())) {
-      return false;
-    }
-    if (!this.description.equals(other.description())) {
-      return false;
-    }
-    if (this.value == null || other.value() == null) {
-      if (this.value == null && other.value() == null) return true;
-      return false;
-    }
-    if (!this.value.equals(other.value())) {
-      return false;
-    }
-    return true;
-  }
+   /**
+    * Get the description of the tag
+    * @return  the description
+    */
+   public String description() {
+      return description;
+   }
 
-  @Override
-  public int hashCode() {
-    return name.hashCode() ^ (value == null ? 0 : value.hashCode());
-  }
+   /**
+    * Get the value of the tag
+    * @return  the value
+    */
+   public String value() {
+      return value;
+   }
 
-  @Override
-  public String toString() {
-    return "MetricsTag{" + "name='" + name + "' description='" + description +
-           "' value='" + value + "'}";
-  }
+   @Override
+   public boolean equals(Object obj) {
+      if (obj == null) {
+         return false;
+      }
+      if (getClass() != obj.getClass()) {
+         return false;
+      }
+      final MetricsTag other = (MetricsTag) obj;
+      if (!this.name.equals(other.name())) {
+         return false;
+      }
+      if (!this.description.equals(other.description())) {
+         return false;
+      }
+      if (this.value == null || other.value() == null) {
+         if (this.value == null && other.value() == null)
+            return true;
+         return false;
+      }
+      if (!this.value.equals(other.value())) {
+         return false;
+      }
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      return name.hashCode() ^ (value == null ? 0 : value.hashCode());
+   }
+
+   @Override
+   public String toString() {
+      return "MetricsTag{" + "name='" + name + "' description='" + description + "' value='" + value + "'}";
+   }
 
 }

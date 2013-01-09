@@ -25,24 +25,26 @@ import java.util.List;
  * used by {@link Groups}.
  */
 interface GroupMappingServiceProvider {
-  
-  /**
-   * Get all various group memberships of a given user.
-   * Returns EMPTY list in case of non-existing user
-   * @param user User's name
-   * @return group memberships of user
-   * @throws IOException
-   */
-  public List<String> getGroups(String user) throws IOException;
-  /**
-   * Refresh the cache of groups and user mapping
-   * @throws IOException
-   */
-  public void cacheGroupsRefresh() throws IOException;
-  /**
-   * Caches the group user information
-   * @param groups list of groups to add to cache
-   * @throws IOException
-   */
-  public void cacheGroupsAdd(List<String> groups) throws IOException;
+
+   /**
+    * Get all various group memberships of a given user.
+    * Returns EMPTY list in case of non-existing user
+    * @param user User's name
+    * @return group memberships of user
+    * @throws IOException
+    */
+   public List<String> getGroups(String user) throws IOException;
+
+   /**
+    * Refresh the cache of groups and user mapping
+    * @throws IOException
+    */
+   public void cacheGroupsRefresh() throws IOException;
+
+   /**
+    * Caches the group user information
+    * @param groups list of groups to add to cache
+    * @throws IOException
+    */
+   public void cacheGroupsAdd(List<String> groups) throws IOException;
 }

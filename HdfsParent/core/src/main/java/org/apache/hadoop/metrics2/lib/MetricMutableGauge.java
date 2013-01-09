@@ -22,26 +22,25 @@ package org.apache.hadoop.metrics2.lib;
  * The mutable gauge metric interface
  * @param <T> the type of the metric
  */
-public abstract class MetricMutableGauge<T extends Number>
-    extends MetricMutable {
+public abstract class MetricMutableGauge<T extends Number> extends MetricMutable {
 
-  /**
-   * Construct the metric with name and description
-   * @param name  of the metric
-   * @param description of the metric
-   */
-  public MetricMutableGauge(String name, String description) {
-    super(name, description);
-  }
+   /**
+    * Construct the metric with name and description
+    * @param name  of the metric
+    * @param description of the metric
+    */
+   public MetricMutableGauge(String name, String description) {
+      super(name, description);
+   }
 
-  /**
-   * Increment the value of the metric by 1
-   */
-  public abstract void incr();
+   /**
+    * Increment the value of the metric by 1
+    */
+   public abstract void incr();
 
-  /**
-   * Decrement the value of the metric by 1
-   */
-  public abstract void decr();
+   /**
+    * Decrement the value of the metric by 1
+    */
+   public abstract void decr();
 
 }

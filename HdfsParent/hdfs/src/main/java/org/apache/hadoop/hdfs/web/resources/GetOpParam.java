@@ -21,62 +21,59 @@ import java.net.HttpURLConnection;
 
 /** Http GET operation parameter. */
 public class GetOpParam extends HttpOpParam<GetOpParam.Op> {
-  /** Get operations. */
-  public static enum Op implements HttpOpParam.Op {
-    OPEN(HttpURLConnection.HTTP_OK),
+   /** Get operations. */
+   public static enum Op implements HttpOpParam.Op {
+      OPEN(HttpURLConnection.HTTP_OK),
 
-    GETFILESTATUS(HttpURLConnection.HTTP_OK),
-    LISTSTATUS(HttpURLConnection.HTTP_OK),
-    GETCONTENTSUMMARY(HttpURLConnection.HTTP_OK),
-    GETFILECHECKSUM(HttpURLConnection.HTTP_OK),
+      GETFILESTATUS(HttpURLConnection.HTTP_OK), LISTSTATUS(HttpURLConnection.HTTP_OK), GETCONTENTSUMMARY(
+            HttpURLConnection.HTTP_OK), GETFILECHECKSUM(HttpURLConnection.HTTP_OK),
 
-    GETHOMEDIRECTORY(HttpURLConnection.HTTP_OK),
-    GETDELEGATIONTOKEN(HttpURLConnection.HTTP_OK),
+      GETHOMEDIRECTORY(HttpURLConnection.HTTP_OK), GETDELEGATIONTOKEN(HttpURLConnection.HTTP_OK),
 
-    /** GET_BLOCK_LOCATIONS is a private unstable op. */
-    GET_BLOCK_LOCATIONS(HttpURLConnection.HTTP_OK),
+      /** GET_BLOCK_LOCATIONS is a private unstable op. */
+      GET_BLOCK_LOCATIONS(HttpURLConnection.HTTP_OK),
 
-    NULL(HttpURLConnection.HTTP_NOT_IMPLEMENTED);
+      NULL(HttpURLConnection.HTTP_NOT_IMPLEMENTED);
 
-    final int expectedHttpResponseCode;
+      final int expectedHttpResponseCode;
 
-    Op(final int expectedHttpResponseCode) {
-      this.expectedHttpResponseCode = expectedHttpResponseCode;
-    }
+      Op(final int expectedHttpResponseCode) {
+         this.expectedHttpResponseCode = expectedHttpResponseCode;
+      }
 
-    @Override
-    public HttpOpParam.Type getType() {
-      return HttpOpParam.Type.GET;
-    }
+      @Override
+      public HttpOpParam.Type getType() {
+         return HttpOpParam.Type.GET;
+      }
 
-    @Override
-    public boolean getDoOutput() {
-      return false;
-    }
+      @Override
+      public boolean getDoOutput() {
+         return false;
+      }
 
-    @Override
-    public int getExpectedHttpResponseCode() {
-      return expectedHttpResponseCode;
-    }
+      @Override
+      public int getExpectedHttpResponseCode() {
+         return expectedHttpResponseCode;
+      }
 
-    @Override
-    public String toQueryString() {
-      return NAME + "=" + this;
-    }
-  }
+      @Override
+      public String toQueryString() {
+         return NAME + "=" + this;
+      }
+   }
 
-  private static final Domain<Op> DOMAIN = new Domain<Op>(NAME, Op.class);
+   private static final Domain<Op> DOMAIN = new Domain<Op>(NAME, Op.class);
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public GetOpParam(final String str) {
-    super(DOMAIN, DOMAIN.parse(str));
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public GetOpParam(final String str) {
+      super(DOMAIN, DOMAIN.parse(str));
+   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   @Override
+   public String getName() {
+      return NAME;
+   }
 }

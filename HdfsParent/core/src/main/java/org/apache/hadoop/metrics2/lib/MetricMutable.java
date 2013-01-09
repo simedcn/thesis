@@ -25,51 +25,58 @@ import org.apache.hadoop.metrics2.MetricsRecordBuilder;
  */
 public abstract class MetricMutable {
 
-  /** name of the metric */
-  public final String name;
-  /** description of the metric */
-  public final String description;
+   /** name of the metric */
+   public final String name;
 
-  private volatile boolean changed = true;
+   /** description of the metric */
+   public final String description;
 
-  /**
-   * Construct a mutable metric
-   * @param name  of the metric
-   * @param description of the metric
-   */
-  public MetricMutable(String name, String description) {
-    this.name = name;
-    this.description = description;
-  }
+   private volatile boolean changed = true;
 
-  /**
-   * Get a snapshot/snapshot of the metric
-   * @param builder the metrics record builder
-   * @param all if true, snapshot unchanged metrics as well
-   */
-  public abstract void snapshot(MetricsRecordBuilder builder, boolean all);
+   /**
+    * Construct a mutable metric
+    * @param name  of the metric
+    * @param description of the metric
+    */
+   public MetricMutable(String name, String description) {
+      this.name = name;
+      this.description = description;
+   }
 
-  /**
-   * Get a sampe/snapshot of metric if changed
-   * @param builder the metrics record builder
-   */
-  public void snapshot(MetricsRecordBuilder builder) {
-    snapshot(builder, false);
-  }
+   /**
+    * Get a snapshot/snapshot of the metric
+    * @param builder the metrics record builder
+    * @param all if true, snapshot unchanged metrics as well
+    */
+   public abstract void snapshot(MetricsRecordBuilder builder, boolean all);
 
-  /**
-   * Set the changed flag in mutable operations
-   */
-  protected void setChanged() { changed = true; }
+   /**
+    * Get a sampe/snapshot of metric if changed
+    * @param builder the metrics record builder
+    */
+   public void snapshot(MetricsRecordBuilder builder) {
+      snapshot(builder, false);
+   }
 
-  /**
-   * Clear the changed flag in the snapshot operations
-   */
-  protected void clearChanged() { changed = false; }
+   /**
+    * Set the changed flag in mutable operations
+    */
+   protected void setChanged() {
+      changed = true;
+   }
 
-  /**
-   * @return  true if metric is changed since last snapshot/snapshot
-   */
-  public boolean changed() { return changed; }
+   /**
+    * Clear the changed flag in the snapshot operations
+    */
+   protected void clearChanged() {
+      changed = false;
+   }
+
+   /**
+    * @return  true if metric is changed since last snapshot/snapshot
+    */
+   public boolean changed() {
+      return changed;
+   }
 
 }

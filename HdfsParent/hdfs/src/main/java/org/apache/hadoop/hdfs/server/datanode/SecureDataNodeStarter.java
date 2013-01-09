@@ -34,81 +34,88 @@ import org.mortbay.jetty.nio.SelectChannelConnector;
  * privileged resources before main startup and handing them to the datanode.
  */
 public class SecureDataNodeStarter implements Daemon {
-  /**
-   * Stash necessary resources needed for datanode operation in a secure env.
-   */
-  public static class SecureResources {
-    private final ServerSocket streamingSocket;
-    private final SelectChannelConnector listener;
-    public SecureResources(ServerSocket streamingSocket,
-        SelectChannelConnector listener) {
+   /**
+    * Stash necessary resources needed for datanode operation in a secure env.
+    */
+   public static class SecureResources {
+      private final ServerSocket streamingSocket;
 
-      this.streamingSocket = streamingSocket;
-      this.listener = listener;
-    }
+      private final SelectChannelConnector listener;
 
-    public ServerSocket getStreamingSocket() { return streamingSocket; }
+      public SecureResources(ServerSocket streamingSocket, SelectChannelConnector listener) {
 
-    public SelectChannelConnector getListener() { return listener; }
-  }
-  
-  private String [] args;
-  private SecureResources resources;
-  
-  @Override
-  public void init(DaemonContext context) throws Exception {
-    System.err.println("Initializing secure datanode resources");
-    // We should only start up a secure datanode in a Kerberos-secured cluster
-    Configuration conf = new Configuration(); // Skip UGI method to not log in
-    if(!conf.get(HADOOP_SECURITY_AUTHENTICATION).equals("kerberos"))
-      throw new RuntimeException("Cannot start secure datanode in unsecure cluster");
-    
-    // Stash command-line arguments for regular datanode
-    args = context.getArguments();
-    
-    // Obtain secure port for data streaming to datanode
-    InetSocketAddress socAddr = DataNode.getStreamingAddr(conf);
-    int socketWriteTimeout = conf.getInt("dfs.datanode.socket.write.timeout",
-        HdfsConstants.WRITE_TIMEOUT);
-    
-    ServerSocket ss = (socketWriteTimeout > 0) ? 
-        ServerSocketChannel.open().socket() : new ServerSocket();
-    ss.bind(socAddr, 0);
-    
-    // Check that we got the port we need
-    if(ss.getLocalPort() != socAddr.getPort())
-      throw new RuntimeException("Unable to bind on specified streaming port in secure " +
-      		"context. Needed " + socAddr.getPort() + ", got " + ss.getLocalPort());
+         this.streamingSocket = streamingSocket;
+         this.listener = listener;
+      }
 
-    // Obtain secure listener for web server
-    SelectChannelConnector listener = 
-                   (SelectChannelConnector)HttpServer.createDefaultChannelConnector();
-    InetSocketAddress infoSocAddr = DataNode.getInfoAddr(conf);
-    listener.setHost(infoSocAddr.getHostName());
-    listener.setPort(infoSocAddr.getPort());
-    // Open listener here in order to bind to port as root
-    listener.open(); 
-    if(listener.getPort() != infoSocAddr.getPort())
-      throw new RuntimeException("Unable to bind on specified info port in secure " +
-          "context. Needed " + socAddr.getPort() + ", got " + ss.getLocalPort());
-   
-    if(ss.getLocalPort() >= 1023 || listener.getPort() >= 1023)
-      throw new RuntimeException("Cannot start secure datanode on non-privileged "
-         +" ports. (streaming port = " + ss + " ) (http listener port = " + 
-         listener.getConnection() + "). Exiting.");
- 
-    System.err.println("Successfully obtained privileged resources (streaming port = "
-        + ss + " ) (http listener port = " + listener.getConnection() +")");
-    
-    resources = new SecureResources(ss, listener);
-  }
+      public ServerSocket getStreamingSocket() {
+         return streamingSocket;
+      }
 
-  @Override
-  public void start() throws Exception {
-    System.err.println("Starting regular datanode initialization");
-    DataNode.secureMain(args, resources);
-  }
-  
-  @Override public void destroy() { /* Nothing to do */ }
-  @Override public void stop() throws Exception { /* Nothing to do */ }
+      public SelectChannelConnector getListener() {
+         return listener;
+      }
+   }
+
+   private String[] args;
+
+   private SecureResources resources;
+
+   @Override
+   public void init(DaemonContext context) throws Exception {
+      System.err.println("Initializing secure datanode resources");
+      // We should only start up a secure datanode in a Kerberos-secured cluster
+      Configuration conf = new Configuration(); // Skip UGI method to not log in
+      if (!conf.get(HADOOP_SECURITY_AUTHENTICATION).equals("kerberos"))
+         throw new RuntimeException("Cannot start secure datanode in unsecure cluster");
+
+      // Stash command-line arguments for regular datanode
+      args = context.getArguments();
+
+      // Obtain secure port for data streaming to datanode
+      InetSocketAddress socAddr = DataNode.getStreamingAddr(conf);
+      int socketWriteTimeout = conf.getInt("dfs.datanode.socket.write.timeout", HdfsConstants.WRITE_TIMEOUT);
+
+      ServerSocket ss = (socketWriteTimeout > 0) ? ServerSocketChannel.open().socket() : new ServerSocket();
+      ss.bind(socAddr, 0);
+
+      // Check that we got the port we need
+      if (ss.getLocalPort() != socAddr.getPort())
+         throw new RuntimeException("Unable to bind on specified streaming port in secure " + "context. Needed "
+               + socAddr.getPort() + ", got " + ss.getLocalPort());
+
+      // Obtain secure listener for web server
+      SelectChannelConnector listener = (SelectChannelConnector) HttpServer.createDefaultChannelConnector();
+      InetSocketAddress infoSocAddr = DataNode.getInfoAddr(conf);
+      listener.setHost(infoSocAddr.getHostName());
+      listener.setPort(infoSocAddr.getPort());
+      // Open listener here in order to bind to port as root
+      listener.open();
+      if (listener.getPort() != infoSocAddr.getPort())
+         throw new RuntimeException("Unable to bind on specified info port in secure " + "context. Needed "
+               + socAddr.getPort() + ", got " + ss.getLocalPort());
+
+      if (ss.getLocalPort() >= 1023 || listener.getPort() >= 1023)
+         throw new RuntimeException("Cannot start secure datanode on non-privileged " + " ports. (streaming port = "
+               + ss + " ) (http listener port = " + listener.getConnection() + "). Exiting.");
+
+      System.err.println("Successfully obtained privileged resources (streaming port = " + ss
+            + " ) (http listener port = " + listener.getConnection() + ")");
+
+      resources = new SecureResources(ss, listener);
+   }
+
+   @Override
+   public void start() throws Exception {
+      System.err.println("Starting regular datanode initialization");
+      DataNode.secureMain(args, resources);
+   }
+
+   @Override
+   public void destroy() { /* Nothing to do */
+   }
+
+   @Override
+   public void stop() throws Exception { /* Nothing to do */
+   }
 }

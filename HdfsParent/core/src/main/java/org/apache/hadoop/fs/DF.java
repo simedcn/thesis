@@ -33,112 +33,107 @@ import org.apache.hadoop.util.Shell;
  */
 public class DF extends Shell {
 
-  /** Default DF refresh interval. */
-  public static final long DF_INTERVAL_DEFAULT = 3 * 1000;
-  
-  private final String dirPath;
-  private final File dirFile;
-  private String filesystem;
-  private String mount;
-  
-  public DF(File path, Configuration conf) throws IOException {
-    this(path, conf.getLong("dfs.df.interval", DF.DF_INTERVAL_DEFAULT));
-  }
+   /** Default DF refresh interval. */
+   public static final long DF_INTERVAL_DEFAULT = 3 * 1000;
 
-  public DF(File path, long dfInterval) throws IOException {
-    super(dfInterval);
-    this.dirPath = path.getCanonicalPath();
-    this.dirFile = path.getCanonicalFile();
-  }
-  
-  /// ACCESSORS
+   private final String dirPath;
 
-  /** @return the canonical path to the volume we're checking. */
-  public String getDirPath() {
-    return dirPath;
-  }
+   private final File dirFile;
 
-  /** @return a string indicating which filesystem volume we're checking. */
-  public String getFilesystem() throws IOException {
-    run();
-    return filesystem;
-  }
+   private String filesystem;
 
-  /** @return the capacity of the measured filesystem in bytes. */
-  public long getCapacity() {
-    return dirFile.getTotalSpace();
-  }
+   private String mount;
 
-  /** @return the total used space on the filesystem in bytes. */
-  public long getUsed() {
-    return dirFile.getTotalSpace() - dirFile.getFreeSpace();
-  }
+   public DF(File path, Configuration conf) throws IOException {
+      this(path, conf.getLong("dfs.df.interval", DF.DF_INTERVAL_DEFAULT));
+   }
 
-  /** @return the usable space remaining on the filesystem in bytes. */
-  public long getAvailable() {
-    return dirFile.getUsableSpace();
-  }
+   public DF(File path, long dfInterval) throws IOException {
+      super(dfInterval);
+      this.dirPath = path.getCanonicalPath();
+      this.dirFile = path.getCanonicalFile();
+   }
 
-  /** @return the amount of the volume full, as a percent. */
-  public int getPercentUsed() {
-    final double cap = (double) getCapacity();
-    final double used = (cap - (double) getAvailable());
-    return (int) (used * 100.0 / cap);
-  }
+   /// ACCESSORS
 
-  /** @return the filesystem mount point for the indicated volume */
-  public String getMount() throws IOException {
-    run();
-    return mount;
-  }
-  
-  public String toString() {
-    return
-      "df -k " + mount +"\n" +
-      filesystem + "\t" +
-      getCapacity() / 1024 + "\t" +
-      getUsed() / 1024 + "\t" +
-      getAvailable() / 1024 + "\t" +
-      getPercentUsed() + "%\t" +
-      mount;
-  }
+   /** @return the canonical path to the volume we're checking. */
+   public String getDirPath() {
+      return dirPath;
+   }
 
-  protected String[] getExecString() {
-    // ignoring the error since the exit code it enough
-    return new String[] {"bash","-c","exec 'df' '-k' '" + dirPath 
-                         + "' 2>/dev/null"};
-  }
-  
-  protected void parseExecResult(BufferedReader lines) throws IOException {
-    lines.readLine();                         // skip headings
-  
-    String line = lines.readLine();
-    if (line == null) {
-      throw new IOException( "Expecting a line not the end of stream" );
-    }
-    StringTokenizer tokens =
-      new StringTokenizer(line, " \t\n\r\f%");
-    
-    this.filesystem = tokens.nextToken();
-    if (!tokens.hasMoreTokens()) {            // for long filesystem name
-      line = lines.readLine();
+   /** @return a string indicating which filesystem volume we're checking. */
+   public String getFilesystem() throws IOException {
+      run();
+      return filesystem;
+   }
+
+   /** @return the capacity of the measured filesystem in bytes. */
+   public long getCapacity() {
+      return dirFile.getTotalSpace();
+   }
+
+   /** @return the total used space on the filesystem in bytes. */
+   public long getUsed() {
+      return dirFile.getTotalSpace() - dirFile.getFreeSpace();
+   }
+
+   /** @return the usable space remaining on the filesystem in bytes. */
+   public long getAvailable() {
+      return dirFile.getUsableSpace();
+   }
+
+   /** @return the amount of the volume full, as a percent. */
+   public int getPercentUsed() {
+      final double cap = (double) getCapacity();
+      final double used = (cap - (double) getAvailable());
+      return (int) (used * 100.0 / cap);
+   }
+
+   /** @return the filesystem mount point for the indicated volume */
+   public String getMount() throws IOException {
+      run();
+      return mount;
+   }
+
+   public String toString() {
+      return "df -k " + mount + "\n" + filesystem + "\t" + getCapacity() / 1024 + "\t" + getUsed() / 1024 + "\t"
+            + getAvailable() / 1024 + "\t" + getPercentUsed() + "%\t" + mount;
+   }
+
+   protected String[] getExecString() {
+      // ignoring the error since the exit code it enough
+      return new String[] { "bash", "-c", "exec 'df' '-k' '" + dirPath + "' 2>/dev/null" };
+   }
+
+   protected void parseExecResult(BufferedReader lines) throws IOException {
+      lines.readLine(); // skip headings
+
+      String line = lines.readLine();
       if (line == null) {
-        throw new IOException( "Expecting a line not the end of stream" );
+         throw new IOException("Expecting a line not the end of stream");
       }
-      tokens = new StringTokenizer(line, " \t\n\r\f%");
-    }
-    Long.parseLong(tokens.nextToken()); // skip capacity
-    Long.parseLong(tokens.nextToken()); // skip used
-    Long.parseLong(tokens.nextToken()); // skip available
-    Integer.parseInt(tokens.nextToken()); // skip percentUsed
-    this.mount = tokens.nextToken();
-  }
+      StringTokenizer tokens = new StringTokenizer(line, " \t\n\r\f%");
 
-  public static void main(String[] args) throws Exception {
-    String path = ".";
-    if (args.length > 0)
-      path = args[0];
+      this.filesystem = tokens.nextToken();
+      if (!tokens.hasMoreTokens()) { // for long filesystem name
+         line = lines.readLine();
+         if (line == null) {
+            throw new IOException("Expecting a line not the end of stream");
+         }
+         tokens = new StringTokenizer(line, " \t\n\r\f%");
+      }
+      Long.parseLong(tokens.nextToken()); // skip capacity
+      Long.parseLong(tokens.nextToken()); // skip used
+      Long.parseLong(tokens.nextToken()); // skip available
+      Integer.parseInt(tokens.nextToken()); // skip percentUsed
+      this.mount = tokens.nextToken();
+   }
 
-    System.out.println(new DF(new File(path), DF_INTERVAL_DEFAULT).toString());
-  }
+   public static void main(String[] args) throws Exception {
+      String path = ".";
+      if (args.length > 0)
+         path = args[0];
+
+      System.out.println(new DF(new File(path), DF_INTERVAL_DEFAULT).toString());
+   }
 }

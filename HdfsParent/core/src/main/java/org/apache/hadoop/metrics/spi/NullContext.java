@@ -33,38 +33,37 @@ import org.apache.hadoop.classification.InterfaceStability;
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
 public class NullContext extends AbstractMetricsContext {
-    
-  /** Creates a new instance of NullContext */
-  @InterfaceAudience.Private
-  public NullContext() {
-  }
-    
-  /**
-   * Do-nothing version of startMonitoring
-   */
-  @InterfaceAudience.Private
-  public void startMonitoring() {
-  }
-    
-  /**
-   * Do-nothing version of emitRecord
-   */
-  @InterfaceAudience.Private
-  protected void emitRecord(String contextName, String recordName,
-                            OutputRecord outRec) 
-  {}
-    
-  /**
-   * Do-nothing version of update
-   */
-  @InterfaceAudience.Private
-  protected void update(MetricsRecordImpl record) {
-  }
-    
-  /**
-   * Do-nothing version of remove
-   */
-  @InterfaceAudience.Private
-  protected void remove(MetricsRecordImpl record) {
-  }
+
+   /** Creates a new instance of NullContext */
+   @InterfaceAudience.Private
+   public NullContext() {
+   }
+
+   /**
+    * Do-nothing version of startMonitoring
+    */
+   @InterfaceAudience.Private
+   public void startMonitoring() {
+   }
+
+   /**
+    * Do-nothing version of emitRecord
+    */
+   @InterfaceAudience.Private
+   protected void emitRecord(String contextName, String recordName, OutputRecord outRec) {
+   }
+
+   /**
+    * Do-nothing version of update
+    */
+   @InterfaceAudience.Private
+   protected void update(MetricsRecordImpl record) {
+   }
+
+   /**
+    * Do-nothing version of remove
+    */
+   @InterfaceAudience.Private
+   protected void remove(MetricsRecordImpl record) {
+   }
 }

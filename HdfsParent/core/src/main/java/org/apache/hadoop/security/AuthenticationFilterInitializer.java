@@ -40,36 +40,34 @@ import java.util.Map;
  */
 public class AuthenticationFilterInitializer extends FilterInitializer {
 
-  private static final String PREFIX = "hadoop.http.authentication.";
+   private static final String PREFIX = "hadoop.http.authentication.";
 
-  /**
-   * Initializes Alfredo AuthenticationFilter.
-   * <p/>
-   * Propagates to Alfredo AuthenticationFilter configuration all Hadoop
-   * configuration properties prefixed with "hadoop.http.authentication."
-   *
-   * @param container The filter container
-   * @param conf Configuration for run-time parameters
-   */
-  @Override
-  public void initFilter(FilterContainer container, Configuration conf) {
-    Map<String, String> filterConfig = new HashMap<String, String>();
+   /**
+    * Initializes Alfredo AuthenticationFilter.
+    * <p/>
+    * Propagates to Alfredo AuthenticationFilter configuration all Hadoop
+    * configuration properties prefixed with "hadoop.http.authentication."
+    *
+    * @param container The filter container
+    * @param conf Configuration for run-time parameters
+    */
+   @Override
+   public void initFilter(FilterContainer container, Configuration conf) {
+      Map<String, String> filterConfig = new HashMap<String, String>();
 
-    //setting the cookie path to root '/' so it is used for all resources.
-    filterConfig.put(AuthenticationFilter.COOKIE_PATH, "/");
+      //setting the cookie path to root '/' so it is used for all resources.
+      filterConfig.put(AuthenticationFilter.COOKIE_PATH, "/");
 
-    for (Map.Entry<String, String> entry : conf) {
-      String name = entry.getKey();
-      if (name.startsWith(PREFIX)) {
-        String value = conf.get(name);
-        name = name.substring(PREFIX.length());
-        filterConfig.put(name, value);
+      for (Map.Entry<String, String> entry : conf) {
+         String name = entry.getKey();
+         if (name.startsWith(PREFIX)) {
+            String value = conf.get(name);
+            name = name.substring(PREFIX.length());
+            filterConfig.put(name, value);
+         }
       }
-    }
 
-    container.addFilter("authentication",
-                        AuthenticationFilter.class.getName(),
-                        filterConfig);
-  }
+      container.addFilter("authentication", AuthenticationFilter.class.getName(), filterConfig);
+   }
 
 }

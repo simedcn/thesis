@@ -207,7 +207,7 @@ public class HadoopLocationWizard extends WizardPage {
     {
       String fsDefaultURI = location.getConfProp(ConfProp.FS_DEFAULT_URI);
       try {
-        URI uri = new URI(fsDefaultURI);
+        new URI(fsDefaultURI);
       } catch (URISyntaxException e) {
 
         setMessage("The default file system URI is invalid. "
@@ -291,10 +291,12 @@ public class HadoopLocationWizard extends WizardPage {
      * @param propName the property name
      * @return the current property value
      */
+    @SuppressWarnings("unused")
     String get(String propName) {
       return location.getConfProp(propName);
     }
 
+    @SuppressWarnings("unused")
     String get(ConfProp prop) {
       return location.getConfProp(prop);
     }

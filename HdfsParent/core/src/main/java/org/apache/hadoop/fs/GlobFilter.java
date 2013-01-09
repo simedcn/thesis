@@ -21,41 +21,41 @@ package org.apache.hadoop.fs;
 import java.util.regex.PatternSyntaxException;
 import java.io.IOException;
 
- // A class that could decide if a string matches the glob or not
+// A class that could decide if a string matches the glob or not
 class GlobFilter implements PathFilter {
-  private final static PathFilter DEFAULT_FILTER = new PathFilter() {
+   private final static PathFilter DEFAULT_FILTER = new PathFilter() {
       public boolean accept(Path file) {
-        return true;
+         return true;
       }
-    };
+   };
 
-  private PathFilter userFilter = DEFAULT_FILTER;
-  private GlobPattern pattern;
+   private PathFilter userFilter = DEFAULT_FILTER;
 
-  GlobFilter(String filePattern) throws IOException {
-    init(filePattern, DEFAULT_FILTER);
-  }
+   private GlobPattern pattern;
 
-  GlobFilter(String filePattern, PathFilter filter) throws IOException {
-    init(filePattern, filter);
-  }
+   GlobFilter(String filePattern) throws IOException {
+      init(filePattern, DEFAULT_FILTER);
+   }
 
-  void init(String filePattern, PathFilter filter) throws IOException {
-    try {
-      userFilter = filter;
-      pattern = new GlobPattern(filePattern);
-    }
-    catch (PatternSyntaxException e) {
-      // Existing code expects IOException startWith("Illegal file pattern")
-      throw new IOException("Illegal file pattern: "+ e.getMessage(), e);
-    }
-  }
+   GlobFilter(String filePattern, PathFilter filter) throws IOException {
+      init(filePattern, filter);
+   }
 
-  boolean hasPattern() {
-    return pattern.hasWildcard();
-  }
+   void init(String filePattern, PathFilter filter) throws IOException {
+      try {
+         userFilter = filter;
+         pattern = new GlobPattern(filePattern);
+      } catch (PatternSyntaxException e) {
+         // Existing code expects IOException startWith("Illegal file pattern")
+         throw new IOException("Illegal file pattern: " + e.getMessage(), e);
+      }
+   }
 
-  public boolean accept(Path path) {
-    return pattern.matches(path.getName()) && userFilter.accept(path);
-  }
+   boolean hasPattern() {
+      return pattern.hasWildcard();
+   }
+
+   public boolean accept(Path path) {
+      return pattern.matches(path.getName()) && userFilter.accept(path);
+   }
 }

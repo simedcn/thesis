@@ -19,80 +19,79 @@ package org.apache.hadoop.hdfs.web.resources;
 
 import javax.ws.rs.core.Response;
 
-
 /** Http operation parameter. */
-public abstract class HttpOpParam<E extends Enum<E> & HttpOpParam.Op>
-    extends EnumParam<E> {
-  /** Parameter name. */
-  public static final String NAME = "op";
+public abstract class HttpOpParam<E extends Enum<E> & HttpOpParam.Op> extends EnumParam<E> {
+   /** Parameter name. */
+   public static final String NAME = "op";
 
-  /** Default parameter value. */
-  public static final String DEFAULT = NULL;
+   /** Default parameter value. */
+   public static final String DEFAULT = NULL;
 
-  /** Http operation types */
-  public static enum Type {
-    GET, PUT, POST, DELETE;
-  }
+   /** Http operation types */
+   public static enum Type {
+      GET, PUT, POST, DELETE;
+   }
 
-  /** Http operation interface. */
-  public static interface Op {
-    /** @return the Http operation type. */
-    public Type getType();
+   /** Http operation interface. */
+   public static interface Op {
+      /** @return the Http operation type. */
+      public Type getType();
 
-    /** @return true if the operation will do output. */
-    public boolean getDoOutput();
+      /** @return true if the operation will do output. */
+      public boolean getDoOutput();
 
-    /** @return true the expected http response code. */
-    public int getExpectedHttpResponseCode();
+      /** @return true the expected http response code. */
+      public int getExpectedHttpResponseCode();
 
-    /** @return a URI query string. */
-    public String toQueryString();
-  }
+      /** @return a URI query string. */
+      public String toQueryString();
+   }
 
-  /** Expects HTTP response 307 "Temporary Redirect". */
-  public static class TemporaryRedirectOp implements Op {
-    static final TemporaryRedirectOp CREATE = new TemporaryRedirectOp(PutOpParam.Op.CREATE);
-    static final TemporaryRedirectOp APPEND = new TemporaryRedirectOp(PostOpParam.Op.APPEND);
-    
-    /** Get an object for the given op. */
-    public static TemporaryRedirectOp valueOf(final Op op) {
-      if (op == CREATE.op) {
-        return CREATE;
-      } else if (op == APPEND.op) {
-        return APPEND;
+   /** Expects HTTP response 307 "Temporary Redirect". */
+   public static class TemporaryRedirectOp implements Op {
+      static final TemporaryRedirectOp CREATE = new TemporaryRedirectOp(PutOpParam.Op.CREATE);
+
+      static final TemporaryRedirectOp APPEND = new TemporaryRedirectOp(PostOpParam.Op.APPEND);
+
+      /** Get an object for the given op. */
+      public static TemporaryRedirectOp valueOf(final Op op) {
+         if (op == CREATE.op) {
+            return CREATE;
+         } else if (op == APPEND.op) {
+            return APPEND;
+         }
+         throw new IllegalArgumentException(op + " not found.");
       }
-      throw new IllegalArgumentException(op + " not found.");
-    }
 
-    private final Op op;
+      private final Op op;
 
-    private TemporaryRedirectOp(final Op op) {
-      this.op = op;
-    }
+      private TemporaryRedirectOp(final Op op) {
+         this.op = op;
+      }
 
-    @Override
-    public Type getType() {
-      return op.getType();
-    }
+      @Override
+      public Type getType() {
+         return op.getType();
+      }
 
-    @Override
-    public boolean getDoOutput() {
-      return op.getDoOutput();
-    }
+      @Override
+      public boolean getDoOutput() {
+         return op.getDoOutput();
+      }
 
-    /** Override the original expected response with "Temporary Redirect". */
-    @Override
-    public int getExpectedHttpResponseCode() {
-      return Response.Status.TEMPORARY_REDIRECT.getStatusCode();
-    }
+      /** Override the original expected response with "Temporary Redirect". */
+      @Override
+      public int getExpectedHttpResponseCode() {
+         return Response.Status.TEMPORARY_REDIRECT.getStatusCode();
+      }
 
-    @Override
-    public String toQueryString() {
-      return op.toQueryString();
-    }
-  }
+      @Override
+      public String toQueryString() {
+         return op.toQueryString();
+      }
+   }
 
-  HttpOpParam(final Domain<E> domain, final E value) {
-    super(domain, value);
-  }
+   HttpOpParam(final Domain<E> domain, final E value) {
+      super(domain, value);
+   }
 }

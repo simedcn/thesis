@@ -22,7 +22,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.navigator,
  org.eclipse.core.filesystem,
  org.apache.commons.logging
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: classes/,
  lib/hadoop-core.jar
 Bundle-Vendor: Apache Hadoop
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

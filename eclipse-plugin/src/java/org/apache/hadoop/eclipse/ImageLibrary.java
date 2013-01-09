@@ -28,7 +28,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.Bundle;
 
 /**
@@ -209,34 +208,6 @@ public class ImageLibrary {
   private boolean newSharedImage(String name, String sharedName) {
     boolean success = true;
     ImageDescriptor id = getSharedByName(sharedName);
-
-    if (id == null) {
-      id = ImageDescriptor.getMissingImageDescriptor();
-      // id = getSharedByName(ISharedImages.IMG_OBJS_ERROR_TSK);
-      success = false;
-    }
-
-    descMap.put(name, id);
-    imageMap.put(name, id.createImage(true));
-
-    return success;
-  }
-
-  /**
-   * Register an image from the workspace shared image pool. If the image
-   * resource does not exist or fails to load, a default "error" resource is
-   * supplied.
-   * 
-   * @param name name of the image
-   * @param sharedName name of the shared image ({@link ISharedImages})
-   * @return whether the image has correctly been loaded
-   */
-  private boolean newPluginImage(String name, String pluginId,
-      String filename) {
-
-    boolean success = true;
-    ImageDescriptor id =
-        AbstractUIPlugin.imageDescriptorFromPlugin(pluginId, filename);
 
     if (id == null) {
       id = ImageDescriptor.getMissingImageDescriptor();

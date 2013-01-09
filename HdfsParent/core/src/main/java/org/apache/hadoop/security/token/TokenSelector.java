@@ -29,6 +29,5 @@ import org.apache.hadoop.io.Text;
  *          T extends TokenIdentifier
  */
 public interface TokenSelector<T extends TokenIdentifier> {
-  Token<T> selectToken(Text service,
-      Collection<Token<? extends TokenIdentifier>> tokens);
+   Token<T> selectToken(Text service, Collection<Token<? extends TokenIdentifier>> tokens);
 }

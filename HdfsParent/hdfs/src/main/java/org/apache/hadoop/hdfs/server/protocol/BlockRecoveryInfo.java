@@ -25,42 +25,41 @@ import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.io.Writable;
 
 public class BlockRecoveryInfo implements Writable {
-  private Block block;
-  private boolean wasRecoveredOnStartup;
-  
-  public BlockRecoveryInfo() {
-    block = new Block();
-    wasRecoveredOnStartup = false;
-  }
-  
-  public BlockRecoveryInfo(Block block,
-      boolean wasRecoveredOnStartup)
-  {
-    this.block = new Block(block);
-    this.wasRecoveredOnStartup = wasRecoveredOnStartup;
-  }
-  
-  @Override
-  public void readFields(DataInput in) throws IOException {
-    block.readFields(in);
-    wasRecoveredOnStartup = in.readBoolean();
-  }
-  
-  @Override
-  public void write(DataOutput out) throws IOException {
-    block.write(out);
-    out.writeBoolean(wasRecoveredOnStartup);    
-  }
+   private Block block;
 
-  public Block getBlock() {
-    return block;
-  }
-  public boolean wasRecoveredOnStartup() {
-    return wasRecoveredOnStartup;
-  }
-  
-  public String toString() {
-    return "BlockRecoveryInfo(block=" + block +
-      " wasRecoveredOnStartup=" + wasRecoveredOnStartup + ")";
-  }
+   private boolean wasRecoveredOnStartup;
+
+   public BlockRecoveryInfo() {
+      block = new Block();
+      wasRecoveredOnStartup = false;
+   }
+
+   public BlockRecoveryInfo(Block block, boolean wasRecoveredOnStartup) {
+      this.block = new Block(block);
+      this.wasRecoveredOnStartup = wasRecoveredOnStartup;
+   }
+
+   @Override
+   public void readFields(DataInput in) throws IOException {
+      block.readFields(in);
+      wasRecoveredOnStartup = in.readBoolean();
+   }
+
+   @Override
+   public void write(DataOutput out) throws IOException {
+      block.write(out);
+      out.writeBoolean(wasRecoveredOnStartup);
+   }
+
+   public Block getBlock() {
+      return block;
+   }
+
+   public boolean wasRecoveredOnStartup() {
+      return wasRecoveredOnStartup;
+   }
+
+   public String toString() {
+      return "BlockRecoveryInfo(block=" + block + " wasRecoveredOnStartup=" + wasRecoveredOnStartup + ")";
+   }
 }

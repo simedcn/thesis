@@ -28,13 +28,13 @@ import org.apache.hadoop.classification.InterfaceStability;
  * @deprecated in favor of <code>org.apache.hadoop.metrics2</code> usage.
  */
 @Deprecated
-@InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
+@InterfaceAudience.LimitedPrivate({ "HDFS", "MapReduce" })
 @InterfaceStability.Evolving
 public interface Updater {
-    
-  /**
-   * Timer-based call-back from the metric library. 
-   */
-  public abstract void doUpdates(MetricsContext context);
+
+   /**
+    * Timer-based call-back from the metric library. 
+    */
+   public abstract void doUpdates(MetricsContext context);
 
 }

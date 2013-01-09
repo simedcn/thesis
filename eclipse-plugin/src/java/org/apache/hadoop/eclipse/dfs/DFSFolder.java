@@ -91,7 +91,7 @@ public class DFSFolder extends DFSPath implements DFSContent {
 
     } else if (file.isFile()) {
       Path filePath = new Path(this.path, file.getName());
-      DFSFile newFile = new DFSFile(this, filePath, file, monitor);
+      new DFSFile(this, filePath, file, monitor);
     } else {
       // XXX don't know what the file is?
     }

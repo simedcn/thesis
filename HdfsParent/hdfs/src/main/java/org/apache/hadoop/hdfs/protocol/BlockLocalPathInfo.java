@@ -28,7 +28,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableFactories;
 import org.apache.hadoop.io.WritableFactory;
 
-
 /**
  * A block and the full path information to the block data file and
  * the metadata file stored on the local file system.
@@ -36,63 +35,72 @@ import org.apache.hadoop.io.WritableFactory;
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
 public class BlockLocalPathInfo implements Writable {
-  static final WritableFactory FACTORY = new WritableFactory() {
-    public Writable newInstance() { return new BlockLocalPathInfo(); }
-  };
-  static {                                      // register a ctor
-    WritableFactories.setFactory(BlockLocalPathInfo.class, FACTORY);
-  }
+   static final WritableFactory FACTORY = new WritableFactory() {
+      public Writable newInstance() {
+         return new BlockLocalPathInfo();
+      }
+   };
+   static { // register a ctor
+      WritableFactories.setFactory(BlockLocalPathInfo.class, FACTORY);
+   }
 
-  private Block block;
-  private String localBlockPath = "";  // local file storing the data
-  private String localMetaPath = "";   // local file storing the checksum
+   private Block block;
 
-  public BlockLocalPathInfo() {}
+   private String localBlockPath = ""; // local file storing the data
 
-  /**
-   * Constructs BlockLocalPathInfo.
-   * @param b The block corresponding to this lock path info.
-   * @param file Block data file.
-   * @param metafile Metadata file for the block.
-   */
-  public BlockLocalPathInfo(Block b, String file, String metafile) {
-    block = b;
-    localBlockPath = file;
-    localMetaPath = metafile;
-  }
+   private String localMetaPath = ""; // local file storing the checksum
 
-  /**
-   * Get the Block data file.
-   * @return Block data file.
-   */
-  public String getBlockPath() {return localBlockPath;}
-  
-  /**
-   * Get the Block metadata file.
-   * @return Block metadata file.
-   */
-  public String getMetaPath() {return localMetaPath;}
+   public BlockLocalPathInfo() {
+   }
 
-  @Override
-  public void write(DataOutput out) throws IOException {
-    block.write(out);
-    Text.writeString(out, localBlockPath);
-    Text.writeString(out, localMetaPath);
-  }
+   /**
+    * Constructs BlockLocalPathInfo.
+    * @param b The block corresponding to this lock path info.
+    * @param file Block data file.
+    * @param metafile Metadata file for the block.
+    */
+   public BlockLocalPathInfo(Block b, String file, String metafile) {
+      block = b;
+      localBlockPath = file;
+      localMetaPath = metafile;
+   }
 
-  @Override
-  public void readFields(DataInput in) throws IOException {
-    block = new Block();
-    block.readFields(in);
-    localBlockPath = Text.readString(in);
-    localMetaPath = Text.readString(in);
-  }
-  
-  /**
-   * Get number of bytes in the block.
-   * @return Number of bytes in the block.
-   */
-  public long getNumBytes() {
-    return block.getNumBytes();
-  }
+   /**
+    * Get the Block data file.
+    * @return Block data file.
+    */
+   public String getBlockPath() {
+      return localBlockPath;
+   }
+
+   /**
+    * Get the Block metadata file.
+    * @return Block metadata file.
+    */
+   public String getMetaPath() {
+      return localMetaPath;
+   }
+
+   @Override
+   public void write(DataOutput out) throws IOException {
+      block.write(out);
+      Text.writeString(out, localBlockPath);
+      Text.writeString(out, localMetaPath);
+   }
+
+   @Override
+   public void readFields(DataInput in) throws IOException {
+      block = new Block();
+      block.readFields(in);
+      localBlockPath = Text.readString(in);
+      localMetaPath = Text.readString(in);
+   }
+
+   /**
+    * Get number of bytes in the block.
+    * @return Number of bytes in the block.
+    */
+   public long getNumBytes() {
+      return block.getNumBytes();
+   }
 }

@@ -21,30 +21,31 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 /** User parameter. */
 public class UserParam extends StringParam {
-  /** Parameter name. */
-  public static final String NAME = "user.name";
-  /** Default parameter value. */
-  public static final String DEFAULT = "";
+   /** Parameter name. */
+   public static final String NAME = "user.name";
 
-  private static final Domain DOMAIN = new Domain(NAME, null);
+   /** Default parameter value. */
+   public static final String DEFAULT = "";
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public UserParam(final String str) {
-    super(DOMAIN, str == null || str.equals(DEFAULT)? null: str);
-  }
+   private static final Domain DOMAIN = new Domain(NAME, null);
 
-  /**
-   * Construct an object from a UGI.
-   */
-  public UserParam(final UserGroupInformation ugi) {
-    this(ugi.getShortUserName());
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public UserParam(final String str) {
+      super(DOMAIN, str == null || str.equals(DEFAULT) ? null : str);
+   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   /**
+    * Construct an object from a UGI.
+    */
+   public UserParam(final UserGroupInformation ugi) {
+      this(ugi.getShortUserName());
+   }
+
+   @Override
+   public String getName() {
+      return NAME;
+   }
 }

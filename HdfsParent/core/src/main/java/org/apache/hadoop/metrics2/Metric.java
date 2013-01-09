@@ -23,86 +23,89 @@ package org.apache.hadoop.metrics2;
  */
 public abstract class Metric {
 
-  public static final String NO_DESCRIPTION = "<<no description>>";
-  private final String name;
-  private final String description;
+   public static final String NO_DESCRIPTION = "<<no description>>";
 
-  /**
-   * Construct the metric with name only
-   * @param name  of the metric
-   */
-  public Metric(String name) {
-    this.name = name;
-    this.description = NO_DESCRIPTION;
-  }
+   private final String name;
 
-  /**
-   * Construct the metric with a name and a description
-   * @param name  of the metric
-   * @param desc  description of the metric
-   */
-  public Metric(String name, String desc) {
-    this.name = name;
-    this.description = desc;
-  }
+   private final String description;
 
-  /**
-   * Get the name of the metric
-   * @return  the name
-   */
-  public String name() {
-    return name;
-  }
+   /**
+    * Construct the metric with name only
+    * @param name  of the metric
+    */
+   public Metric(String name) {
+      this.name = name;
+      this.description = NO_DESCRIPTION;
+   }
 
-  /**
-   * Get the description of the metric
-   * @return  the description
-   */
-  public String description() {
-    return description;
-  }
+   /**
+    * Construct the metric with a name and a description
+    * @param name  of the metric
+    * @param desc  description of the metric
+    */
+   public Metric(String name, String desc) {
+      this.name = name;
+      this.description = desc;
+   }
 
-  /**
-   * Get the value of the metric
-   * @return  the value of the metric
-   */
-  public abstract Number value();
+   /**
+    * Get the name of the metric
+    * @return  the name
+    */
+   public String name() {
+      return name;
+   }
 
-  /**
-   * Accept a visitor interface
-   * @param visitor of the metric
-   */
-  public abstract void visit(MetricsVisitor visitor);
+   /**
+    * Get the description of the metric
+    * @return  the description
+    */
+   public String description() {
+      return description;
+   }
 
-  // Mostly for testing
-  @Override public boolean equals(Object obj) {
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    final Metric other = (Metric) obj;
-    if (!this.name.equals(other.name())) {
-      return false;
-    }
-    if (!this.description.equals(other.description())) {
-      return false;
-    }
-    if (!value().equals(other.value())) {
-      return false;
-    }
-    return true;
-  }
+   /**
+    * Get the value of the metric
+    * @return  the value of the metric
+    */
+   public abstract Number value();
 
-  @Override public int hashCode() {
-    return name.hashCode();
-  }
+   /**
+    * Accept a visitor interface
+    * @param visitor of the metric
+    */
+   public abstract void visit(MetricsVisitor visitor);
 
-  @Override
-  public String toString() {
-    return "Metric{" + "name='" + name + "' description='" + description +
-           "' value="+ value() +'}';
-  }
+   // Mostly for testing
+   @Override
+   public boolean equals(Object obj) {
+      if (obj == null) {
+         return false;
+      }
+      if (getClass() != obj.getClass()) {
+         return false;
+      }
+      final Metric other = (Metric) obj;
+      if (!this.name.equals(other.name())) {
+         return false;
+      }
+      if (!this.description.equals(other.description())) {
+         return false;
+      }
+      if (!value().equals(other.value())) {
+         return false;
+      }
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      return name.hashCode();
+   }
+
+   @Override
+   public String toString() {
+      return "Metric{" + "name='" + name + "' description='" + description + "' value=" + value() + '}';
+   }
 
 }

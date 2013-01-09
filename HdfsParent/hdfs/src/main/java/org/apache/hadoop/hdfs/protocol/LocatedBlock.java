@@ -34,120 +34,123 @@ import org.apache.hadoop.security.token.Token;
  ****************************************************/
 public class LocatedBlock implements Writable {
 
-  static {                                      // register a ctor
-    WritableFactories.setFactory
-      (LocatedBlock.class,
-       new WritableFactory() {
-         public Writable newInstance() { return new LocatedBlock(); }
-       });
-  }
+   static { // register a ctor
+      WritableFactories.setFactory(LocatedBlock.class, new WritableFactory() {
+         public Writable newInstance() {
+            return new LocatedBlock();
+         }
+      });
+   }
 
-  private Block b;
-  private long offset;  // offset of the first byte of the block in the file
-  private DatanodeInfo[] locs;
-  // corrupt flag is true if all of the replicas of a block are corrupt.
-  // else false. If block has few corrupt replicas, they are filtered and 
-  // their locations are not part of this object
-  private boolean corrupt;
-  private Token<BlockTokenIdentifier> blockToken = new Token<BlockTokenIdentifier>();
+   private Block b;
 
-  /**
-   */
-  public LocatedBlock() {
-    this(new Block(), new DatanodeInfo[0], 0L, false);
-  }
+   private long offset; // offset of the first byte of the block in the file
 
-  /**
-   */
-  public LocatedBlock(Block b, DatanodeInfo[] locs) {
-    this(b, locs, -1, false); // startOffset is unknown
-  }
+   private DatanodeInfo[] locs;
 
-  /**
-   */
-  public LocatedBlock(Block b, DatanodeInfo[] locs, long startOffset) {
-    this(b, locs, startOffset, false);
-  }
+   // corrupt flag is true if all of the replicas of a block are corrupt.
+   // else false. If block has few corrupt replicas, they are filtered and 
+   // their locations are not part of this object
+   private boolean corrupt;
 
-  /**
-   */
-  public LocatedBlock(Block b, DatanodeInfo[] locs, long startOffset, 
-                      boolean corrupt) {
-    this.b = b;
-    this.offset = startOffset;
-    this.corrupt = corrupt;
-    if (locs==null) {
-      this.locs = new DatanodeInfo[0];
-    } else {
-      this.locs = locs;
-    }
-  }
+   private Token<BlockTokenIdentifier> blockToken = new Token<BlockTokenIdentifier>();
 
-  public Token<BlockTokenIdentifier> getBlockToken() {
-    return blockToken;
-  }
+   /**
+    */
+   public LocatedBlock() {
+      this(new Block(), new DatanodeInfo[0], 0L, false);
+   }
 
-  public void setBlockToken(Token<BlockTokenIdentifier> token) {
-    this.blockToken = token;
-  }
+   /**
+    */
+   public LocatedBlock(Block b, DatanodeInfo[] locs) {
+      this(b, locs, -1, false); // startOffset is unknown
+   }
 
-  /**
-   */
-  public Block getBlock() {
-    return b;
-  }
+   /**
+    */
+   public LocatedBlock(Block b, DatanodeInfo[] locs, long startOffset) {
+      this(b, locs, startOffset, false);
+   }
 
-  /**
-   */
-  public DatanodeInfo[] getLocations() {
-    return locs;
-  }
-  
-  public long getStartOffset() {
-    return offset;
-  }
-  
-  public long getBlockSize() {
-    return b.getNumBytes();
-  }
+   /**
+    */
+   public LocatedBlock(Block b, DatanodeInfo[] locs, long startOffset, boolean corrupt) {
+      this.b = b;
+      this.offset = startOffset;
+      this.corrupt = corrupt;
+      if (locs == null) {
+         this.locs = new DatanodeInfo[0];
+      } else {
+         this.locs = locs;
+      }
+   }
 
-  void setStartOffset(long value) {
-    this.offset = value;
-  }
+   public Token<BlockTokenIdentifier> getBlockToken() {
+      return blockToken;
+   }
 
-  void setCorrupt(boolean corrupt) {
-    this.corrupt = corrupt;
-  }
-  
-  public boolean isCorrupt() {
-    return this.corrupt;
-  }
+   public void setBlockToken(Token<BlockTokenIdentifier> token) {
+      this.blockToken = token;
+   }
 
-  ///////////////////////////////////////////
-  // Writable
-  ///////////////////////////////////////////
-  public void write(DataOutput out) throws IOException {
-    blockToken.write(out);
-    out.writeBoolean(corrupt);
-    out.writeLong(offset);
-    b.write(out);
-    out.writeInt(locs.length);
-    for (int i = 0; i < locs.length; i++) {
-      locs[i].write(out);
-    }
-  }
+   /**
+    */
+   public Block getBlock() {
+      return b;
+   }
 
-  public void readFields(DataInput in) throws IOException {
-    blockToken.readFields(in);
-    this.corrupt = in.readBoolean();
-    offset = in.readLong();
-    this.b = new Block();
-    b.readFields(in);
-    int count = in.readInt();
-    this.locs = new DatanodeInfo[count];
-    for (int i = 0; i < locs.length; i++) {
-      locs[i] = new DatanodeInfo();
-      locs[i].readFields(in);
-    }
-  }
+   /**
+    */
+   public DatanodeInfo[] getLocations() {
+      return locs;
+   }
+
+   public long getStartOffset() {
+      return offset;
+   }
+
+   public long getBlockSize() {
+      return b.getNumBytes();
+   }
+
+   void setStartOffset(long value) {
+      this.offset = value;
+   }
+
+   void setCorrupt(boolean corrupt) {
+      this.corrupt = corrupt;
+   }
+
+   public boolean isCorrupt() {
+      return this.corrupt;
+   }
+
+   ///////////////////////////////////////////
+   // Writable
+   ///////////////////////////////////////////
+   public void write(DataOutput out) throws IOException {
+      blockToken.write(out);
+      out.writeBoolean(corrupt);
+      out.writeLong(offset);
+      b.write(out);
+      out.writeInt(locs.length);
+      for (int i = 0; i < locs.length; i++) {
+         locs[i].write(out);
+      }
+   }
+
+   public void readFields(DataInput in) throws IOException {
+      blockToken.readFields(in);
+      this.corrupt = in.readBoolean();
+      offset = in.readLong();
+      this.b = new Block();
+      b.readFields(in);
+      int count = in.readInt();
+      this.locs = new DatanodeInfo[count];
+      for (int i = 0; i < locs.length; i++) {
+         locs[i] = new DatanodeInfo();
+         locs[i].readFields(in);
+      }
+   }
 }

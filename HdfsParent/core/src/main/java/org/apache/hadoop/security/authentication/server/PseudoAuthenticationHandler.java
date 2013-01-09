@@ -38,97 +38,97 @@ import java.util.Properties;
  */
 public class PseudoAuthenticationHandler implements AuthenticationHandler {
 
-  /**
-   * Constant that identifies the authentication mechanism.
-   */
-  public static final String TYPE = "simple";
+   /**
+    * Constant that identifies the authentication mechanism.
+    */
+   public static final String TYPE = "simple";
 
-  /**
-   * Constant for the configuration property that indicates if anonymous users are allowed.
-   */
-  public static final String ANONYMOUS_ALLOWED = TYPE + ".anonymous.allowed";
+   /**
+    * Constant for the configuration property that indicates if anonymous users are allowed.
+    */
+   public static final String ANONYMOUS_ALLOWED = TYPE + ".anonymous.allowed";
 
-  private boolean acceptAnonymous;
+   private boolean acceptAnonymous;
 
-  /**
-   * Initializes the authentication handler instance.
-   * <p/>
-   * This method is invoked by the {@link AuthenticationFilter#init} method.
-   *
-   * @param config configuration properties to initialize the handler.
-   *
-   * @throws ServletException thrown if the handler could not be initialized.
-   */
-  @Override
-  public void init(Properties config) throws ServletException {
-    acceptAnonymous = Boolean.parseBoolean(config.getProperty(ANONYMOUS_ALLOWED, "false"));
-  }
+   /**
+    * Initializes the authentication handler instance.
+    * <p/>
+    * This method is invoked by the {@link AuthenticationFilter#init} method.
+    *
+    * @param config configuration properties to initialize the handler.
+    *
+    * @throws ServletException thrown if the handler could not be initialized.
+    */
+   @Override
+   public void init(Properties config) throws ServletException {
+      acceptAnonymous = Boolean.parseBoolean(config.getProperty(ANONYMOUS_ALLOWED, "false"));
+   }
 
-  /**
-   * Returns if the handler is configured to support anonymous users.
-   *
-   * @return if the handler is configured to support anonymous users.
-   */
-  protected boolean getAcceptAnonymous() {
-    return acceptAnonymous;
-  }
+   /**
+    * Returns if the handler is configured to support anonymous users.
+    *
+    * @return if the handler is configured to support anonymous users.
+    */
+   protected boolean getAcceptAnonymous() {
+      return acceptAnonymous;
+   }
 
-  /**
-   * Releases any resources initialized by the authentication handler.
-   * <p/>
-   * This implementation does a NOP.
-   */
-  @Override
-  public void destroy() {
-  }
+   /**
+    * Releases any resources initialized by the authentication handler.
+    * <p/>
+    * This implementation does a NOP.
+    */
+   @Override
+   public void destroy() {
+   }
 
-  /**
-   * Returns the authentication type of the authentication handler, 'simple'.
-   * <p/>
-   *
-   * @return the authentication type of the authentication handler, 'simple'.
-   */
-  @Override
-  public String getType() {
-    return TYPE;
-  }
+   /**
+    * Returns the authentication type of the authentication handler, 'simple'.
+    * <p/>
+    *
+    * @return the authentication type of the authentication handler, 'simple'.
+    */
+   @Override
+   public String getType() {
+      return TYPE;
+   }
 
-  /**
-   * Authenticates an HTTP client request.
-   * <p/>
-   * It extracts the {@link PseudoAuthenticator#USER_NAME} parameter from the query string and creates
-   * an {@link AuthenticationToken} with it.
-   * <p/>
-   * If the HTTP client request does not contain the {@link PseudoAuthenticator#USER_NAME} parameter and
-   * the handler is configured to allow anonymous users it returns the {@link AuthenticationToken#ANONYMOUS}
-   * token.
-   * <p/>
-   * If the HTTP client request does not contain the {@link PseudoAuthenticator#USER_NAME} parameter and
-   * the handler is configured to disallow anonymous users it throws an {@link AuthenticationException}.
-   *
-   * @param request the HTTP client request.
-   * @param response the HTTP client response.
-   *
-   * @return an authentication token if the HTTP client request is accepted and credentials are valid.
-   *
-   * @throws IOException thrown if an IO error occurred.
-   * @throws AuthenticationException thrown if HTTP client request was not accepted as an authentication request.
-   */
-  @Override
-  public AuthenticationToken authenticate(HttpServletRequest request, HttpServletResponse response)
-    throws IOException, AuthenticationException {
-    AuthenticationToken token;
-    String userName = request.getParameter(PseudoAuthenticator.USER_NAME);
-    if (userName == null) {
-      if (getAcceptAnonymous()) {
-        token = AuthenticationToken.ANONYMOUS;
+   /**
+    * Authenticates an HTTP client request.
+    * <p/>
+    * It extracts the {@link PseudoAuthenticator#USER_NAME} parameter from the query string and creates
+    * an {@link AuthenticationToken} with it.
+    * <p/>
+    * If the HTTP client request does not contain the {@link PseudoAuthenticator#USER_NAME} parameter and
+    * the handler is configured to allow anonymous users it returns the {@link AuthenticationToken#ANONYMOUS}
+    * token.
+    * <p/>
+    * If the HTTP client request does not contain the {@link PseudoAuthenticator#USER_NAME} parameter and
+    * the handler is configured to disallow anonymous users it throws an {@link AuthenticationException}.
+    *
+    * @param request the HTTP client request.
+    * @param response the HTTP client response.
+    *
+    * @return an authentication token if the HTTP client request is accepted and credentials are valid.
+    *
+    * @throws IOException thrown if an IO error occurred.
+    * @throws AuthenticationException thrown if HTTP client request was not accepted as an authentication request.
+    */
+   @Override
+   public AuthenticationToken authenticate(HttpServletRequest request, HttpServletResponse response)
+         throws IOException, AuthenticationException {
+      AuthenticationToken token;
+      String userName = request.getParameter(PseudoAuthenticator.USER_NAME);
+      if (userName == null) {
+         if (getAcceptAnonymous()) {
+            token = AuthenticationToken.ANONYMOUS;
+         } else {
+            throw new AuthenticationException("Anonymous requests are disallowed");
+         }
       } else {
-        throw new AuthenticationException("Anonymous requests are disallowed");
+         token = new AuthenticationToken(userName, userName, TYPE);
       }
-    } else {
-      token = new AuthenticationToken(userName, userName, TYPE);
-    }
-    return token;
-  }
+      return token;
+   }
 
 }

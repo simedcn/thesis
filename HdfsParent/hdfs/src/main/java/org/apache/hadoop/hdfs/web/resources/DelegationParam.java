@@ -21,24 +21,24 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 /** Represents delegation token used for authentication. */
 public class DelegationParam extends StringParam {
-  /** Parameter name. */
-  public static final String NAME = "delegation";
-  /** Default parameter value. */
-  public static final String DEFAULT = "";
+   /** Parameter name. */
+   public static final String NAME = "delegation";
 
-  private static final Domain DOMAIN = new Domain(NAME, null);
+   /** Default parameter value. */
+   public static final String DEFAULT = "";
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public DelegationParam(final String str) {
-    super(DOMAIN, UserGroupInformation.isSecurityEnabled()
-        && str != null && !str.equals(DEFAULT)? str: null);
-  }
+   private static final Domain DOMAIN = new Domain(NAME, null);
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public DelegationParam(final String str) {
+      super(DOMAIN, UserGroupInformation.isSecurityEnabled() && str != null && !str.equals(DEFAULT) ? str : null);
+   }
+
+   @Override
+   public String getName() {
+      return NAME;
+   }
 }

@@ -31,182 +31,181 @@ import org.apache.hadoop.metrics2.source.JvmMetricsSource;
 
 public class DataNodeInstrumentation implements MetricsSource {
 
-  final MetricsRegistry registry = new MetricsRegistry("datanode");
+   final MetricsRegistry registry = new MetricsRegistry("datanode");
 
-  final MetricMutableCounterLong bytesWritten =
-      registry.newCounter("bytes_written", "", 0L);
-  final MetricMutableCounterLong bytesRead =
-      registry.newCounter("bytes_read", "", 0L);
-  final MetricMutableCounterInt blocksWritten =
-      registry.newCounter("blocks_written", "", 0);
-  final MetricMutableCounterInt blocksRead =
-      registry.newCounter("blocks_read", "", 0);
-  final MetricMutableCounterInt blocksReplicated =
-      registry.newCounter("blocks_replicated", "", 0);
-  final MetricMutableCounterInt blocksRemoved =
-      registry.newCounter("blocks_removed", "", 0);
-  final MetricMutableCounterInt blocksVerified =
-      registry.newCounter("blocks_verified", "", 0);
-  final MetricMutableCounterInt blockVerificationFailures =
-      registry.newCounter("block_verification_failures", "", 0);
-  final MetricMutableCounterInt blocksGetLocalPathInfo = 
-      registry.newCounter("blocks_get_local_pathinfo", "", 0);
+   final MetricMutableCounterLong bytesWritten = registry.newCounter("bytes_written", "", 0L);
 
-  final MetricMutableCounterInt readsFromLocalClient =
-      registry.newCounter("reads_from_local_client", "", 0);
-  final MetricMutableCounterInt readsFromRemoteClient =
-      registry.newCounter("reads_from_remote_client", "", 0);
-  final MetricMutableCounterInt writesFromLocalClient =
-      registry.newCounter("writes_from_local_client", "", 0);
-  final MetricMutableCounterInt writesFromRemoteClient =
-      registry.newCounter("writes_from_remote_client", "", 0);
+   final MetricMutableCounterLong bytesRead = registry.newCounter("bytes_read", "", 0L);
 
-  final MetricMutableStat readBlockOp = registry.newStat("readBlockOp");
-  final MetricMutableStat writeBlockOp = registry.newStat("writeBlockOp");
-  final MetricMutableStat blockChecksumOp = registry.newStat("blockChecksumOp");
-  final MetricMutableStat copyBlockOp = registry.newStat("copyBlockOp");
-  final MetricMutableStat replaceBlockOp = registry.newStat("replaceBlockOp");
-  final MetricMutableStat heartbeats = registry.newStat("heartBeats");
-  final MetricMutableStat blockReports = registry.newStat("blockReports");
+   final MetricMutableCounterInt blocksWritten = registry.newCounter("blocks_written", "", 0);
 
+   final MetricMutableCounterInt blocksRead = registry.newCounter("blocks_read", "", 0);
 
-  public DataNodeInstrumentation(Configuration conf, String storageId) {
-    String sessionId = conf.get("session.id");
-    JvmMetricsSource.create("DataNode", sessionId);
-    registry.setContext("dfs").tag("sessionId", "", sessionId);
-  }
+   final MetricMutableCounterInt blocksReplicated = registry.newCounter("blocks_replicated", "", 0);
 
-  //@Override
-  public void shutdown() {
-    // metrics system shutdown would suffice
-  }
+   final MetricMutableCounterInt blocksRemoved = registry.newCounter("blocks_removed", "", 0);
 
-  //@Override
-  public void resetAllMinMax() {
-    readBlockOp.resetMinMax();
-    writeBlockOp.resetMinMax();
-    blockChecksumOp.resetMinMax();
-    copyBlockOp.resetMinMax();
-    replaceBlockOp.resetMinMax();
-    heartbeats.resetMinMax();
-    blockReports.resetMinMax();
-  }
+   final MetricMutableCounterInt blocksVerified = registry.newCounter("blocks_verified", "", 0);
 
-  //@Override
-  public void addHeartBeat(long latency) {
-    heartbeats.add(latency);
-  }
+   final MetricMutableCounterInt blockVerificationFailures = registry.newCounter("block_verification_failures", "", 0);
 
-  //@Override
-  public void addBlockReport(long latency) {
-    blockReports.add(latency);
-  }
+   final MetricMutableCounterInt blocksGetLocalPathInfo = registry.newCounter("blocks_get_local_pathinfo", "", 0);
 
-  //@Override
-  public void incrBlocksReplicated(int delta) {
-    blocksReplicated.incr(delta);
-  }
+   final MetricMutableCounterInt readsFromLocalClient = registry.newCounter("reads_from_local_client", "", 0);
 
-  //@Override
-  public void incrBlocksWritten() {
-    blocksWritten.incr();
-  }
+   final MetricMutableCounterInt readsFromRemoteClient = registry.newCounter("reads_from_remote_client", "", 0);
 
-  //@Override
-  public void incrBlocksRemoved(int delta) {
-    blocksRemoved.incr(delta);
-  }
+   final MetricMutableCounterInt writesFromLocalClient = registry.newCounter("writes_from_local_client", "", 0);
 
-  //@Override
-  public void incrBytesWritten(int delta) {
-    bytesWritten.incr(delta);
-  }
+   final MetricMutableCounterInt writesFromRemoteClient = registry.newCounter("writes_from_remote_client", "", 0);
 
-  //@Override
-  public void incrBlockVerificationFailures() {
-    blockVerificationFailures.incr();
-  }
+   final MetricMutableStat readBlockOp = registry.newStat("readBlockOp");
 
-  //@Override
-  public void incrBlocksVerified() {
-    blocksVerified.incr();
-  }
+   final MetricMutableStat writeBlockOp = registry.newStat("writeBlockOp");
 
-  //@Override
-  public void incrBlocksGetLocalPathInfo() {
-    blocksGetLocalPathInfo.incr();
-  }
+   final MetricMutableStat blockChecksumOp = registry.newStat("blockChecksumOp");
 
-  //@Override
-  public void addReadBlockOp(long latency) {
-    readBlockOp.add(latency);
-  }
+   final MetricMutableStat copyBlockOp = registry.newStat("copyBlockOp");
 
-  //@Override
-  public void incrReadsFromLocalClient() {
-    readsFromLocalClient.incr();
-  }
+   final MetricMutableStat replaceBlockOp = registry.newStat("replaceBlockOp");
 
-  //@Override
-  public void incrReadsFromRemoteClient() {
-    readsFromRemoteClient.incr();
-  }
+   final MetricMutableStat heartbeats = registry.newStat("heartBeats");
 
-  //@Override
-  public void addWriteBlockOp(long latency) {
-    writeBlockOp.add(latency);
-  }
+   final MetricMutableStat blockReports = registry.newStat("blockReports");
 
-  //@Override
-  public void incrWritesFromLocalClient() {
-    writesFromLocalClient.incr();
-  }
+   public DataNodeInstrumentation(Configuration conf, String storageId) {
+      String sessionId = conf.get("session.id");
+      JvmMetricsSource.create("DataNode", sessionId);
+      registry.setContext("dfs").tag("sessionId", "", sessionId);
+   }
 
-  //@Override
-  public void incrWritesFromRemoteClient() {
-    writesFromRemoteClient.incr();
-  }
+   //@Override
+   public void shutdown() {
+      // metrics system shutdown would suffice
+   }
 
-  //@Override
-  public void addReplaceBlockOp(long latency) {
-    replaceBlockOp.add(latency);
-  }
+   //@Override
+   public void resetAllMinMax() {
+      readBlockOp.resetMinMax();
+      writeBlockOp.resetMinMax();
+      blockChecksumOp.resetMinMax();
+      copyBlockOp.resetMinMax();
+      replaceBlockOp.resetMinMax();
+      heartbeats.resetMinMax();
+      blockReports.resetMinMax();
+   }
 
-  //@Override
-  public void addCopyBlockOp(long latency) {
-    copyBlockOp.add(latency);
-  }
+   //@Override
+   public void addHeartBeat(long latency) {
+      heartbeats.add(latency);
+   }
 
-  //@Override
-  public void addBlockChecksumOp(long latency) {
-    blockChecksumOp.add(latency);
-  }
+   //@Override
+   public void addBlockReport(long latency) {
+      blockReports.add(latency);
+   }
 
-  //@Override
-  public void incrBytesRead(int delta) {
-    bytesRead.incr(delta);
-  }
+   //@Override
+   public void incrBlocksReplicated(int delta) {
+      blocksReplicated.incr(delta);
+   }
 
-  //@Override
-  public void incrBlocksRead() {
-    blocksRead.incr();
-  }
+   //@Override
+   public void incrBlocksWritten() {
+      blocksWritten.incr();
+   }
 
-  @Override
-  public void getMetrics(MetricsBuilder builder, boolean all) {
-    registry.snapshot(builder.addRecord(registry.name()), all);
-  }
+   //@Override
+   public void incrBlocksRemoved(int delta) {
+      blocksRemoved.incr(delta);
+   }
 
-  public static DataNodeInstrumentation create(Configuration conf,
-                                               String storageID) {
-    return create(conf, storageID, DefaultMetricsSystem.INSTANCE);
-  }
+   //@Override
+   public void incrBytesWritten(int delta) {
+      bytesWritten.incr(delta);
+   }
 
-  public static DataNodeInstrumentation create(Configuration conf,
-                                               String storageID,
-                                               MetricsSystem ms) {
-    return ms.register("DataNode", "DataNode metrics",
-                       new DataNodeInstrumentation(conf, storageID));
-  }
+   //@Override
+   public void incrBlockVerificationFailures() {
+      blockVerificationFailures.incr();
+   }
+
+   //@Override
+   public void incrBlocksVerified() {
+      blocksVerified.incr();
+   }
+
+   //@Override
+   public void incrBlocksGetLocalPathInfo() {
+      blocksGetLocalPathInfo.incr();
+   }
+
+   //@Override
+   public void addReadBlockOp(long latency) {
+      readBlockOp.add(latency);
+   }
+
+   //@Override
+   public void incrReadsFromLocalClient() {
+      readsFromLocalClient.incr();
+   }
+
+   //@Override
+   public void incrReadsFromRemoteClient() {
+      readsFromRemoteClient.incr();
+   }
+
+   //@Override
+   public void addWriteBlockOp(long latency) {
+      writeBlockOp.add(latency);
+   }
+
+   //@Override
+   public void incrWritesFromLocalClient() {
+      writesFromLocalClient.incr();
+   }
+
+   //@Override
+   public void incrWritesFromRemoteClient() {
+      writesFromRemoteClient.incr();
+   }
+
+   //@Override
+   public void addReplaceBlockOp(long latency) {
+      replaceBlockOp.add(latency);
+   }
+
+   //@Override
+   public void addCopyBlockOp(long latency) {
+      copyBlockOp.add(latency);
+   }
+
+   //@Override
+   public void addBlockChecksumOp(long latency) {
+      blockChecksumOp.add(latency);
+   }
+
+   //@Override
+   public void incrBytesRead(int delta) {
+      bytesRead.incr(delta);
+   }
+
+   //@Override
+   public void incrBlocksRead() {
+      blocksRead.incr();
+   }
+
+   @Override
+   public void getMetrics(MetricsBuilder builder, boolean all) {
+      registry.snapshot(builder.addRecord(registry.name()), all);
+   }
+
+   public static DataNodeInstrumentation create(Configuration conf, String storageID) {
+      return create(conf, storageID, DefaultMetricsSystem.INSTANCE);
+   }
+
+   public static DataNodeInstrumentation create(Configuration conf, String storageID, MetricsSystem ms) {
+      return ms.register("DataNode", "DataNode metrics", new DataNodeInstrumentation(conf, storageID));
+   }
 
 }

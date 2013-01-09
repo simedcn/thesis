@@ -33,45 +33,45 @@ import org.apache.hadoop.util.Shell.ExitCodeException;
  * memberships of a given user.
  */
 public class ShellBasedUnixGroupsMapping implements GroupMappingServiceProvider {
-  
-  private static final Log LOG = LogFactory.getLog(ShellBasedUnixGroupsMapping.class);
-  
-  @Override
-  public List<String> getGroups(String user) throws IOException {
-    return getUnixGroups(user);
-  }
 
-  @Override
-  public void cacheGroupsRefresh() throws IOException {
-    // does nothing in this provider of user to groups mapping
-  }
+   private static final Log LOG = LogFactory.getLog(ShellBasedUnixGroupsMapping.class);
 
-  @Override
-  public void cacheGroupsAdd(List<String> groups) throws IOException {
-    // does nothing in this provider of user to groups mapping
-  }
+   @Override
+   public List<String> getGroups(String user) throws IOException {
+      return getUnixGroups(user);
+   }
 
-  /** 
-   * Get the current user's group list from Unix by running the command 'groups'
-   * NOTE. For non-existing user it will return EMPTY list
-   * @param user user name
-   * @return the groups list that the <code>user</code> belongs to
-   * @throws IOException if encounter any error when running the command
-   */
-  private static List<String> getUnixGroups(final String user) throws IOException {
-    String result = "";
-    try {
-      result = Shell.execCommand(Shell.getGroupsForUserCommand(user));
-    } catch (ExitCodeException e) {
-      // if we didn't get the group - just return empty list;
-      LOG.warn("got exception trying to get groups for user " + user, e);
-    }
-    
-    StringTokenizer tokenizer = new StringTokenizer(result);
-    List<String> groups = new LinkedList<String>();
-    while (tokenizer.hasMoreTokens()) {
-      groups.add(tokenizer.nextToken());
-    }
-    return groups;
-  }
+   @Override
+   public void cacheGroupsRefresh() throws IOException {
+      // does nothing in this provider of user to groups mapping
+   }
+
+   @Override
+   public void cacheGroupsAdd(List<String> groups) throws IOException {
+      // does nothing in this provider of user to groups mapping
+   }
+
+   /** 
+    * Get the current user's group list from Unix by running the command 'groups'
+    * NOTE. For non-existing user it will return EMPTY list
+    * @param user user name
+    * @return the groups list that the <code>user</code> belongs to
+    * @throws IOException if encounter any error when running the command
+    */
+   private static List<String> getUnixGroups(final String user) throws IOException {
+      String result = "";
+      try {
+         result = Shell.execCommand(Shell.getGroupsForUserCommand(user));
+      } catch (ExitCodeException e) {
+         // if we didn't get the group - just return empty list;
+         LOG.warn("got exception trying to get groups for user " + user, e);
+      }
+
+      StringTokenizer tokenizer = new StringTokenizer(result);
+      List<String> groups = new LinkedList<String>();
+      while (tokenizer.hasMoreTokens()) {
+         groups.add(tokenizer.nextToken());
+      }
+      return groups;
+   }
 }

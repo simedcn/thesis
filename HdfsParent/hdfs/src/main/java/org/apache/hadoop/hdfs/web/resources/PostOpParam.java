@@ -21,51 +21,51 @@ import java.net.HttpURLConnection;
 
 /** Http POST operation parameter. */
 public class PostOpParam extends HttpOpParam<PostOpParam.Op> {
-  /** Post operations. */
-  public static enum Op implements HttpOpParam.Op {
-    APPEND(HttpURLConnection.HTTP_OK),
+   /** Post operations. */
+   public static enum Op implements HttpOpParam.Op {
+      APPEND(HttpURLConnection.HTTP_OK),
 
-    NULL(HttpURLConnection.HTTP_NOT_IMPLEMENTED);
+      NULL(HttpURLConnection.HTTP_NOT_IMPLEMENTED);
 
-    final int expectedHttpResponseCode;
+      final int expectedHttpResponseCode;
 
-    Op(final int expectedHttpResponseCode) {
-      this.expectedHttpResponseCode = expectedHttpResponseCode;
-    }
+      Op(final int expectedHttpResponseCode) {
+         this.expectedHttpResponseCode = expectedHttpResponseCode;
+      }
 
-    @Override
-    public Type getType() {
-      return Type.POST;
-    }
+      @Override
+      public Type getType() {
+         return Type.POST;
+      }
 
-    @Override
-    public boolean getDoOutput() {
-      return true;
-    }
+      @Override
+      public boolean getDoOutput() {
+         return true;
+      }
 
-    @Override
-    public int getExpectedHttpResponseCode() {
-      return expectedHttpResponseCode;
-    }
+      @Override
+      public int getExpectedHttpResponseCode() {
+         return expectedHttpResponseCode;
+      }
 
-    /** @return a URI query string. */
-    public String toQueryString() {
-      return NAME + "=" + this;
-    }
-  }
+      /** @return a URI query string. */
+      public String toQueryString() {
+         return NAME + "=" + this;
+      }
+   }
 
-  private static final Domain<Op> DOMAIN = new Domain<PostOpParam.Op>(NAME, Op.class);
+   private static final Domain<Op> DOMAIN = new Domain<PostOpParam.Op>(NAME, Op.class);
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public PostOpParam(final String str) {
-    super(DOMAIN, DOMAIN.parse(str));
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public PostOpParam(final String str) {
+      super(DOMAIN, DOMAIN.parse(str));
+   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   @Override
+   public String getName() {
+      return NAME;
+   }
 }

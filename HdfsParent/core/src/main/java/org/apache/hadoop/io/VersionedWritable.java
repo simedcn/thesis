@@ -31,20 +31,19 @@ import java.io.IOException;
  */
 public abstract class VersionedWritable implements Writable {
 
-  /** Return the version number of the current implementation. */
-  public abstract byte getVersion();
-    
-  // javadoc from Writable
-  public void write(DataOutput out) throws IOException {
-    out.writeByte(getVersion());                  // store version
-  }
+   /** Return the version number of the current implementation. */
+   public abstract byte getVersion();
 
-  // javadoc from Writable
-  public void readFields(DataInput in) throws IOException {
-    byte version = in.readByte();                 // read version
-    if (version != getVersion())
-      throw new VersionMismatchException(getVersion(), version);
-  }
+   // javadoc from Writable
+   public void write(DataOutput out) throws IOException {
+      out.writeByte(getVersion()); // store version
+   }
 
-    
+   // javadoc from Writable
+   public void readFields(DataInput in) throws IOException {
+      byte version = in.readByte(); // read version
+      if (version != getVersion())
+         throw new VersionMismatchException(getVersion(), version);
+   }
+
 }

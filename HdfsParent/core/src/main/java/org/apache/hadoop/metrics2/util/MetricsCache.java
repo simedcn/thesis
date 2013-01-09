@@ -33,112 +33,114 @@ import org.apache.hadoop.metrics2.MetricsTag;
  */
 public class MetricsCache {
 
-  private static final long serialVersionUID = 1L;
-  private final Map<String, RecMap> map = new HashMap<String, RecMap>();
+   private static final long serialVersionUID = 1L;
 
-  static class RecMap extends HashMap<Collection<MetricsTag>, Record> {
-    private static final long serialVersionUID = 1L;
-  }
+   private final Map<String, RecMap> map = new HashMap<String, RecMap>();
 
-  /**
-   * Cached record
-   */
-  public static class Record {
-    final Map<String, String> tags = new LinkedHashMap<String, String>();
-    final Map<String, Metric> metrics = new LinkedHashMap<String, Metric>();
+   static class RecMap extends HashMap<Collection<MetricsTag>, Record> {
+      private static final long serialVersionUID = 1L;
+   }
 
-    /**
-     * Get the tag value
-     * @param key name of the tag
-     * @return the tag value
-     */
-    public String getTag(String key) {
-      return tags.get(key);
-    }
+   /**
+    * Cached record
+    */
+   public static class Record {
+      final Map<String, String> tags = new LinkedHashMap<String, String>();
 
-    /**
-     * Get the metric value
-     * @param key name of the metric
-     * @return the metric value
-     */
-    public Number getMetric(String key) {
-      Metric metric = metrics.get(key);
-      return metric != null ? metric.value() : null;
-    }
+      final Map<String, Metric> metrics = new LinkedHashMap<String, Metric>();
 
-    /**
-     * Get the metric value
-     * @param key name of the metric
-     * @return the metric value
-     */
-    public Metric getMetricInstance(String key) {
-      return metrics.get(key);
-    }
-
-    /**
-     * @return entry set of metrics
-     */
-    public Set<Map.Entry<String, Number>> metrics() {
-      Map<String, Number> map =
-        new LinkedHashMap<String,Number>(metrics.size());
-      for (Map.Entry<String, Metric> mapEntry : metrics.entrySet()) {
-        map.put(mapEntry.getKey(), mapEntry.getValue().value());
+      /**
+       * Get the tag value
+       * @param key name of the tag
+       * @return the tag value
+       */
+      public String getTag(String key) {
+         return tags.get(key);
       }
-      return map.entrySet();
-    }
 
-    /**
-     * @return entry set of metrics
-     */
-    public Set<Map.Entry<String, Metric>> metricsEntrySet() {
-      return metrics.entrySet();
-    }
-  }
-
-  /**
-   * Update the cache and return the cached record
-   * @param mr the update record
-   * @param includingTags cache tag values (for later lookup by name) if true
-   * @return the updated cached record
-   */
-  public Record update(MetricsRecord mr, boolean includingTags) {
-    String name = mr.name();
-    RecMap recMap = map.get(name);
-    if (recMap == null) {
-      recMap = new RecMap();
-      map.put(name, recMap);
-    }
-    Collection<MetricsTag> tags = (Collection<MetricsTag>)mr.tags();
-    Record rec = recMap.get(tags);
-    if (rec == null) {
-      rec = new Record();
-      recMap.put(tags, rec);
-    }
-    for (Metric m : mr.metrics()) {
-      rec.metrics.put(m.name(), m);
-    }
-    if (includingTags) {
-      // mostly for some sinks that include tags as part of a dense schema
-      for (MetricsTag t : mr.tags()) {
-        rec.tags.put(t.name(), t.value());
+      /**
+       * Get the metric value
+       * @param key name of the metric
+       * @return the metric value
+       */
+      public Number getMetric(String key) {
+         Metric metric = metrics.get(key);
+         return metric != null ? metric.value() : null;
       }
-    }
-    return rec;
-  }
 
-  public Record update(MetricsRecord mr) {
-    return update(mr, false);
-  }
+      /**
+       * Get the metric value
+       * @param key name of the metric
+       * @return the metric value
+       */
+      public Metric getMetricInstance(String key) {
+         return metrics.get(key);
+      }
 
-  /**
-   * Get the cached record
-   * @param name of the record
-   * @param tags of the record
-   * @return the cached record or null
-   */
-  public Record get(String name, Collection<MetricsTag> tags) {
-    RecMap tmap = map.get(name);
-    if (tmap == null) return null;
-    return tmap.get(tags);
-  }
+      /**
+       * @return entry set of metrics
+       */
+      public Set<Map.Entry<String, Number>> metrics() {
+         Map<String, Number> map = new LinkedHashMap<String, Number>(metrics.size());
+         for (Map.Entry<String, Metric> mapEntry : metrics.entrySet()) {
+            map.put(mapEntry.getKey(), mapEntry.getValue().value());
+         }
+         return map.entrySet();
+      }
+
+      /**
+       * @return entry set of metrics
+       */
+      public Set<Map.Entry<String, Metric>> metricsEntrySet() {
+         return metrics.entrySet();
+      }
+   }
+
+   /**
+    * Update the cache and return the cached record
+    * @param mr the update record
+    * @param includingTags cache tag values (for later lookup by name) if true
+    * @return the updated cached record
+    */
+   public Record update(MetricsRecord mr, boolean includingTags) {
+      String name = mr.name();
+      RecMap recMap = map.get(name);
+      if (recMap == null) {
+         recMap = new RecMap();
+         map.put(name, recMap);
+      }
+      Collection<MetricsTag> tags = (Collection<MetricsTag>) mr.tags();
+      Record rec = recMap.get(tags);
+      if (rec == null) {
+         rec = new Record();
+         recMap.put(tags, rec);
+      }
+      for (Metric m : mr.metrics()) {
+         rec.metrics.put(m.name(), m);
+      }
+      if (includingTags) {
+         // mostly for some sinks that include tags as part of a dense schema
+         for (MetricsTag t : mr.tags()) {
+            rec.tags.put(t.name(), t.value());
+         }
+      }
+      return rec;
+   }
+
+   public Record update(MetricsRecord mr) {
+      return update(mr, false);
+   }
+
+   /**
+    * Get the cached record
+    * @param name of the record
+    * @param tags of the record
+    * @return the cached record or null
+    */
+   public Record get(String name, Collection<MetricsTag> tags) {
+      RecMap tmap = map.get(name);
+      if (tmap == null)
+         return null;
+      return tmap.get(tags);
+   }
 }

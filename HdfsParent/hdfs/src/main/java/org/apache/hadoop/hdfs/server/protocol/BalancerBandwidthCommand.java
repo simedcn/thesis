@@ -42,77 +42,79 @@ import org.apache.hadoop.io.WritableFactory;
  * payload. The bandwidth value is in bytes per second.
  */
 public class BalancerBandwidthCommand extends DatanodeCommand {
-  public final static int BBC_VERSION = 1;
-  private final static long BBC_DEFAULTBANDWIDTH = 0L;
+   public final static int BBC_VERSION = 1;
 
-  private long bandwidth;
-  private int version = BBC_VERSION;
+   private final static long BBC_DEFAULTBANDWIDTH = 0L;
 
-  /**
-   * Balancer Bandwidth Command constructor. Sets bandwidth to 0.
-   */
-  BalancerBandwidthCommand() {
-    this(BBC_DEFAULTBANDWIDTH);
-  }
+   private long bandwidth;
 
-  /**
-   * Balancer Bandwidth Command constructor.
-   *
-   * @param bandwidth Blanacer bandwidth in bytes per second.
-   */
-  public BalancerBandwidthCommand(long bandwidth) {
-    super(DatanodeProtocol.DNA_BALANCERBANDWIDTHUPDATE);
-    this.bandwidth = bandwidth;
-  }
+   private int version = BBC_VERSION;
 
-  /**
-   * Get current value of the balancer bandwidth version.
-   *
-   * @return version blanacer bandwidth command version
-   */
-  public int getBalancerBandwidthVersion() {
-    return this.version;
-  }
+   /**
+    * Balancer Bandwidth Command constructor. Sets bandwidth to 0.
+    */
+   BalancerBandwidthCommand() {
+      this(BBC_DEFAULTBANDWIDTH);
+   }
 
-  /**
-   * Get current value of the max balancer bandwidth in bytes per second.
-   *
-   * @return bandwidth Blanacer bandwidth in bytes per second for this datanode.
-   */
-  public long getBalancerBandwidthValue() {
-    return this.bandwidth;
-  }
+   /**
+    * Balancer Bandwidth Command constructor.
+    *
+    * @param bandwidth Blanacer bandwidth in bytes per second.
+    */
+   public BalancerBandwidthCommand(long bandwidth) {
+      super(DatanodeProtocol.DNA_BALANCERBANDWIDTHUPDATE);
+      this.bandwidth = bandwidth;
+   }
 
-  // ///////////////////////////////////////////////
-  // Writable
-  // ///////////////////////////////////////////////
-  static { // register a ctor
-    WritableFactories.setFactory(BalancerBandwidthCommand.class, new WritableFactory() {
-      public Writable newInstance() {
-        return new BalancerBandwidthCommand();
-      }
-    });
-  }
+   /**
+    * Get current value of the balancer bandwidth version.
+    *
+    * @return version blanacer bandwidth command version
+    */
+   public int getBalancerBandwidthVersion() {
+      return this.version;
+   }
 
-  /**
-   * Writes the bandwidth payload to the Balancer Bandwidth Command packet.
-   * @param out DataOutput stream used for writing commands to the datanode.
-   * @throws IOException
-   */
-  public void write(DataOutput out) throws IOException {
-    super.write(out);
-    out.writeInt(this.version);
-    out.writeLong(this.bandwidth);
-  }
+   /**
+    * Get current value of the max balancer bandwidth in bytes per second.
+    *
+    * @return bandwidth Blanacer bandwidth in bytes per second for this datanode.
+    */
+   public long getBalancerBandwidthValue() {
+      return this.bandwidth;
+   }
 
-  /**
-   * Reads the bandwidth payload from the Balancer Bandwidth Command packet.
-   * @param in DataInput stream used for reading commands to the datanode.
-   * @throws IOException
-   */
-  public void readFields(DataInput in) throws IOException {
-    super.readFields(in);
-    this.version = in.readInt();
-    this.bandwidth = in.readLong();
-  }
+   // ///////////////////////////////////////////////
+   // Writable
+   // ///////////////////////////////////////////////
+   static { // register a ctor
+      WritableFactories.setFactory(BalancerBandwidthCommand.class, new WritableFactory() {
+         public Writable newInstance() {
+            return new BalancerBandwidthCommand();
+         }
+      });
+   }
+
+   /**
+    * Writes the bandwidth payload to the Balancer Bandwidth Command packet.
+    * @param out DataOutput stream used for writing commands to the datanode.
+    * @throws IOException
+    */
+   public void write(DataOutput out) throws IOException {
+      super.write(out);
+      out.writeInt(this.version);
+      out.writeLong(this.bandwidth);
+   }
+
+   /**
+    * Reads the bandwidth payload from the Balancer Bandwidth Command packet.
+    * @param in DataInput stream used for reading commands to the datanode.
+    * @throws IOException
+    */
+   public void readFields(DataInput in) throws IOException {
+      super.readFields(in);
+      this.version = in.readInt();
+      this.bandwidth = in.readLong();
+   }
 }

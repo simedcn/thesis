@@ -40,74 +40,78 @@ import javax.servlet.Filter;
  * so that the web UI is usable for a secure cluster without authentication.
  */
 public class StaticUserWebFilter extends FilterInitializer {
-  private static final String WEB_USERNAME = "Dr.Who";
-  private static final Principal WEB_USER = new User(WEB_USERNAME);
+   private static final String WEB_USERNAME = "Dr.Who";
 
-  static class User implements Principal {
-    private final String name;
-    public User(String name) {
-      this.name = name;
-    }
-    public String getName() {
-      return name;
-    }
-    @Override
-    public int hashCode() {
-      return name.hashCode();
-    }
-    @Override
-    public boolean equals(Object other) {
-      if (other == this) {
-        return true;
-      } else if (other == null || other.getClass() != getClass()) {
-        return false;
+   private static final Principal WEB_USER = new User(WEB_USERNAME);
+
+   static class User implements Principal {
+      private final String name;
+
+      public User(String name) {
+         this.name = name;
       }
-      return ((User) other).name.equals(name);
-    }
-    @Override
-    public String toString() {
-      return name;
-    }    
-  }
 
-  public static class StaticUserFilter implements Filter {
-
-    public void destroy() {
-      // NOTHING
-    }
-
-    public void doFilter(ServletRequest request, ServletResponse response,
-                         FilterChain chain
-                         ) throws IOException, ServletException {
-      HttpServletRequest httpRequest = (HttpServletRequest) request;
-      // if the user is already authenticated, don't override it
-      if (httpRequest.getRemoteUser() != null) {
-        chain.doFilter(request, response);
-      } else {
-        HttpServletRequestWrapper wrapper = 
-            new HttpServletRequestWrapper(httpRequest) {
-          @Override
-          public Principal getUserPrincipal() {
-            return WEB_USER;
-          }
-          @Override
-          public String getRemoteUser() {
-            return WEB_USERNAME;
-          }
-        };
-        chain.doFilter(wrapper, response);
+      public String getName() {
+         return name;
       }
-    }
 
-    public void init(FilterConfig conf) throws ServletException {
-      // NOTHING
-    }
-    
-  }
+      @Override
+      public int hashCode() {
+         return name.hashCode();
+      }
 
-  @Override
-  public void initFilter(FilterContainer container, Configuration conf) {
-    container.addFilter("static_user_filter", StaticUserFilter.class.getName(), 
-                        new HashMap<String,String>());
-  }
+      @Override
+      public boolean equals(Object other) {
+         if (other == this) {
+            return true;
+         } else if (other == null || other.getClass() != getClass()) {
+            return false;
+         }
+         return ((User) other).name.equals(name);
+      }
+
+      @Override
+      public String toString() {
+         return name;
+      }
+   }
+
+   public static class StaticUserFilter implements Filter {
+
+      public void destroy() {
+         // NOTHING
+      }
+
+      public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
+            ServletException {
+         HttpServletRequest httpRequest = (HttpServletRequest) request;
+         // if the user is already authenticated, don't override it
+         if (httpRequest.getRemoteUser() != null) {
+            chain.doFilter(request, response);
+         } else {
+            HttpServletRequestWrapper wrapper = new HttpServletRequestWrapper(httpRequest) {
+               @Override
+               public Principal getUserPrincipal() {
+                  return WEB_USER;
+               }
+
+               @Override
+               public String getRemoteUser() {
+                  return WEB_USERNAME;
+               }
+            };
+            chain.doFilter(wrapper, response);
+         }
+      }
+
+      public void init(FilterConfig conf) throws ServletException {
+         // NOTHING
+      }
+
+   }
+
+   @Override
+   public void initFilter(FilterContainer container, Configuration conf) {
+      container.addFilter("static_user_filter", StaticUserFilter.class.getName(), new HashMap<String, String>());
+   }
 }

@@ -216,13 +216,13 @@ public class ServerView extends ViewPart implements ITreeContentProvider,
     });
   }
 
+  @SuppressWarnings("unused")
   private void addItem() {
     System.out.printf("ADD ITEM\n");
   }
 
   private void updateActionEnablement() {
-    IStructuredSelection sel = (IStructuredSelection) viewer.getSelection();
-    // deleteItemAction.setEnabled(sel.size() > 0);
+    viewer.getSelection();
   }
 
   /**

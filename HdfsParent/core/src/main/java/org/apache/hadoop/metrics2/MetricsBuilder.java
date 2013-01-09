@@ -23,11 +23,11 @@ package org.apache.hadoop.metrics2;
  */
 public interface MetricsBuilder {
 
-  /**
-   * Add a metrics record
-   * @param name  of the record
-   * @return  a metrics record builder for the record
-   */
-  public MetricsRecordBuilder addRecord(String name);
+   /**
+    * Add a metrics record
+    * @param name  of the record
+    * @return  a metrics record builder for the record
+    */
+   public MetricsRecordBuilder addRecord(String name);
 
 }

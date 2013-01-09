@@ -19,31 +19,32 @@ package org.apache.hadoop.hdfs.web.resources;
 
 /** Length parameter. */
 public class LengthParam extends LongParam {
-  /** Parameter name. */
-  public static final String NAME = "length";
-  /** Default parameter value. */
-  public static final String DEFAULT = NULL;
+   /** Parameter name. */
+   public static final String NAME = "length";
 
-  private static final Domain DOMAIN = new Domain(NAME);
+   /** Default parameter value. */
+   public static final String DEFAULT = NULL;
 
-  /**
-   * Constructor.
-   * @param value the parameter value.
-   */
-  public LengthParam(final Long value) {
-    super(DOMAIN, value, 0L, null);
-  }
+   private static final Domain DOMAIN = new Domain(NAME);
 
-  /**
-   * Constructor.
-   * @param str a string representation of the parameter value.
-   */
-  public LengthParam(final String str) {
-    this(DOMAIN.parse(str));
-  }
+   /**
+    * Constructor.
+    * @param value the parameter value.
+    */
+   public LengthParam(final Long value) {
+      super(DOMAIN, value, 0L, null);
+   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
+   /**
+    * Constructor.
+    * @param str a string representation of the parameter value.
+    */
+   public LengthParam(final String str) {
+      this(DOMAIN.parse(str));
+   }
+
+   @Override
+   public String getName() {
+      return NAME;
+   }
 }

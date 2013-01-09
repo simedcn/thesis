@@ -25,44 +25,41 @@ package org.apache.hadoop.fs;
  */
 
 public class CommonConfigurationKeys {
-  
-  /** See src/core/core-default.xml */
-  public static final String  FS_DEFAULT_NAME_KEY = "fs.default.name";
-  public static final String  FS_DEFAULT_NAME_DEFAULT = "file:///";
 
-  /** See src/core/core-default.xml */
-  public static final String  HADOOP_SECURITY_GROUP_MAPPING =
-    "hadoop.security.group.mapping";
-  /** See src/core/core-default.xml */
-  public static final String  HADOOP_SECURITY_AUTHENTICATION =
-    "hadoop.security.authentication";
-  /** See src/core/core-default.xml */
-  public static final String HADOOP_SECURITY_AUTHORIZATION =
-    "hadoop.security.authorization";
-  /** See src/core/core-default.xml */
-  public static final String  HADOOP_SECURITY_SERVICE_USER_NAME_KEY = 
-    "hadoop.security.service.user.name.key";
-  /** See src/core/core-default.xml */
-  public static final String HADOOP_SECURITY_TOKEN_SERVICE_USE_IP =
-    "hadoop.security.token.service.use_ip";
-  public static final boolean HADOOP_SECURITY_TOKEN_SERVICE_USE_IP_DEFAULT =
-      true;
-  
-  public static final String IPC_SERVER_RPC_READ_THREADS_KEY =
-                                        "ipc.server.read.threadpool.size";
-  public static final int IPC_SERVER_RPC_READ_THREADS_DEFAULT = 1;
+   /** See src/core/core-default.xml */
+   public static final String FS_DEFAULT_NAME_KEY = "fs.default.name";
 
-  public static final String  IO_NATIVE_LIB_AVAILABLE_KEY =
-      "hadoop.native.lib";
-  /** Default value for IO_NATIVE_LIB_AVAILABLE_KEY */
-  public static final boolean IO_NATIVE_LIB_AVAILABLE_DEFAULT = true;
+   public static final String FS_DEFAULT_NAME_DEFAULT = "file:///";
 
-  /** Internal buffer size for Snappy compressor/decompressors */
-  public static final String IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_KEY =
-      "io.compression.codec.snappy.buffersize";
+   /** See src/core/core-default.xml */
+   public static final String HADOOP_SECURITY_GROUP_MAPPING = "hadoop.security.group.mapping";
 
-  /** Default value for IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_KEY */
-  public static final int IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_DEFAULT =
-      256 * 1024;
+   /** See src/core/core-default.xml */
+   public static final String HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";
+
+   /** See src/core/core-default.xml */
+   public static final String HADOOP_SECURITY_AUTHORIZATION = "hadoop.security.authorization";
+
+   /** See src/core/core-default.xml */
+   public static final String HADOOP_SECURITY_SERVICE_USER_NAME_KEY = "hadoop.security.service.user.name.key";
+
+   /** See src/core/core-default.xml */
+   public static final String HADOOP_SECURITY_TOKEN_SERVICE_USE_IP = "hadoop.security.token.service.use_ip";
+
+   public static final boolean HADOOP_SECURITY_TOKEN_SERVICE_USE_IP_DEFAULT = true;
+
+   public static final String IPC_SERVER_RPC_READ_THREADS_KEY = "ipc.server.read.threadpool.size";
+
+   public static final int IPC_SERVER_RPC_READ_THREADS_DEFAULT = 1;
+
+   public static final String IO_NATIVE_LIB_AVAILABLE_KEY = "hadoop.native.lib";
+
+   /** Default value for IO_NATIVE_LIB_AVAILABLE_KEY */
+   public static final boolean IO_NATIVE_LIB_AVAILABLE_DEFAULT = true;
+
+   /** Internal buffer size for Snappy compressor/decompressors */
+   public static final String IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_KEY = "io.compression.codec.snappy.buffersize";
+
+   /** Default value for IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_KEY */
+   public static final int IO_COMPRESSION_CODEC_SNAPPY_BUFFERSIZE_DEFAULT = 256 * 1024;
 }
-

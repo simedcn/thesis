@@ -68,6 +68,7 @@ import org.eclipse.ui.wizards.newresource.BasicNewProjectResourceWizard;
  * 
  */
 
+@SuppressWarnings("deprecation")
 public class NewMapReduceProjectWizard extends Wizard implements
     IWorkbenchWizard, IExecutableExtension {
   static Logger log =
@@ -382,13 +383,10 @@ public class NewMapReduceProjectWizard extends Wizard implements
 
                 BasicNewProjectResourceWizard.updatePerspective(config);
               } catch (CoreException e) {
-                // TODO Auto-generated catch block
                 log.log(Level.SEVERE, "CoreException thrown.", e);
               } catch (InvocationTargetException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
               } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
               }
             }

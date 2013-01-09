@@ -22,7 +22,6 @@ package org.apache.hadoop.io;
  * @see WritableFactories
  */
 public interface WritableFactory {
-  /** Return a new instance. */
-  Writable newInstance();
+   /** Return a new instance. */
+   Writable newInstance();
 }
-

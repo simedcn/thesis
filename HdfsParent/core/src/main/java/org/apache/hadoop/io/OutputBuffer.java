@@ -42,51 +42,63 @@ import java.io.*;
  */
 public class OutputBuffer extends FilterOutputStream {
 
-  private static class Buffer extends ByteArrayOutputStream {
-    public byte[] getData() { return buf; }
-    public int getLength() { return count; }
-    public void reset() { count = 0; }
-
-    public void write(InputStream in, int len) throws IOException {
-      int newcount = count + len;
-      if (newcount > buf.length) {
-        byte newbuf[] = new byte[Math.max(buf.length << 1, newcount)];
-        System.arraycopy(buf, 0, newbuf, 0, count);
-        buf = newbuf;
+   private static class Buffer extends ByteArrayOutputStream {
+      public byte[] getData() {
+         return buf;
       }
-      IOUtils.readFully(in, buf, count, len);
-      count = newcount;
-    }
-  }
 
-  private Buffer buffer;
-  
-  /** Constructs a new empty buffer. */
-  public OutputBuffer() {
-    this(new Buffer());
-  }
-  
-  private OutputBuffer(Buffer buffer) {
-    super(buffer);
-    this.buffer = buffer;
-  }
+      public int getLength() {
+         return count;
+      }
 
-  /** Returns the current contents of the buffer.
-   *  Data is only valid to {@link #getLength()}.
-   */
-  public byte[] getData() { return buffer.getData(); }
+      public void reset() {
+         count = 0;
+      }
 
-  /** Returns the length of the valid data currently in the buffer. */
-  public int getLength() { return buffer.getLength(); }
+      public void write(InputStream in, int len) throws IOException {
+         int newcount = count + len;
+         if (newcount > buf.length) {
+            byte newbuf[] = new byte[Math.max(buf.length << 1, newcount)];
+            System.arraycopy(buf, 0, newbuf, 0, count);
+            buf = newbuf;
+         }
+         IOUtils.readFully(in, buf, count, len);
+         count = newcount;
+      }
+   }
 
-  /** Resets the buffer to empty. */
-  public OutputBuffer reset() {
-    buffer.reset();
-    return this;
-  }
+   private Buffer buffer;
 
-  /** Writes bytes from a InputStream directly into the buffer. */
-  public void write(InputStream in, int length) throws IOException {
-    buffer.write(in, length);
-  }
+   /** Constructs a new empty buffer. */
+   public OutputBuffer() {
+      this(new Buffer());
+   }
+
+   private OutputBuffer(Buffer buffer) {
+      super(buffer);
+      this.buffer = buffer;
+   }
+
+   /** Returns the current contents of the buffer.
+    *  Data is only valid to {@link #getLength()}.
+    */
+   public byte[] getData() {
+      return buffer.getData();
+   }
+
+   /** Returns the length of the valid data currently in the buffer. */
+   public int getLength() {
+      return buffer.getLength();
+   }
+
+   /** Resets the buffer to empty. */
+   public OutputBuffer reset() {
+      buffer.reset();
+      return this;
+   }
+
+   /** Writes bytes from a InputStream directly into the buffer. */
+   public void write(InputStream in, int length) throws IOException {
+      buffer.write(in, length);
+   }
 }

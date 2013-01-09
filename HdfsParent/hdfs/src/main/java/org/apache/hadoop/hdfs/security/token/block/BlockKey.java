@@ -27,11 +27,11 @@ import org.apache.hadoop.security.token.delegation.DelegationKey;
  */
 public class BlockKey extends DelegationKey {
 
-  public BlockKey() {
-    super();
-  }
+   public BlockKey() {
+      super();
+   }
 
-  public BlockKey(int keyId, long expiryDate, SecretKey key) {
-    super(keyId, expiryDate, key);
-  }
+   public BlockKey(int keyId, long expiryDate, SecretKey key) {
+      super(keyId, expiryDate, key);
+   }
 }

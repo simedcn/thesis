@@ -120,7 +120,7 @@ public class LocalMapReduceLaunchTabGroup extends
       button.addListener(SWT.Selection, new Listener() {
         public void handleEvent(Event arg0) {
           try {
-            AST ast = AST.newAST(3);
+            AST.newAST(3);
 
             SelectionDialog dialog = JavaUI.createTypeDialog(parent.getShell(),
                 new ProgressMonitorDialog(parent.getShell()), SearchEngine

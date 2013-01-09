@@ -25,39 +25,38 @@ import org.apache.hadoop.metrics2.MetricsRecordBuilder;
  */
 public class MetricMutableCounterInt extends MetricMutableCounter<Integer> {
 
-  private volatile int value;
+   private volatile int value;
 
-  /**
-   * Construct a mutable int counter
-   * @param name  of the counter
-   * @param description of the counter
-   * @param initValue the initial value of the counter
-   */
-  public MetricMutableCounterInt(String name, String description,
-                                 int initValue) {
-    super(name, description);
-    this.value = initValue;
-  }
+   /**
+    * Construct a mutable int counter
+    * @param name  of the counter
+    * @param description of the counter
+    * @param initValue the initial value of the counter
+    */
+   public MetricMutableCounterInt(String name, String description, int initValue) {
+      super(name, description);
+      this.value = initValue;
+   }
 
-  public synchronized void incr() {
-    ++value;
-    setChanged();
-  }
+   public synchronized void incr() {
+      ++value;
+      setChanged();
+   }
 
-  /**
-   * Increment the value by a delta
-   * @param delta of the increment
-   */
-  public synchronized void incr(int delta) {
-    value += delta;
-    setChanged();
-  }
+   /**
+    * Increment the value by a delta
+    * @param delta of the increment
+    */
+   public synchronized void incr(int delta) {
+      value += delta;
+      setChanged();
+   }
 
-  public void snapshot(MetricsRecordBuilder builder, boolean all) {
-    if (all || changed()) {
-      builder.addCounter(name, description, value);
-      clearChanged();
-    }
-  }
+   public void snapshot(MetricsRecordBuilder builder, boolean all) {
+      if (all || changed()) {
+         builder.addCounter(name, description, value);
+         clearChanged();
+      }
+   }
 
 }

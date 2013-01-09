@@ -22,79 +22,79 @@ import java.security.NoSuchAlgorithmException;
  * Signs strings and verifies signed strings using a SHA digest.
  */
 public class Signer {
-  private static final String SIGNATURE = "&s=";
+   private static final String SIGNATURE = "&s=";
 
-  private byte[] secret;
+   private byte[] secret;
 
-  /**
-   * Creates a Signer instance using the specified secret.
-   *
-   * @param secret secret to use for creating the digest.
-   */
-  public Signer(byte[] secret) {
-    if (secret == null) {
-      throw new IllegalArgumentException("secret cannot be NULL");
-    }
-    this.secret = secret.clone();
-  }
+   /**
+    * Creates a Signer instance using the specified secret.
+    *
+    * @param secret secret to use for creating the digest.
+    */
+   public Signer(byte[] secret) {
+      if (secret == null) {
+         throw new IllegalArgumentException("secret cannot be NULL");
+      }
+      this.secret = secret.clone();
+   }
 
-  /**
-   * Returns a signed string.
-   * <p/>
-   * The signature '&s=SIGNATURE' is appended at the end of the string.
-   *
-   * @param str string to sign.
-   *
-   * @return the signed string.
-   */
-  public String sign(String str) {
-    if (str == null || str.length() == 0) {
-      throw new IllegalArgumentException("NULL or empty string to sign");
-    }
-    String signature = computeSignature(str);
-    return str + SIGNATURE + signature;
-  }
+   /**
+    * Returns a signed string.
+    * <p/>
+    * The signature '&s=SIGNATURE' is appended at the end of the string.
+    *
+    * @param str string to sign.
+    *
+    * @return the signed string.
+    */
+   public String sign(String str) {
+      if (str == null || str.length() == 0) {
+         throw new IllegalArgumentException("NULL or empty string to sign");
+      }
+      String signature = computeSignature(str);
+      return str + SIGNATURE + signature;
+   }
 
-  /**
-   * Verifies a signed string and extracts the original string.
-   *
-   * @param signedStr the signed string to verify and extract.
-   *
-   * @return the extracted original string.
-   *
-   * @throws SignerException thrown if the given string is not a signed string or if the signature is invalid.
-   */
-  public String verifyAndExtract(String signedStr) throws SignerException {
-    int index = signedStr.lastIndexOf(SIGNATURE);
-    if (index == -1) {
-      throw new SignerException("Invalid signed text: " + signedStr);
-    }
-    String originalSignature = signedStr.substring(index + SIGNATURE.length());
-    String rawValue = signedStr.substring(0, index);
-    String currentSignature = computeSignature(rawValue);
-    if (!originalSignature.equals(currentSignature)) {
-      throw new SignerException("Invalid signature");
-    }
-    return rawValue;
-  }
+   /**
+    * Verifies a signed string and extracts the original string.
+    *
+    * @param signedStr the signed string to verify and extract.
+    *
+    * @return the extracted original string.
+    *
+    * @throws SignerException thrown if the given string is not a signed string or if the signature is invalid.
+    */
+   public String verifyAndExtract(String signedStr) throws SignerException {
+      int index = signedStr.lastIndexOf(SIGNATURE);
+      if (index == -1) {
+         throw new SignerException("Invalid signed text: " + signedStr);
+      }
+      String originalSignature = signedStr.substring(index + SIGNATURE.length());
+      String rawValue = signedStr.substring(0, index);
+      String currentSignature = computeSignature(rawValue);
+      if (!originalSignature.equals(currentSignature)) {
+         throw new SignerException("Invalid signature");
+      }
+      return rawValue;
+   }
 
-  /**
-   * Returns then signature of a string.
-   *
-   * @param str string to sign.
-   *
-   * @return the signature for the string.
-   */
-  protected String computeSignature(String str) {
-    try {
-      MessageDigest md = MessageDigest.getInstance("SHA");
-      md.update(str.getBytes());
-      md.update(secret);
-      byte[] digest = md.digest();
-      return new Base64(0).encodeToString(digest);
-    } catch (NoSuchAlgorithmException ex) {
-      throw new RuntimeException("It should not happen, " + ex.getMessage(), ex);
-    }
-  }
+   /**
+    * Returns then signature of a string.
+    *
+    * @param str string to sign.
+    *
+    * @return the signature for the string.
+    */
+   protected String computeSignature(String str) {
+      try {
+         MessageDigest md = MessageDigest.getInstance("SHA");
+         md.update(str.getBytes());
+         md.update(secret);
+         byte[] digest = md.digest();
+         return new Base64(0).encodeToString(digest);
+      } catch (NoSuchAlgorithmException ex) {
+         throw new RuntimeException("It should not happen, " + ex.getMessage(), ex);
+      }
+   }
 
 }

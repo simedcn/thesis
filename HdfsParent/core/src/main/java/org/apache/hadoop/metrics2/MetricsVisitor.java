@@ -23,46 +23,46 @@ package org.apache.hadoop.metrics2;
  */
 public interface MetricsVisitor {
 
-  /**
-   * Callback for int value gauges
-   * @param metric the metric object
-   * @param value of the metric
-   */
-  public void gauge(MetricGauge<Integer> metric, int value);
+   /**
+    * Callback for int value gauges
+    * @param metric the metric object
+    * @param value of the metric
+    */
+   public void gauge(MetricGauge<Integer> metric, int value);
 
-  /**
-   * Callback for long value gauges
-   * @param metric the metric object
-   * @param value of the metric
-   */
-  public void gauge(MetricGauge<Long> metric, long value);
+   /**
+    * Callback for long value gauges
+    * @param metric the metric object
+    * @param value of the metric
+    */
+   public void gauge(MetricGauge<Long> metric, long value);
 
-  /**
-   * Callback for float value gauges
-   * @param metric the metric object
-   * @param value of the metric
-   */
-  public void gauge(MetricGauge<Float> metric, float value);
+   /**
+    * Callback for float value gauges
+    * @param metric the metric object
+    * @param value of the metric
+    */
+   public void gauge(MetricGauge<Float> metric, float value);
 
-  /**
-   * Callback for double value gauges
-   * @param metric the metric object
-   * @param value of the metric
-   */
-  public void gauge(MetricGauge<Double> metric, double value);
+   /**
+    * Callback for double value gauges
+    * @param metric the metric object
+    * @param value of the metric
+    */
+   public void gauge(MetricGauge<Double> metric, double value);
 
-  /**
-   * Callback for integer value counters
-   * @param metric the metric object
-   * @param value of the metric
-   */
-  public void counter(MetricCounter<Integer> metric, int value);
+   /**
+    * Callback for integer value counters
+    * @param metric the metric object
+    * @param value of the metric
+    */
+   public void counter(MetricCounter<Integer> metric, int value);
 
-  /**
-   * Callback for long value counters
-   * @param metric the metric object
-   * @param value of the metric
-   */
-  public void counter(MetricCounter<Long> metric, long value);
+   /**
+    * Callback for long value counters
+    * @param metric the metric object
+    * @param value of the metric
+    */
+   public void counter(MetricCounter<Long> metric, long value);
 
 }

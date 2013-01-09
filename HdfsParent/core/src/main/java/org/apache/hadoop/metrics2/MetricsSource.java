@@ -23,11 +23,11 @@ package org.apache.hadoop.metrics2;
  */
 public interface MetricsSource {
 
-  /**
-   * Get metrics from the source
-   * @param builder to contain the resulting metrics snapshot
-   * @param all     if true, return all metrics even if unchanged.
-   */
-  void getMetrics(MetricsBuilder builder, boolean all);
+   /**
+    * Get metrics from the source
+    * @param builder to contain the resulting metrics snapshot
+    * @param all     if true, return all metrics even if unchanged.
+    */
+   void getMetrics(MetricsBuilder builder, boolean all);
 
 }

@@ -35,62 +35,64 @@ import org.apache.hadoop.io.WritableUtils;
  */
 //@InterfaceAudience.LimitedPrivate({HDFS, MAPREDUCE})
 public class DelegationKey implements Writable {
-  private int keyId;
-  private long expiryDate;
-  private SecretKey key;
+   private int keyId;
 
-  public DelegationKey() {
-    this(0, 0L, null);
-  }
+   private long expiryDate;
 
-  public DelegationKey(int keyId, long expiryDate, SecretKey key) {
-    this.keyId = keyId;
-    this.expiryDate = expiryDate;
-    this.key = key;
-  }
+   private SecretKey key;
 
-  public int getKeyId() {
-    return keyId;
-  }
+   public DelegationKey() {
+      this(0, 0L, null);
+   }
 
-  public long getExpiryDate() {
-    return expiryDate;
-  }
+   public DelegationKey(int keyId, long expiryDate, SecretKey key) {
+      this.keyId = keyId;
+      this.expiryDate = expiryDate;
+      this.key = key;
+   }
 
-  public SecretKey getKey() {
-    return key;
-  }
+   public int getKeyId() {
+      return keyId;
+   }
 
-  public void setExpiryDate(long expiryDate) {
-    this.expiryDate = expiryDate;
-  }
+   public long getExpiryDate() {
+      return expiryDate;
+   }
 
-  /**
-   */
-  public void write(DataOutput out) throws IOException {
-    WritableUtils.writeVInt(out, keyId);
-    WritableUtils.writeVLong(out, expiryDate);
-    if (key == null) {
-      WritableUtils.writeVInt(out, -1);
-    } else {
-      byte[] keyBytes = key.getEncoded();
-      WritableUtils.writeVInt(out, keyBytes.length);
-      out.write(keyBytes);
-    }
-  }
+   public SecretKey getKey() {
+      return key;
+   }
 
-  /**
-   */
-  public void readFields(DataInput in) throws IOException {
-    keyId = WritableUtils.readVInt(in);
-    expiryDate = WritableUtils.readVLong(in);
-    int len = WritableUtils.readVInt(in);
-    if (len == -1) {
-      key = null;
-    } else {
-      byte[] keyBytes = new byte[len];
-      in.readFully(keyBytes);
-      key = AbstractDelegationTokenSecretManager.createSecretKey(keyBytes);
-    }
-  }
+   public void setExpiryDate(long expiryDate) {
+      this.expiryDate = expiryDate;
+   }
+
+   /**
+    */
+   public void write(DataOutput out) throws IOException {
+      WritableUtils.writeVInt(out, keyId);
+      WritableUtils.writeVLong(out, expiryDate);
+      if (key == null) {
+         WritableUtils.writeVInt(out, -1);
+      } else {
+         byte[] keyBytes = key.getEncoded();
+         WritableUtils.writeVInt(out, keyBytes.length);
+         out.write(keyBytes);
+      }
+   }
+
+   /**
+    */
+   public void readFields(DataInput in) throws IOException {
+      keyId = WritableUtils.readVInt(in);
+      expiryDate = WritableUtils.readVLong(in);
+      int len = WritableUtils.readVInt(in);
+      if (len == -1) {
+         key = null;
+      } else {
+         byte[] keyBytes = new byte[len];
+         in.readFully(keyBytes);
+         key = AbstractDelegationTokenSecretManager.createSecretKey(keyBytes);
+      }
+   }
 }

@@ -35,53 +35,55 @@ import org.apache.hadoop.io.WritableFactory;
  * to a data-node handshake.
  * 
  */
+@SuppressWarnings("deprecation")
 public class NamespaceInfo extends StorageInfo implements Writable {
-  String  buildVersion;
-  int distributedUpgradeVersion;
+   String buildVersion;
 
-  public NamespaceInfo() {
-    super();
-    buildVersion = null;
-  }
-  
-  public NamespaceInfo(int nsID, long cT, int duVersion) {
-    super(FSConstants.LAYOUT_VERSION, nsID, cT);
-    buildVersion = Storage.getBuildVersion();
-    this.distributedUpgradeVersion = duVersion;
-  }
-  
-  public String getBuildVersion() {
-    return buildVersion;
-  }
+   int distributedUpgradeVersion;
 
-  public int getDistributedUpgradeVersion() {
-    return distributedUpgradeVersion;
-  }
-  
-  /////////////////////////////////////////////////
-  // Writable
-  /////////////////////////////////////////////////
-  static {                                      // register a ctor
-    WritableFactories.setFactory
-      (NamespaceInfo.class,
-       new WritableFactory() {
-         public Writable newInstance() { return new NamespaceInfo(); }
-       });
-  }
+   public NamespaceInfo() {
+      super();
+      buildVersion = null;
+   }
 
-  public void write(DataOutput out) throws IOException {
-    UTF8.writeString(out, getBuildVersion());
-    out.writeInt(getLayoutVersion());
-    out.writeInt(getNamespaceID());
-    out.writeLong(getCTime());
-    out.writeInt(getDistributedUpgradeVersion());
-  }
+   public NamespaceInfo(int nsID, long cT, int duVersion) {
+      super(FSConstants.LAYOUT_VERSION, nsID, cT);
+      buildVersion = Storage.getBuildVersion();
+      this.distributedUpgradeVersion = duVersion;
+   }
 
-  public void readFields(DataInput in) throws IOException {
-    buildVersion = UTF8.readString(in);
-    layoutVersion = in.readInt();
-    namespaceID = in.readInt();
-    cTime = in.readLong();
-    distributedUpgradeVersion = in.readInt();
-  }
+   public String getBuildVersion() {
+      return buildVersion;
+   }
+
+   public int getDistributedUpgradeVersion() {
+      return distributedUpgradeVersion;
+   }
+
+   /////////////////////////////////////////////////
+   // Writable
+   /////////////////////////////////////////////////
+   static { // register a ctor
+      WritableFactories.setFactory(NamespaceInfo.class, new WritableFactory() {
+         public Writable newInstance() {
+            return new NamespaceInfo();
+         }
+      });
+   }
+
+   public void write(DataOutput out) throws IOException {
+      UTF8.writeString(out, getBuildVersion());
+      out.writeInt(getLayoutVersion());
+      out.writeInt(getNamespaceID());
+      out.writeLong(getCTime());
+      out.writeInt(getDistributedUpgradeVersion());
+   }
+
+   public void readFields(DataInput in) throws IOException {
+      buildVersion = UTF8.readString(in);
+      layoutVersion = in.readInt();
+      namespaceID = in.readInt();
+      cTime = in.readLong();
+      distributedUpgradeVersion = in.readInt();
+   }
 }
