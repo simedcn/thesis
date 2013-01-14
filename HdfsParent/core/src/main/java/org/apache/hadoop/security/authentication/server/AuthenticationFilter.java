@@ -13,12 +13,12 @@
  */
 package org.apache.hadoop.security.authentication.server;
 
-import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
-import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.hadoop.security.authentication.util.Signer;
-import org.apache.hadoop.security.authentication.util.SignerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.security.Principal;
+import java.text.MessageFormat;
+import java.util.Enumeration;
+import java.util.Properties;
+import java.util.Random;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -30,11 +30,13 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.security.Principal;
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.Random;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
+import org.apache.hadoop.security.authentication.client.AuthenticationException;
+import org.apache.hadoop.security.authentication.util.Signer;
+import org.apache.hadoop.security.authentication.util.SignerException;
 
 /**
  * The {@link AuthenticationFilter} enables protecting web application resources with different (pluggable)
@@ -71,7 +73,7 @@ import java.util.Random;
  */
 public class AuthenticationFilter implements Filter {
 
-   private static Logger LOG = LoggerFactory.getLogger(AuthenticationFilter.class);
+   private static Log LOG = LogFactory.getLog(AuthenticationFilter.class);
 
    /**
     * Constant for the property that specifies the configuration prefix.
@@ -339,7 +341,7 @@ public class AuthenticationFilter implements Filter {
          AuthenticationToken token = getToken(httpRequest);
          if (token == null) {
             if (LOG.isDebugEnabled()) {
-               LOG.debug("Request [{}] triggering authentication", getRequestURL(httpRequest));
+               LOG.debug(MessageFormat.format("Request {0} triggering authentication", getRequestURL(httpRequest)));
             }
             token = authHandler.authenticate(httpRequest, httpResponse);
             if (token != null && token != AuthenticationToken.ANONYMOUS) {
@@ -349,11 +351,10 @@ public class AuthenticationFilter implements Filter {
          }
          if (token != null) {
             if (LOG.isDebugEnabled()) {
-               LOG.debug("Request [{}] user [{}] authenticated", getRequestURL(httpRequest), token.getUserName());
+               LOG.debug(MessageFormat.format("Request {0} user {1} authenticated", getRequestURL(httpRequest), token.getUserName()));
             }
             final AuthenticationToken authToken = token;
             httpRequest = new HttpServletRequestWrapper(httpRequest) {
-
                @Override
                public String getAuthType() {
                   return authToken.getType();

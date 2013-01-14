@@ -13,16 +13,17 @@
  */
 package org.apache.hadoop.security.authentication.server;
 
-import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.hadoop.security.KerberosName;
-import org.apache.hadoop.security.authentication.util.KerberosUtil;
-import org.ietf.jgss.GSSContext;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.File;
+import java.io.IOException;
+import java.security.Principal;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosPrincipal;
@@ -33,16 +34,17 @@ import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.security.Principal;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.KerberosName;
+import org.apache.hadoop.security.authentication.client.AuthenticationException;
+import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
+import org.apache.hadoop.security.authentication.util.KerberosUtil;
+import org.ietf.jgss.GSSContext;
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSManager;
 
 /**
  * The {@link KerberosAuthenticationHandler} implements the Kerberos SPNEGO authentication mechanism for HTTP.
@@ -58,7 +60,7 @@ import java.util.Set;
  * </ul>
  */
 public class KerberosAuthenticationHandler implements AuthenticationHandler {
-   private static Logger LOG = LoggerFactory.getLogger(KerberosAuthenticationHandler.class);
+   private static Log LOG = LogFactory.getLog(KerberosAuthenticationHandler.class);
 
    /**
     * Kerberos context configuration for the JDK GSS library.
@@ -175,7 +177,7 @@ public class KerberosAuthenticationHandler implements AuthenticationHandler {
          } catch (PrivilegedActionException ex) {
             throw ex.getException();
          }
-         LOG.info("Initialized, principal [{}] from keytab [{}]", principal, keytab);
+         LOG.info(MessageFormat.format("Initialized, principal {0} from keytab {1}", principal, keytab));
       } catch (Exception ex) {
          throw new ServletException(ex);
       }
@@ -254,7 +256,7 @@ public class KerberosAuthenticationHandler implements AuthenticationHandler {
             LOG.trace("SPNEGO starting");
          } else {
             LOG.warn("'" + KerberosAuthenticator.AUTHORIZATION + "' does not start with '"
-                  + KerberosAuthenticator.NEGOTIATE + "' :  {}", authorization);
+                  + KerberosAuthenticator.NEGOTIATE + "' :  "+ authorization);
          }
       } else {
          authorization = authorization.substring(KerberosAuthenticator.NEGOTIATE.length()).trim();
@@ -285,7 +287,7 @@ public class KerberosAuthenticationHandler implements AuthenticationHandler {
                         String userName = kerberosName.getShortName();
                         token = new AuthenticationToken(userName, clientPrincipal, TYPE);
                         response.setStatus(HttpServletResponse.SC_OK);
-                        LOG.trace("SPNEGO completed for principal [{}]", clientPrincipal);
+                        LOG.trace(MessageFormat.format("SPNEGO completed for principal {0}", clientPrincipal));
                      }
                   } finally {
                      if (gssContext != null) {
