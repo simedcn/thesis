@@ -2,22 +2,20 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.ebay.chluo.KVStore</groupId>
-		<artifactId>KVParent</artifactId>
+		<artifactId>HDFSParent</artifactId>
+		<groupId>com.ebay.chluo.hdfs</groupId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<groupId>com.ebay.chluo.KVStore</groupId>
-	<artifactId>server</artifactId>
+	<groupId>com.ebay.chluo.hdfs</groupId>
+	<artifactId>zookeeper</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-
+	<build>
+		<sourceDirectory>src/main/java,src/generated</sourceDirectory>
+	</build>
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.mina</groupId>
-			<artifactId>mina-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -28,8 +26,12 @@
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.zookeeper</groupId>
-			<artifactId>zookeeper</artifactId>
+			<groupId>jline</groupId>
+			<artifactId>jline</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.netty</groupId>
+			<artifactId>netty</artifactId>
 		</dependency>
 	</dependencies>
 </project>
