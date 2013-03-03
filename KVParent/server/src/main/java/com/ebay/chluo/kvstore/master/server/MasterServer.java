@@ -20,8 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.ebay.chluo.kvstore.IServer;
 import com.ebay.chluo.kvstore.conf.MasterConfiguration;
 import com.ebay.chluo.kvstore.conf.ServerConstants;
-import com.ebay.chluo.kvstore.protocol.SimpleRequest;
-import com.ebay.chluo.kvstore.protocol.SimpleResponse;
 import com.ebay.chluo.kvstore.zookeeper.MasterWatcher;
 
 public class MasterServer implements IServer {
@@ -110,17 +108,16 @@ public class MasterServer implements IServer {
 
 		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
 			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
-
 		}
 
 		public void messageReceived(IoSession session, Object obj) throws Exception {
-			if (obj instanceof SimpleRequest) {
-				System.out.println("Message received from " + session.getRemoteAddress().toString()
-						+ " " + obj);
-				session.write(new SimpleResponse("Hi, I'm Master"));
-			} else {
-				System.err.println("Malformat message " + obj);
-			}
+			/*
+			 * if (obj instanceof SimpleRequest) {
+			 * System.out.println("Message received from " +
+			 * session.getRemoteAddress().toString() + " " + obj);
+			 * session.write(new SimpleResponse("Hi, I'm Master")); } else {
+			 * System.err.println("Malformat message " + obj); }
+			 */
 		}
 
 		public void messageSent(IoSession session, Object arg1) throws Exception {

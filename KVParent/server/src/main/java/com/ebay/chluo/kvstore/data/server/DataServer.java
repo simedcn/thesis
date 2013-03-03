@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import com.ebay.chluo.kvstore.IServer;
 import com.ebay.chluo.kvstore.conf.MasterConfiguration;
 import com.ebay.chluo.kvstore.conf.ServerConstants;
-import com.ebay.chluo.kvstore.protocol.SimpleRequest;
 import com.ebay.chluo.kvstore.zookeeper.DataWatcher;
 
 public class DataServer implements IServer {
@@ -98,7 +97,7 @@ public class DataServer implements IServer {
 		initConnection();
 
 		IoSession session = client.connect();
-		session.write(new SimpleRequest("hello", "master"));
+		//session.write(new SimpleRequest("hello", "master"));
 	}
 
 	public void shutdown() {

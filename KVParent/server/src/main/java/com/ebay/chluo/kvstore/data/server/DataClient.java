@@ -14,8 +14,6 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.chluo.kvstore.protocol.SimpleRequest;
-import com.ebay.chluo.kvstore.protocol.SimpleResponse;
 
 public class DataClient {
 	private String ip;
@@ -28,8 +26,8 @@ public class DataClient {
 			DataClient client = new DataClient("127.0.0.1", 1111, 2000);
 			IoSession session = client.connect();
 			Thread.sleep(1000);
-			SimpleRequest request = new SimpleRequest("name", "luochen");
-			session.write(request);
+			/*SimpleRequest request = new SimpleRequest("name", "luochen");
+			session.write(request);*/
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -79,12 +77,12 @@ public class DataClient {
 		}
 
 		public void messageReceived(IoSession session, Object obj) throws Exception {
-			if (obj instanceof SimpleResponse) {
+			/*if (obj instanceof SimpleResponse) {
 				System.out.println("Message received from " + session.getRemoteAddress().toString()
 						+ " " + obj);
 			} else {
 				System.err.println("Malformat message " + obj);
-			}
+			}*/
 		}
 
 		public void sessionClosed(IoSession session) throws Exception {
