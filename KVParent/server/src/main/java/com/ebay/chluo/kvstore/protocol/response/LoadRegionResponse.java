@@ -13,7 +13,7 @@ public class LoadRegionResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Load_Region;
+		return ProtocolType.Load_Region_Resp;
 	}
 
 	public Region getRegion() {

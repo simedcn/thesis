@@ -22,7 +22,7 @@ public class SplitRegionResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Split_Region;
+		return ProtocolType.Split_Region_Resp;
 	}
 
 

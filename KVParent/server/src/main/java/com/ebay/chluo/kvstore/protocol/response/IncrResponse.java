@@ -19,7 +19,7 @@ public class IncrResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Incr;
+		return ProtocolType.Incr_Resp;
 	}
 
 	public IncrResponse(int retCode, byte[] key, int incremental, int value) {

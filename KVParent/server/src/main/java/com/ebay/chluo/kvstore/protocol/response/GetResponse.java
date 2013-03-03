@@ -18,7 +18,7 @@ public class GetResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Get;
+		return ProtocolType.Get_Resp;
 	}
 
 

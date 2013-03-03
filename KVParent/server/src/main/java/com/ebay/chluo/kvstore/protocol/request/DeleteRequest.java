@@ -13,7 +13,7 @@ public class DeleteRequest extends ClientRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Delete;
+		return ProtocolType.Delete_Req;
 	}
 
 	public DeleteRequest(byte[] key) {

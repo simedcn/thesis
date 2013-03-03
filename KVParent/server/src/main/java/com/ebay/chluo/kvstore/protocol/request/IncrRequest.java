@@ -19,7 +19,7 @@ public class IncrRequest extends ClientRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Incr;
+		return ProtocolType.Incr_Req;
 	}
 
 	public IncrRequest(byte[] key, int incremental, int initValue) {

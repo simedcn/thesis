@@ -19,7 +19,7 @@ public class SetResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Set;
+		return ProtocolType.Set_Resp;
 	}
 
 	public SetResponse(int retCode, byte[] key, byte[] value, int version) {

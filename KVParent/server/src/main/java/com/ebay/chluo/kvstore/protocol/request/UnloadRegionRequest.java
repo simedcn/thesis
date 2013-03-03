@@ -19,7 +19,7 @@ public class UnloadRegionRequest extends ServerRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Unload_Region;
+		return ProtocolType.Unload_Region_Req;
 	}
 
 	public UnloadRegionRequest(int regionId, byte phase) {

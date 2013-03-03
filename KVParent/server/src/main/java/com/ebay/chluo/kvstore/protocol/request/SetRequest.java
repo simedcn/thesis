@@ -25,7 +25,7 @@ public class SetRequest extends ClientRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Get;
+		return ProtocolType.Get_Req;
 	}
 
 	public byte[] getKey() {

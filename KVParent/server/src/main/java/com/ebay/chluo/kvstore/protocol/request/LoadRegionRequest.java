@@ -16,7 +16,7 @@ public class LoadRegionRequest extends ServerRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Load_Region;
+		return ProtocolType.Load_Region_Req;
 	}
 
 	public LoadRegionRequest(Region region, String srcIp) {

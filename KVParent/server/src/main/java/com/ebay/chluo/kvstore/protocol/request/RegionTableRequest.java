@@ -2,7 +2,7 @@ package com.ebay.chluo.kvstore.protocol.request;
 
 import com.ebay.chluo.kvstore.protocol.ProtocolType;
 
-public class StatRequest extends ClientRequest{
+public class RegionTableRequest extends ClientRequest {
 
 	/**
 	 * 
@@ -11,7 +11,7 @@ public class StatRequest extends ClientRequest{
 
 	@Override
 	public int getType() {
-		return ProtocolType.Stat_Req;
+		return ProtocolType.Region_Table_Req;
 	}
 
 }

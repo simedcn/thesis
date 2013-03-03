@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import com.ebay.chluo.kvstore.IServer;
 import com.ebay.chluo.kvstore.conf.MasterConfiguration;
 import com.ebay.chluo.kvstore.conf.ServerConstants;
+import com.ebay.chluo.kvstore.protocol.ProtocolType;
+import com.ebay.chluo.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.chluo.kvstore.zookeeper.MasterWatcher;
 
 public class MasterServer implements IServer {
@@ -33,6 +35,7 @@ public class MasterServer implements IServer {
 	private ZooKeeper zooKeeper;
 
 	private int sessionTimeOut;
+	private ProtocolDispatcher dispatcher;
 
 	public static void main(String[] args) {
 		try {
@@ -51,6 +54,15 @@ public class MasterServer implements IServer {
 		zkIp = "127.0.0.1";
 
 		sessionTimeOut = 10 * 1000;
+
+		dispatcher = new ProtocolDispatcher();
+		dispatcher.registerHandler(ProtocolType.Heart_Beart_Req, null);
+		dispatcher.registerHandler(ProtocolType.Region_Table_Req, null);
+
+		dispatcher.registerHandler(ProtocolType.Load_Region_Resp, null);
+		dispatcher.registerHandler(ProtocolType.Unload_Region_Resp, null);
+		dispatcher.registerHandler(ProtocolType.Split_Region_Resp, null);
+
 	}
 
 	private void initServer() throws IOException {

@@ -21,7 +21,7 @@ public class SplitRegionRequest extends ServerRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Split_Region;
+		return ProtocolType.Split_Region_Req;
 	}
 
 	public int getRegionId() {

@@ -14,6 +14,8 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.chluo.kvstore.protocol.ProtocolType;
+import com.ebay.chluo.kvstore.protocol.handler.ProtocolDispatcher;
 
 public class DataClient {
 	private String ip;
@@ -21,13 +23,17 @@ public class DataClient {
 	private int timeout;
 	private IoSession session;
 
+	private ProtocolDispatcher dispatcher;
+
 	public static void main(String[] args) throws InterruptedException {
 		try {
 			DataClient client = new DataClient("127.0.0.1", 1111, 2000);
 			IoSession session = client.connect();
 			Thread.sleep(1000);
-			/*SimpleRequest request = new SimpleRequest("name", "luochen");
-			session.write(request);*/
+			/*
+			 * SimpleRequest request = new SimpleRequest("name", "luochen");
+			 * session.write(request);
+			 */
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -38,6 +44,14 @@ public class DataClient {
 		this.ip = ip;
 		this.port = port;
 		this.timeout = timeout;
+
+		this.dispatcher = new ProtocolDispatcher();
+
+		dispatcher.registerHandler(ProtocolType.Load_Region_Req, null);
+		dispatcher.registerHandler(ProtocolType.Unload_Region_Req, null);
+		dispatcher.registerHandler(ProtocolType.Split_Region_Req, null);
+		dispatcher.registerHandler(ProtocolType.Heart_Beart_Resp, null);
+
 	}
 
 	public DataClient(String path, int timeout) {
@@ -77,12 +91,12 @@ public class DataClient {
 		}
 
 		public void messageReceived(IoSession session, Object obj) throws Exception {
-			/*if (obj instanceof SimpleResponse) {
-				System.out.println("Message received from " + session.getRemoteAddress().toString()
-						+ " " + obj);
-			} else {
-				System.err.println("Malformat message " + obj);
-			}*/
+			/*
+			 * if (obj instanceof SimpleResponse) {
+			 * System.out.println("Message received from " +
+			 * session.getRemoteAddress().toString() + " " + obj); } else {
+			 * System.err.println("Malformat message " + obj); }
+			 */
 		}
 
 		public void sessionClosed(IoSession session) throws Exception {

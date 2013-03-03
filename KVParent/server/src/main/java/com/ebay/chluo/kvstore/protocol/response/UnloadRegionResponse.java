@@ -12,7 +12,7 @@ public class UnloadRegionResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Unload_Region;
+		return ProtocolType.Unload_Region_Resp;
 	}
 
 	public UnloadRegionResponse(int retCode, int regionId) {

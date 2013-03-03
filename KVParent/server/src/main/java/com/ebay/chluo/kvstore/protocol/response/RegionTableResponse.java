@@ -1,9 +1,11 @@
-package com.ebay.chluo.kvstore.protocol.request;
+package com.ebay.chluo.kvstore.protocol.response;
+
+import java.util.Arrays;
 
 import com.ebay.chluo.kvstore.protocol.ProtocolType;
 import com.ebay.chluo.kvstore.structure.Region;
 
-public class HeartBeatRequest extends ServerRequest {
+public class RegionTableResponse extends BaseResponse {
 
 	/**
 	 * 
@@ -14,11 +16,11 @@ public class HeartBeatRequest extends ServerRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Heart_Beart_Req;
+		return ProtocolType.Region_Table_Resp;
 	}
 
-	public HeartBeatRequest(Region[] regions) {
-		super();
+	public RegionTableResponse(int retCode, Region[] regions) {
+		super(retCode);
 		this.regions = regions;
 	}
 
@@ -28,6 +30,11 @@ public class HeartBeatRequest extends ServerRequest {
 
 	public void setRegions(Region[] regions) {
 		this.regions = regions;
+	}
+
+	@Override
+	public String toString() {
+		return "RegionTableResponse [regions=" + Arrays.toString(regions) + "]";
 	}
 
 }

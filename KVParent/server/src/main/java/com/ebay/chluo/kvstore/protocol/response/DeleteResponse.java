@@ -17,7 +17,7 @@ public class DeleteResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Delete;
+		return ProtocolType.Delete_Resp;
 	}
 
 	public DeleteResponse(int retCode, byte[] key, byte[] value) {

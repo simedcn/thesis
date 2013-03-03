@@ -15,7 +15,7 @@ public class StatResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Stat;
+		return ProtocolType.Stat_Resp;
 	}
 
 

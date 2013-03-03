@@ -1,7 +1,6 @@
 package com.ebay.chluo.kvstore.protocol.response;
 
-import java.io.Serializable;
+import com.ebay.chluo.kvstore.protocol.IProtocol;
 
-public interface IResponse extends Serializable {
-	public int getType();
+public interface IResponse extends IProtocol {
 }

@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import com.ebay.chluo.kvstore.IServer;
 import com.ebay.chluo.kvstore.conf.MasterConfiguration;
 import com.ebay.chluo.kvstore.conf.ServerConstants;
+import com.ebay.chluo.kvstore.protocol.ProtocolType;
+import com.ebay.chluo.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.chluo.kvstore.zookeeper.DataWatcher;
 
 public class DataServer implements IServer {
@@ -35,6 +37,8 @@ public class DataServer implements IServer {
 	private int sessionTimeout;
 	private int connectTimeout;
 	private DataClient client;
+	
+	private ProtocolDispatcher dispatcher;
 
 	public static void main(String[] args) {
 		DataServer server = null;
@@ -57,6 +61,14 @@ public class DataServer implements IServer {
 		sessionTimeout = 10 * 1000;
 
 		connectTimeout = 2000;
+		
+		dispatcher = new ProtocolDispatcher();
+		
+		dispatcher.registerHandler(ProtocolType.Set_Req, null);
+		dispatcher.registerHandler(ProtocolType.Get_Req, null);
+		dispatcher.registerHandler(ProtocolType.Delete_Req, null);
+		dispatcher.registerHandler(ProtocolType.Incr_Req, null);
+
 	}
 
 	private void initServer() throws IOException {
