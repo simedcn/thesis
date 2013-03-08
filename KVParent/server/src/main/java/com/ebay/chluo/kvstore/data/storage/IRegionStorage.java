@@ -6,17 +6,25 @@ public interface IRegionStorage {
 
 	public void load();
 
-	public void set(byte[] key, byte value);
+	public KeyValue getFromBuffer(byte[] key);
 
-	public void incr(byte[] key, int incremental, int initValue);
+	public KeyValue[] getFromDisk(byte[] key);
 
-	public KeyValue get(byte[] key);
-
-	public KeyValue delete(byte[] key);
+	/**
+	 * 1.put the key/value into buffer, and 2.write redo log
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	public void storeInBuffer(byte[] key, byte[] value);
 
 	public void setBufferLimit(int limit);
 
-	public void getBufferLimit();
+	public void deleteFromBuffer(byte[] key);
 
-	public void flush();
+	public long getBufferLimit();
+
+	public void commit();
+
+	public long getBufferUsed();
 }

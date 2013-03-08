@@ -7,13 +7,15 @@ import com.ebay.chluo.kvstore.structure.Region;
 
 public interface IStoreEngine {
 
-	public void set(byte[] key, byte[] value);
+	public void set(byte[] key, byte[] value) throws InvalidKeyException;
 
-	public KeyValue get(byte[] key);
+	public KeyValue get(byte[] key) throws InvalidKeyException;
 
-	public void incr(byte[] key, int incremental, int initValue);
+	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException;
 
-	public KeyValue delete(byte[] key);
+	public long getMemoryUsed();
+
+	public void delete(byte[] key) throws InvalidKeyException;
 
 	public void setCacheLimit(int limit);
 

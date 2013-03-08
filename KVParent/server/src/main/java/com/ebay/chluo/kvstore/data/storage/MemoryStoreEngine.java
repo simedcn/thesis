@@ -1,14 +1,14 @@
 package com.ebay.chluo.kvstore.data.storage;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.ebay.chluo.kvstore.data.storage.logger.IRedoLogger;
+import com.ebay.chluo.kvstore.data.storage.logger.SetMutation;
 import com.ebay.chluo.kvstore.structure.KeyValue;
 import com.ebay.chluo.kvstore.structure.Region;
 
-public class MemoryStoreEngine extends BaseStorage {
+public class MemoryStoreEngine extends BaseStoreEngine {
 
 	protected Map<Region, IRedoLogger> loggers;
 
@@ -18,57 +18,44 @@ public class MemoryStoreEngine extends BaseStorage {
 	}
 
 	@Override
-	public void set(byte[] key, byte[] value) {
-		// TODO Auto-generated method stub
-
+	public void set(byte[] key, byte[] value) throws InvalidKeyException {
+		Region region = checkKeyRegion(key);
+		IRedoLogger logger = getRedoLogger(region);
+		cache.set(key, value);
+		logger.write(new SetMutation(key, value));
 	}
 
 	@Override
-	public KeyValue get(byte[] key) {
-		// TODO Auto-generated method stub
-		return null;
+	public KeyValue get(byte[] key) throws InvalidKeyException {
+		checkKeyRegion(key);
+		KeyValue kv = cache.get(key);
+		return kv;
 	}
 
 	@Override
-	public void incr(byte[] key, int incremental, int initValue) {
-		// TODO Auto-generated method stub
-
+	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException {
+		Region region = checkKeyRegion(key);
+		IRedoLogger logger = getRedoLogger(region);
+		KeyValue kv = cache.incr(key, incremental, initValue);
+		logger.write(new SetMutation(key, kv.getValue().getValue()));
+		return kv;
 	}
 
 	@Override
-	public KeyValue delete(byte[] key) {
-		// TODO Auto-generated method stub
-		return null;
+	public void delete(byte[] key) throws InvalidKeyException {
+		checkKeyRegion(key);
+		cache.delete(key);
 	}
 
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void registerListener(IStoreListener listener) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void unregisterListener(IStoreListener listener) {
-		// TODO Auto-generated method stub
-
+		// do nothing
 	}
 
 	@Override
 	public void unloadRegion(int regionId) {
 		// TODO Auto-generated method stub
 
-	}
-
-	@Override
-	public List<Region> getRegions() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -81,6 +68,15 @@ public class MemoryStoreEngine extends BaseStorage {
 	public void splitRegion() {
 		// TODO Auto-generated method stub
 
+	}
+
+	private IRedoLogger getRedoLogger(Region region) {
+		return loggers.get(region);
+	}
+
+	@Override
+	public long getMemoryUsed() {
+		return cache.getUsed();
 	}
 
 }

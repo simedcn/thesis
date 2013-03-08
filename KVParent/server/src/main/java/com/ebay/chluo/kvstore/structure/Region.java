@@ -3,7 +3,9 @@ package com.ebay.chluo.kvstore.structure;
 import java.io.Serializable;
 import java.util.Arrays;
 
-public class Region implements Serializable {
+import com.ebay.chluo.kvstore.KeyValueUtil;
+
+public class Region implements Serializable, Comparable<Region> {
 
 	/**
 	 * 
@@ -60,4 +62,32 @@ public class Region implements Serializable {
 		this.stat = stat;
 	}
 
+	public int compareTo(byte[] key) {
+		int e1 = KeyValueUtil.compare(key, start);
+		int e2 = KeyValueUtil.compare(key, end);
+		if (e1 >= 0 && e2 <= 0) {
+			return 0;
+		} else if (e1 < 0) {
+			return 1;
+		} else {
+			return -1;
+		}
+	}
+
+	@Override
+	public int compareTo(Region r) {
+		int e1 = KeyValueUtil.compare(start, r.getEnd());
+		int e2 = KeyValueUtil.compare(end, r.getStart());
+		if (e1 > 0) {
+			return 1;
+		} else if (e2 < 0) {
+			return -1;
+		} else if (e1 == 0 && e2 == 0) {
+			return 0;
+		} else {
+			// The two regions are overlapped, should not happen
+			throw new IllegalArgumentException("The two regions are overlapped:" + this.toString()
+					+ " " + r.toString());
+		}
+	}
 }
