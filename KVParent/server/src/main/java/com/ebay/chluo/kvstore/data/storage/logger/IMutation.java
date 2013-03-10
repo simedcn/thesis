@@ -1,22 +1,27 @@
 package com.ebay.chluo.kvstore.data.storage.logger;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.IOException;
 
 /**
  * Used to define the mutation
+ * 
  * @author luochen
- *
+ * 
  */
 public interface IMutation {
 
-	public static int Set = 0;
-	
-	public static int Delete = 1;
-	
-	public int getType();
+	public static byte Set = 0;
 
-	public void writeToExternal(OutputStream out);
+	public static byte Delete = 1;
 
-	public void readFromExternal(InputStream in);
+	public byte getType();
+
+	public byte[] getKey();
+
+	public byte[] getValue();
+
+	void writeToExternal(LoggerOutputStream out) throws IOException;
+
+	void readFromExternal(LoggerInputStream in) throws IOException;
+
 }

@@ -1,5 +1,7 @@
 package com.ebay.chluo.kvstore.data.storage.cache;
 
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -8,7 +10,7 @@ import com.ebay.chluo.kvstore.KeyValueUtil;
 import com.ebay.chluo.kvstore.structure.KeyValue;
 import com.ebay.chluo.kvstore.structure.Value;
 
-public class KeyValueCache {
+public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 
 	protected volatile SortedMap<byte[], Value> cache;
 
@@ -89,6 +91,10 @@ public class KeyValueCache {
 		}
 	}
 
+	public void addAll(KeyValueCache buffer) {
+		this.cache.putAll(buffer.cache);
+	}
+
 	public KeyValue incr(byte[] key, int incremental, int initValue) {
 		synchronized (key) {
 			Value v = cache.get(key);
@@ -130,5 +136,10 @@ public class KeyValueCache {
 				}
 			}
 		}
+	}
+
+	@Override
+	public Iterator<Entry<byte[], Value>> iterator() {
+		return cache.entrySet().iterator();
 	}
 }

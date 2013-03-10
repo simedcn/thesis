@@ -30,7 +30,7 @@ public class StoreEngineProxy implements IStoreEngine {
 	@Override
 	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException {
 		KeyValue kv = engine.incr(key, incremental, initValue);
-		engine.onIncr(key, KeyValueUtil.byte2int(kv.getValue().getValue()));
+		engine.onIncr(key, KeyValueUtil.bytesToInt(kv.getValue().getValue()));
 		return kv;
 	}
 

@@ -3,9 +3,10 @@ package com.ebay.chluo.kvstore.structure;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import com.ebay.chluo.kvstore.KeyComparable;
 import com.ebay.chluo.kvstore.KeyValueUtil;
 
-public class Region implements Serializable, Comparable<Region> {
+public class Region implements Serializable, Comparable<Region>, KeyComparable {
 
 	/**
 	 * 

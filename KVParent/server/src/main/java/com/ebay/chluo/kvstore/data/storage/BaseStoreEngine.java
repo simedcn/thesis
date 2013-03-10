@@ -54,11 +54,11 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 	}
 
 	protected Region getKeyRegion(byte[] key) {
-		return RegionUtil.searchRegion(regions, key);
+		return RegionUtil.search(regions, key);
 	}
 
 	protected Region checkKeyRegion(byte[] key) throws InvalidKeyException {
-		Region region = RegionUtil.searchRegion(regions, key);
+		Region region = RegionUtil.search(regions, key);
 		if (region == null) {
 			throw new InvalidKeyException("The given key:" + key.toString()
 					+ " is not served in this data server!");

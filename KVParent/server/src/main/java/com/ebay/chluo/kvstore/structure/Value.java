@@ -14,7 +14,7 @@ public class Value implements Serializable {
 	private boolean deleted;
 
 	public int getSize() {
-		return 9 + value.length;
+		return 9 + (value==null?0:value.length);
 	}
 
 	public byte[] getValue() {
@@ -39,7 +39,7 @@ public class Value implements Serializable {
 			throw new UnsupportedOperationException("The current value:" + value
 					+ " is not a valid integer");
 		}
-		int counter = KeyValueUtil.byte2int(value);
+		int counter = KeyValueUtil.bytesToInt(value);
 		counter += incremental;
 		value = KeyValueUtil.intToBytes(counter);
 	}
@@ -75,6 +75,11 @@ public class Value implements Serializable {
 	public Value(byte[] value, boolean deleted) {
 		this.value = value;
 		this.deleted = deleted;
+	}
+
+	@Override
+	public String toString() {
+		return "Value [value=" + Arrays.toString(value) + ", deleted=" + deleted + "]";
 	}
 
 }

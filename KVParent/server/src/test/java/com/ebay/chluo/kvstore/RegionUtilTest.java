@@ -26,24 +26,24 @@ public class RegionUtilTest extends TestCase {
 	}
 
 	@Test
-	public void testSearchRegion() {
+	public void testsearch() {
 
-		Region r = RegionUtil.searchRegion(regions, new byte[] { 0 });
+		Region r = RegionUtil.search(regions, new byte[] { 0 });
 		assertEquals(true, r == null);
 
-		r = RegionUtil.searchRegion(regions, new byte[] { 4 });
+		r = RegionUtil.search(regions, new byte[] { 4 });
 		assertArrayEquals(new byte[] { 1 }, r.getStart());
 		assertArrayEquals(new byte[] { 5 }, r.getEnd());
 
-		r = RegionUtil.searchRegion(regions, new byte[] { -60, 20 });
+		r = RegionUtil.search(regions, new byte[] { -60, 20 });
 		assertArrayEquals(new byte[] { 1, 20 }, r.getStart());
 		assertArrayEquals(new byte[] { -50, 10 }, r.getEnd());
 
-		r = RegionUtil.searchRegion(regions, new byte[] { 5,2,4 });
+		r = RegionUtil.search(regions, new byte[] { 5,2,4 });
 		assertArrayEquals(new byte[] {  1, 1, 1 }, r.getStart());
 		assertArrayEquals(new byte[] { 10, 10, 10}, r.getEnd());
 
-		r = RegionUtil.searchRegion(regions, new byte[] { 1, 1, 1, 1 });
+		r = RegionUtil.search(regions, new byte[] { 1, 1, 1, 1 });
 		assertNull(r);
 	}
 }

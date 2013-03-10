@@ -1,14 +1,24 @@
 package com.ebay.chluo.kvstore.data.storage;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ebay.chluo.kvstore.data.storage.logger.IMutation;
 import com.ebay.chluo.kvstore.data.storage.logger.IRedoLogger;
+import com.ebay.chluo.kvstore.data.storage.logger.LoggerFileInputStream;
+import com.ebay.chluo.kvstore.data.storage.logger.LoggerInputIterator;
 import com.ebay.chluo.kvstore.data.storage.logger.SetMutation;
 import com.ebay.chluo.kvstore.structure.KeyValue;
 import com.ebay.chluo.kvstore.structure.Region;
 
 public class MemoryStoreEngine extends BaseStoreEngine {
+
+	private static Logger logger = LoggerFactory.getLogger(MemoryStoreEngine.class);
 
 	protected Map<Region, IRedoLogger> loggers;
 
@@ -55,7 +65,6 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 	@Override
 	public void unloadRegion(int regionId) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -70,13 +79,32 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 
 	}
 
+	@Override
+	public long getMemoryUsed() {
+		return cache.getUsed();
+	}
+
 	private IRedoLogger getRedoLogger(Region region) {
 		return loggers.get(region);
 	}
 
-	@Override
-	public long getMemoryUsed() {
-		return cache.getUsed();
+	protected synchronized void loadLogger(File file) {
+		try {
+			LoggerInputIterator it = new LoggerInputIterator(new LoggerFileInputStream(file));
+			while (it.hasNext()) {
+				IMutation mutation = it.next();
+				switch (mutation.getType()) {
+				case IMutation.Set:
+					cache.set(mutation.getKey(), mutation.getValue());
+					break;
+				case IMutation.Delete:
+					cache.delete(mutation.getKey());
+					break;
+				}
+			}
+		} catch (IOException e) {
+			logger.error("Error occured when loading the log file:" + file, e);
+		}
 	}
 
 }

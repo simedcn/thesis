@@ -1,7 +1,6 @@
 package com.ebay.chluo.kvstore.data.storage.logger;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class SetMutation implements IMutation {
@@ -9,24 +8,33 @@ public class SetMutation implements IMutation {
 	protected byte[] value;
 
 	@Override
-	public int getType() {
+	public byte getType() {
 		return Set;
-	}
-
-	@Override
-	public void writeToExternal(OutputStream out) {
-
-	}
-
-	@Override
-	public void readFromExternal(InputStream in) {
-
 	}
 
 	public SetMutation(byte[] key, byte[] value) {
 		super();
 		this.key = key;
 		this.value = value;
+	}
+
+	@Override
+	public void readFromExternal(LoggerInputStream in) throws IOException {
+		int keyLen = in.readInt();
+		key = new byte[keyLen];
+		in.read(key);
+		int valueLen = in.readInt();
+		value = new byte[valueLen];
+		in.read(value);
+	}
+
+	@Override
+	public void writeToExternal(LoggerOutputStream out) throws IOException {
+		out.write(getType());
+		out.writeInt(key.length);
+		out.write(key);
+		out.writeInt(value.length);
+		out.write(value);
 	}
 
 	public byte[] getKey() {

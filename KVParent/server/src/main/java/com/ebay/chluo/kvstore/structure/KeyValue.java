@@ -1,7 +1,10 @@
 package com.ebay.chluo.kvstore.structure;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.Serializable;
 import java.util.Arrays;
+
 
 public class KeyValue implements Serializable {
 
@@ -33,8 +36,8 @@ public class KeyValue implements Serializable {
 	public void setValue(Value value) {
 		this.value = value;
 	}
-	
-	public int getSize(){
+
+	public int getSize() {
 		return 8 + key.length + value.getSize();
 	}
 
@@ -64,6 +67,11 @@ public class KeyValue implements Serializable {
 		} else if (!value.equals(other.value))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "KeyValue [key=" + Arrays.toString(key) + ", value=" + value + "]";
 	}
 
 }

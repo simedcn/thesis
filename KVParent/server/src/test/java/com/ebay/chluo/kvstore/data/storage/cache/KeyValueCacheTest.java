@@ -50,7 +50,7 @@ public class KeyValueCacheTest {
 		unlimitCache.incr(key3, 5, 0);
 		unlimitCache.incr(key3, 10, 0);
 
-		assertEquals(15, KeyValueUtil.byte2int(unlimitCache.get(key3).getValue().getValue()));
+		assertEquals(15, KeyValueUtil.bytesToInt(unlimitCache.get(key3).getValue().getValue()));
 	}
 
 	@Test

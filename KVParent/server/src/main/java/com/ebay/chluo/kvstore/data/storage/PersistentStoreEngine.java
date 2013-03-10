@@ -1,11 +1,16 @@
 package com.ebay.chluo.kvstore.data.storage;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ebay.chluo.kvstore.KeyValueUtil;
+import com.ebay.chluo.kvstore.data.storage.file.IRegionStorage;
 import com.ebay.chluo.kvstore.structure.KeyValue;
 import com.ebay.chluo.kvstore.structure.Region;
 import com.ebay.chluo.kvstore.structure.Value;
@@ -13,6 +18,8 @@ import com.ebay.chluo.kvstore.structure.Value;
 public class PersistentStoreEngine extends BaseStoreEngine {
 
 	protected Map<Region, IRegionStorage> storages;
+
+	private static Logger logger = LoggerFactory.getLogger(PersistentStoreEngine.class);
 
 	public PersistentStoreEngine(int limit) {
 		super(limit);
@@ -45,13 +52,19 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			return kv;
 		} else {
 			// 3. get from disk
-			KeyValue[] kvs = storage.getFromDisk(key);
-			for (KeyValue kv2 : kvs) {
-				cache.set(kv.getKey(), kv.getValue());
-				if (kv2.equals(kv)) {
-					kv = kv2;
+			KeyValue[] kvs = null;
+			try {
+				kvs = storage.getFromDisk(key);
+				for (KeyValue kv2 : kvs) {
+					cache.set(kv.getKey(), kv.getValue());
+					if (kv2.equals(kv)) {
+						kv = kv2;
+					}
 				}
+			} catch (IOException e) {
+				logger.error("Error occured when reading from disk for key:" + key, e);
 			}
+
 		}
 		return kv;
 	}
@@ -93,20 +106,14 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		return result;
 	}
 
+	/**
+	 * When the bufferSize exceeds the butterSizeLimit, this method should be
+	 * called and create a thread to flush the buffers into file. Note that if
+	 * the method is called when the previous merging is not done. This function
+	 * will do nothing and return false.
+	 */
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void registerListener(IStoreListener listener) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void unregisterListener(IStoreListener listener) {
 		// TODO Auto-generated method stub
 
 	}

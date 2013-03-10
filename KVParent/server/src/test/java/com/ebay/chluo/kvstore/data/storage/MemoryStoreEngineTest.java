@@ -34,7 +34,7 @@ public class MemoryStoreEngineTest {
 			engine.incr(key2, 10, 0);
 			engine.incr(key2, 2, 0);
 
-			assertEquals(12, KeyValueUtil.byte2int(engine.get(key2).getValue().getValue()));
+			assertEquals(12, KeyValueUtil.bytesToInt(engine.get(key2).getValue().getValue()));
 		} catch (Exception e) {
 		}
 	}

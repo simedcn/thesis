@@ -1,4 +1,6 @@
-package com.ebay.chluo.kvstore.data.storage;
+package com.ebay.chluo.kvstore.data.storage.file;
+
+import java.io.IOException;
 
 import com.ebay.chluo.kvstore.structure.KeyValue;
 
@@ -8,7 +10,7 @@ public interface IRegionStorage {
 
 	public KeyValue getFromBuffer(byte[] key);
 
-	public KeyValue[] getFromDisk(byte[] key);
+	public KeyValue[] getFromDisk(byte[] key) throws IOException;
 
 	/**
 	 * 1.put the key/value into buffer, and 2.write redo log
