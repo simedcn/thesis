@@ -1,0 +1,40 @@
+package com.ebay.chluo.kvstore.data.storage.logger;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+public class LoggerFSOutputStream implements LoggerOutputStream {
+
+	protected OutputStream out;
+
+	public LoggerFSOutputStream(OutputStream out) {
+		this.out = out;
+	}
+
+	@Override
+	public void close() throws IOException {
+		// End of File
+		out.write(-1);
+		out.close();
+	}
+
+	@Override
+	public void writeInt(int i) throws IOException {
+		out.write((i >>> 24) & 0xFF);
+		out.write((i >>> 16) & 0xFF);
+		out.write((i >>> 8) & 0xFF);
+		out.write((i >>> 0) & 0xFF);
+	}
+
+	@Override
+	public void write(byte b) throws IOException {
+		out.write(b);
+	}
+
+	@Override
+	public void write(byte[] b) throws IOException {
+		out.write(b);
+	}
+
+
+}

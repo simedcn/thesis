@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ebay.chluo.kvstore.IServer;
-import com.ebay.chluo.kvstore.conf.MasterConfiguration;
+import com.ebay.chluo.kvstore.conf.IConfiguration;
 import com.ebay.chluo.kvstore.conf.ServerConstants;
 import com.ebay.chluo.kvstore.protocol.ProtocolType;
 import com.ebay.chluo.kvstore.protocol.handler.ProtocolDispatcher;
@@ -46,7 +46,7 @@ public class MasterServer implements IServer {
 		}
 	}
 
-	public MasterServer(MasterConfiguration conf) throws IOException {
+	public MasterServer(IConfiguration conf) throws IOException {
 		port = 1111;
 		ip = "127.0.0.1";
 

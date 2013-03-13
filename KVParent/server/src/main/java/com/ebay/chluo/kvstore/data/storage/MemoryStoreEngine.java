@@ -1,6 +1,5 @@
 package com.ebay.chluo.kvstore.data.storage;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ebay.chluo.kvstore.data.storage.logger.IMutation;
 import com.ebay.chluo.kvstore.data.storage.logger.IRedoLogger;
-import com.ebay.chluo.kvstore.data.storage.logger.LoggerFileInputStream;
-import com.ebay.chluo.kvstore.data.storage.logger.LoggerInputIterator;
+import com.ebay.chluo.kvstore.data.storage.logger.LoggerFSInputIterator;
 import com.ebay.chluo.kvstore.data.storage.logger.SetMutation;
 import com.ebay.chluo.kvstore.structure.KeyValue;
 import com.ebay.chluo.kvstore.structure.Region;
@@ -88,9 +86,9 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		return loggers.get(region);
 	}
 
-	protected synchronized void loadLogger(File file) {
+	protected synchronized void loadLogger(String file) {
 		try {
-			LoggerInputIterator it = new LoggerInputIterator(new LoggerFileInputStream(file));
+			LoggerFSInputIterator it = new LoggerFSInputIterator(file);
 			while (it.hasNext()) {
 				IMutation mutation = it.next();
 				switch (mutation.getType()) {

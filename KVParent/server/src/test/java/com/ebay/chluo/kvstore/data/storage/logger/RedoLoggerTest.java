@@ -1,33 +1,42 @@
 package com.ebay.chluo.kvstore.data.storage.logger;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.InetSocketAddress;
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.ebay.chluo.kvstore.data.storage.fs.DFSClientManager;
 
 public class RedoLoggerTest {
 
-	private final String path = "redo.log";
+	private final String path = "/kvstore/test/redo.log";
 
-	private File file;
+	@BeforeClass
+	public static void init() {
+		try {
+			DFSClientManager.init(new InetSocketAddress("localhost", 9000), new Configuration());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Before
 	public void setUp() throws Exception {
-		file = new File(path);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		file.delete();
 	}
 
 	@Test
 	public void test() {
 		try {
-			IRedoLogger logger = new FileRedoLogger(file);
+			IRedoLogger logger = new FSRedoLogger(path);
 			for (byte i = 0; i < 50; i++) {
 				logger.write(new SetMutation(new byte[] { i }, new byte[] { i }));
 			}
@@ -35,8 +44,7 @@ public class RedoLoggerTest {
 				logger.write(new DeleteMutation(new byte[] { i }));
 			}
 			logger.close();
-			LoggerInputIterator it = new LoggerInputIterator(new LoggerFileInputStream(
-					new FileInputStream(file)));
+			LoggerFSInputIterator it = new LoggerFSInputIterator(path);
 			byte i = 0;
 			while (it.hasNext()) {
 				IMutation mutation = it.next();
@@ -44,7 +52,7 @@ public class RedoLoggerTest {
 				i++;
 			}
 		} catch (Exception e) {
-
+			e.printStackTrace();
 		}
 
 	}

@@ -11,4 +11,5 @@ public interface LoggerOutputStream {
 	public void write(byte b) throws IOException;
 
 	public void write(byte[] b) throws IOException;
+	
 }

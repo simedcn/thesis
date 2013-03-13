@@ -1,0 +1,1 @@
+java -classpath conf/*;lib/*;*; org.apache.hadoop.hdfs.server.namenode.NameNode %*

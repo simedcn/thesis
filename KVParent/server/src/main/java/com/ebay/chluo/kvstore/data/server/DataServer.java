@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ebay.chluo.kvstore.IServer;
-import com.ebay.chluo.kvstore.conf.MasterConfiguration;
+import com.ebay.chluo.kvstore.conf.IConfiguration;
 import com.ebay.chluo.kvstore.conf.ServerConstants;
 import com.ebay.chluo.kvstore.protocol.ProtocolType;
 import com.ebay.chluo.kvstore.protocol.handler.ProtocolDispatcher;
@@ -37,7 +37,7 @@ public class DataServer implements IServer {
 	private int sessionTimeout;
 	private int connectTimeout;
 	private DataClient client;
-	
+
 	private ProtocolDispatcher dispatcher;
 
 	public static void main(String[] args) {
@@ -52,7 +52,7 @@ public class DataServer implements IServer {
 	}
 
 	// TODO
-	public DataServer(MasterConfiguration conf) throws IOException {
+	public DataServer(IConfiguration conf) throws IOException {
 		port = 2222;
 		ip = "127.0.0.1";
 
@@ -61,9 +61,9 @@ public class DataServer implements IServer {
 		sessionTimeout = 10 * 1000;
 
 		connectTimeout = 2000;
-		
+
 		dispatcher = new ProtocolDispatcher();
-		
+
 		dispatcher.registerHandler(ProtocolType.Set_Req, null);
 		dispatcher.registerHandler(ProtocolType.Get_Req, null);
 		dispatcher.registerHandler(ProtocolType.Delete_Req, null);
@@ -109,7 +109,7 @@ public class DataServer implements IServer {
 		initConnection();
 
 		IoSession session = client.connect();
-		//session.write(new SimpleRequest("hello", "master"));
+		// session.write(new SimpleRequest("hello", "master"));
 	}
 
 	public void shutdown() {

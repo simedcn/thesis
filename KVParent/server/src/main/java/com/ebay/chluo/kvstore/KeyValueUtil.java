@@ -2,8 +2,8 @@ package com.ebay.chluo.kvstore;
 
 import java.io.IOException;
 
-import com.ebay.chluo.kvstore.data.storage.file.KVInputStream;
-import com.ebay.chluo.kvstore.data.storage.file.KVOutputStream;
+import com.ebay.chluo.kvstore.data.storage.fs.BlockInputStream;
+import com.ebay.chluo.kvstore.data.storage.fs.BlockOutputStream;
 import com.ebay.chluo.kvstore.structure.KeyValue;
 import com.ebay.chluo.kvstore.structure.Value;
 
@@ -65,7 +65,7 @@ public class KeyValueUtil {
 		return targets;
 	}
 
-	public static KeyValue readFromExternal(KVInputStream in) throws IOException {
+	public static KeyValue readFromExternal(BlockInputStream in) throws IOException {
 		// used for skipping key/values quickly
 		int len = in.readInt();
 		int keyLen = in.readInt();
@@ -77,7 +77,7 @@ public class KeyValueUtil {
 		return kv;
 	}
 
-	public static void writeToExternal(KVOutputStream out, KeyValue kv) throws IOException {
+	public static void writeToExternal(BlockOutputStream out, KeyValue kv) throws IOException {
 		int len = kv.getKey().length + kv.getValue().getValue().length + 4;
 		out.writeInt(len);
 		out.writeInt(kv.getKey().length);

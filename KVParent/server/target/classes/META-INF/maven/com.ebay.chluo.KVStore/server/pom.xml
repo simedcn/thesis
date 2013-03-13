@@ -32,9 +32,14 @@
 			<artifactId>zookeeper</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.ebay.chluo.hdfs</groupId>
+			<artifactId>hdfs</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 	</dependencies>
 </project>

@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ebay.chluo.kvstore.KeyValueUtil;
-import com.ebay.chluo.kvstore.data.storage.file.IRegionStorage;
+import com.ebay.chluo.kvstore.data.storage.fs.IRegionStorage;
 import com.ebay.chluo.kvstore.structure.KeyValue;
 import com.ebay.chluo.kvstore.structure.Region;
 import com.ebay.chluo.kvstore.structure.Value;

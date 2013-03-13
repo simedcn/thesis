@@ -9,7 +9,6 @@
 		<module>core</module>
 		<module>hdfs</module>
 		<module>consumer</module>
-		<module>?</module>
 	</modules>
 	<dependencyManagement>
 

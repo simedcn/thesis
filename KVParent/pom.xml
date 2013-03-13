@@ -43,6 +43,11 @@
 				<artifactId>junit</artifactId>
 				<version>4.11</version>
 			</dependency>
+			<dependency>
+				<groupId>com.ebay.chluo.hdfs</groupId>
+				<artifactId>hdfs</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<modules>
