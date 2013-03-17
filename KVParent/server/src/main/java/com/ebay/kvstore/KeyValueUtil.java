@@ -1,4 +1,4 @@
-package com.ebay.kvstore.kvstore;
+package com.ebay.kvstore;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -88,10 +88,6 @@ public class KeyValueUtil {
 		return kv;
 	}
 
-	public static int getKeyValueLen(KeyValue kv) {
-		return 8 + kv.getKey().length + kv.getValue().getValue().length;
-	}
-
 	public static void writeToExternal(IBlockOutputStream out, KeyValue kv) throws IOException {
 		int len = kv.getKey().length + kv.getValue().getValue().length + 4;
 		out.writeInt(len);
@@ -134,4 +130,19 @@ public class KeyValueUtil {
 		}
 		return nextKey;
 	}
+
+	public static int getKeyValueLen(KeyValue kv) {
+		return 8 + kv.getKey().length + kv.getValue().getValue().length;
+	}
+
+	public static int getKeyValueLen(byte[] key, Value value) {
+		int valueLen = 0;
+		if(value == null || value.getValue()==null){
+			valueLen = 0;
+		}else{
+			valueLen = value.getValue().length;
+		}
+		return 8 + key.length + valueLen;
+	}
+
 }

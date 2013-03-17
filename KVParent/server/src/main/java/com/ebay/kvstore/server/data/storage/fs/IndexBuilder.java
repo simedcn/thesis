@@ -6,7 +6,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import org.apache.hadoop.fs.Path;
+
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.structure.KeyValue;
 
 public class IndexBuilder {
@@ -25,10 +27,11 @@ public class IndexBuilder {
 	 * @return
 	 * @throws IOException
 	 */
-	public static List<IndexEntry> build(InputStream is, int blockSize, int blockCount)
+	public static int build(List<IndexEntry> list, String file, int blockSize, int blockCount)
 			throws IOException {
-		List<IndexEntry> list = new ArrayList<>();
-		IBlockInputStream in = new KVInputStream(is, blockSize, 0, 0);
+		IBlockInputStream in = new KVInputStream(DFSManager.getDFS().open(new Path(file)),
+				blockSize, 0, 0);
+		int keyNum = 0;
 		byte[] prevKey = null, curKey = null;
 		int prevBlock = 0, curBlock = 0;
 		int offset = 0;
@@ -48,6 +51,7 @@ public class IndexBuilder {
 					in.skipBytes(-4);
 				}
 				kv = KeyValueUtil.readFromExternal(in);
+				keyNum++;
 				curKey = kv.getKey();
 				if (prevKey == null) {
 					prevKey = curKey;
@@ -57,7 +61,11 @@ public class IndexBuilder {
 				if (count >= blockCount || (count == blockCount - 1 && in.getBlockAvailable() < 4)) {
 					list.add(new IndexEntry(prevKey, curKey, prevBlock, curBlock, offset));
 					offset = in.getBlockPos() % blockSize;
-					prevBlock = (count == blockCount - 1 ? curBlock + 1 : curBlock);
+					prevBlock = curBlock;
+					if (count == blockCount - 1) {
+						prevBlock++;
+						offset = 0;
+					}
 					prevKey = null;
 				}
 			}
@@ -67,7 +75,7 @@ public class IndexBuilder {
 			}
 			in.close();
 		}
-		return list;
+		return keyNum;
 	}
 
 }

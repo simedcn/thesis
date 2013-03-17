@@ -2,7 +2,7 @@ package com.ebay.kvstore.server.data.storage;
 
 import java.util.List;
 
-import com.ebay.kvstore.kvstore.Address;
+import com.ebay.kvstore.Address;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 
@@ -36,4 +36,6 @@ public interface IStoreEngine {
 	public void splitRegion(int regionId, int newRegionId);
 
 	public void dispose();
+	
+	public void stat();
 }

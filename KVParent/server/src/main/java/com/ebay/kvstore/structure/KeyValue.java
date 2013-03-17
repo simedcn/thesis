@@ -34,10 +34,6 @@ public class KeyValue implements Serializable {
 		this.value = value;
 	}
 
-	public int getSize() {
-		return 8 + key.length + value.getSize();
-	}
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;

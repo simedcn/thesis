@@ -1,6 +1,7 @@
 package com.ebay.kvstore.server.data.storage.helper;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -8,11 +9,11 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.PathBuilder;
+import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.kvstore.Address;
-import com.ebay.kvstore.kvstore.PathBuilder;
-import com.ebay.kvstore.kvstore.RegionUtil;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
@@ -87,7 +88,6 @@ public class RegionLoader extends BaseHelper {
 					}
 				}
 			}
-
 			if (success) {
 				listener.onLoadEnd(true);
 			} else {
@@ -133,9 +133,8 @@ public class RegionLoader extends BaseHelper {
 	 * @throws IOException
 	 */
 	private LoaderResult tryLoad(String dir, String file, String[] logFiles) throws IOException {
-		Path dirPath = new Path(dir);
-		Path dataPath = new Path(dirPath, file);
-		List<IndexEntry> indices = IndexBuilder.build(fs.open(dataPath), blockSize, indexBlockNum);
+		List<IndexEntry> indices = new ArrayList<>();
+		IndexBuilder.build(indices, dir + file, blockSize, indexBlockNum);
 		KeyValueCache buffer = KeyValueCache.forBuffer();
 		// load log files
 		long dataTime = RegionUtil.getRegionFileTimestamp(file);

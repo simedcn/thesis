@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.cache.FIFOCacheReplacer;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 
@@ -26,13 +26,13 @@ public class KeyValueCacheTest {
 		unlimitCache.set(new byte[] { 1 }, new byte[] { 1, 2 });
 		unlimitCache.set(new byte[] { 1, 2 }, new byte[] { 1, 2 });
 		unlimitCache.set(new byte[] { 1 }, new byte[] { 1, 2, 3 });
-		assertEquals(3 + 18 + 5, unlimitCache.getUsed());
+		assertEquals(24, unlimitCache.getUsed());
 
 		unlimitCache.delete(new byte[] { 1 });
-		assertEquals(2 + 2 + 9, unlimitCache.getUsed());
+		assertEquals(12, unlimitCache.getUsed());
 
 		unlimitCache.incr(new byte[] { 3 }, 1, 0);
-		assertEquals(13 + 1 + 4 + 9, unlimitCache.getUsed());
+		assertEquals(25, unlimitCache.getUsed());
 	}
 
 	@Test
@@ -43,10 +43,10 @@ public class KeyValueCacheTest {
 
 		unlimitCache.set(key1, new byte[] { 1, 2 });
 		assertArrayEquals(new byte[] { 1, 2 }, unlimitCache.get(key1).getValue().getValue());
-		assertNull(unlimitCache.get(key2).getValue());
+		assertNull(unlimitCache.get(key2));
 
 		unlimitCache.delete(key1);
-		assertNull(unlimitCache.get(key1).getValue());
+		assertNull(unlimitCache.get(key1));
 
 		unlimitCache.incr(key3, 5, 0);
 		unlimitCache.incr(key3, 10, 0);

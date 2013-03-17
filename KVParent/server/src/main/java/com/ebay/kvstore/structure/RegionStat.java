@@ -8,10 +8,11 @@ public class RegionStat implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private int keyNum;
-	private int size;
-	private int readCount;
-	private int writeCount;
+	public int keyNum;
+	public long size;
+	public int readCount;
+	public int writeCount;
+	public boolean dirty;
 
 	public RegionStat() {
 		this(0, 0, 0, 0);
@@ -23,38 +24,12 @@ public class RegionStat implements Serializable {
 		this.size = size;
 		this.readCount = readCount;
 		this.writeCount = writeCount;
+		this.dirty = true;
 	}
 
-	public int getKeyNum() {
-		return keyNum;
-	}
-
-	public void setKeyNum(int keyNum) {
-		this.keyNum = keyNum;
-	}
-
-	public int getSize() {
-		return size;
-	}
-
-	public void setSize(int size) {
-		this.size = size;
-	}
-
-	public int getReadCount() {
-		return readCount;
-	}
-
-	public void setReadCount(int readCount) {
-		this.readCount = readCount;
-	}
-
-	public int getWriteCount() {
-		return writeCount;
-	}
-
-	public void setWriteCount(int writeCount) {
-		this.writeCount = writeCount;
+	public void reset() {
+		this.keyNum = 0;
+		this.size = 0;
 	}
 
 	@Override
@@ -62,4 +37,5 @@ public class RegionStat implements Serializable {
 		return "RegionStat [keyNum=" + keyNum + ", size=" + size + ", readCount=" + readCount
 				+ ", writeCount=" + writeCount + "]";
 	}
+
 }

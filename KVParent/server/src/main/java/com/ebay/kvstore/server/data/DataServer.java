@@ -18,11 +18,11 @@ import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.IServer;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.conf.ServerConstants;
-import com.ebay.kvstore.kvstore.Address;
-import com.ebay.kvstore.kvstore.IServer;
 import com.ebay.kvstore.protocol.ProtocolType;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;

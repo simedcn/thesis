@@ -22,7 +22,7 @@ public class RegionSplitterTest extends BaseFileStorageTest {
 	@Before
 	public void setUp() throws IOException {
 		conf.set(IConfigurationKey.Region_Block_Size, 64);
-		region = new Region(0, new byte[] { 1 }, new byte[] { (byte) 0xff }, new RegionStat());
+		region = new Region(0, new byte[] { 1 }, new byte[] { (byte) 0xff });
 		storage = new RegionFileStorage(conf, region, true);
 	}
 
@@ -35,7 +35,7 @@ public class RegionSplitterTest extends BaseFileStorageTest {
 		for (int i = 0; i < 100; i++) {
 			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
 		}
-		storage.commit();
+		storage.flush();
 		for (int i = 0; i < 110; i += 15) {
 			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
 		}
@@ -53,7 +53,7 @@ public class RegionSplitterTest extends BaseFileStorageTest {
 		@Override
 		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
 			Assert.assertTrue(success);
-			return new Region(1, start, end, new RegionStat());
+			return new Region(1, start, end);
 		}
 
 		@Override

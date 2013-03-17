@@ -1,14 +1,18 @@
 package com.ebay.kvstore.server.data.cache;
 
+import static com.ebay.kvstore.KeyValueUtil.getKeyValueLen;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.ebay.kvstore.kvstore.ByteArrayComparator;
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import com.ebay.kvstore.ByteArrayComparator;
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Value;
 
@@ -21,6 +25,12 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 	protected volatile long used;
 
 	protected ICacheReplacer replacer;
+
+	protected ReadWriteLock lock = new ReentrantReadWriteLock();
+
+	protected Lock readLock = lock.readLock();
+
+	protected Lock writeLock = lock.writeLock();
 
 	public static KeyValueCache forCache(int limit, ICacheReplacer replacer) {
 		return new KeyValueCache(limit, replacer);
@@ -44,7 +54,8 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 	}
 
 	public KeyValue get(byte[] key) {
-		synchronized (cache) {
+		try {
+			readLock.lock();
 			Value v = cache.get(key);
 			onGet(key, v);
 			if (v != null) {
@@ -52,11 +63,15 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 			} else {
 				return null;
 			}
+		} finally {
+			readLock.unlock();
 		}
+
 	}
 
 	public void set(byte[] key, Value value) {
-		synchronized (cache) {
+		try {
+			writeLock.lock();
 			Value v = cache.get(key);
 			if (v == null) {
 				onSet(key, value);
@@ -65,38 +80,45 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 			}
 			cache.put(key, value);
 			checkMemory();
+		} finally {
+			writeLock.unlock();
 		}
 	}
 
 	public void set(byte[] key, byte[] value) {
-		/*
-		 * Value v = cache.get(key); if (v == null) { v = new Value(value);
-		 * cache.put(key, v); onSet(key, v); if (replacer != null) {
-		 * replacer.addIndex(key); } } else { byte[] old = v.getValue();
-		 * v.setValue(value); onUpdate(key, new Value(old), v); if (replacer !=
-		 * null) { replacer.reIndex(key); } } checkMemory();
-		 */
 		set(key, new Value(value));
 	}
 
 	public KeyValue delete(byte[] key) {
-		Value v = cache.remove(key);
-		if (v != null) {
-			onDelete(key, v);
+		try {
+			writeLock.lock();
+			Value v = cache.remove(key);
+			if (v != null) {
+				onDelete(key, v);
+			}
+			return new KeyValue(key, v);
+		} finally {
+			writeLock.unlock();
 		}
-		return new KeyValue(key, v);
+
 	}
 
 	public KeyValue incr(byte[] key, int incremental, int initValue) {
-		Value v = cache.get(key);
-		if (v == null) {
-			v = new Value(KeyValueUtil.intToBytes(initValue + incremental));
-			cache.put(key, v);
-			onSet(key, v);
-		} else {
-			v.incr(incremental);
+		try {
+			writeLock.lock();
+			Value v = cache.get(key);
+			if (v == null) {
+				v = new Value(KeyValueUtil.intToBytes(initValue + incremental));
+				cache.put(key, v);
+				onSet(key, v);
+			} else {
+				v.incr(incremental);
+			}
+			return new KeyValue(key, v);
+		} finally {
+			writeLock.unlock();
 		}
-		return new KeyValue(key, v);
+
 	}
 
 	public long getUsed() {
@@ -112,26 +134,30 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 			return;
 		}
 		if (used > limit) {
-			synchronized (cache) {
-				while (used > limit) {
-					byte[] key = replacer.getReplacement();
-					Value v = cache.remove(key);
-					onDelete(key, v);
-				}
+			while (used > limit) {
+				byte[] key = replacer.getReplacement();
+				Value v = cache.remove(key);
+				onDelete(key, v);
 			}
 		}
 	}
 
 	public void remove(byte[] start, byte[] end) {
-		Entry<byte[], Value> e = null;
-		Iterator<Entry<byte[], Value>> it = cache.entrySet().iterator();
-		while (it.hasNext()) {
-			e = it.next();
-			if (KeyValueUtil.inRange(e.getKey(), start, end)) {
-				it.remove();
-				onDelete(e.getKey(), e.getValue());
+		try {
+			writeLock.lock();
+			Entry<byte[], Value> e = null;
+			Iterator<Entry<byte[], Value>> it = cache.entrySet().iterator();
+			while (it.hasNext()) {
+				e = it.next();
+				if (KeyValueUtil.inRange(e.getKey(), start, end)) {
+					it.remove();
+					onDelete(e.getKey(), e.getValue());
+				}
 			}
+		} finally {
+			writeLock.unlock();
 		}
+
 	}
 
 	@Override
@@ -145,24 +171,37 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 	}
 
 	public void addAll(KeyValueCache buffer) {
-		for (Entry<byte[], Value> e : buffer) {
-			Value v = cache.get(e.getKey());
-			cache.put(e.getKey(), e.getValue());
-			if (v == null) {
-				onSet(e.getKey(), e.getValue());
-			} else {
-				onUpdate(e.getKey(), v, e.getValue());
-			}
+		if(buffer == null){
+			return ;
 		}
-		checkMemory();
+		try {
+			writeLock.lock();
+			for (Entry<byte[], Value> e : buffer) {
+				Value v = cache.get(e.getKey());
+				cache.put(e.getKey(), e.getValue());
+				if (v == null) {
+					onSet(e.getKey(), e.getValue());
+				} else {
+					onUpdate(e.getKey(), v, e.getValue());
+				}
+			}
+			checkMemory();
+		} finally {
+			writeLock.unlock();
+		}
 	}
 
 	public void removeAll(KeyValueCache buffer) {
-		for (Entry<byte[], Value> e : buffer) {
-			Value v = cache.remove(e.getKey());
-			if (v != null) {
-				onDelete(e.getKey(), v);
+		try {
+			writeLock.lock();
+			for (Entry<byte[], Value> e : buffer) {
+				Value v = cache.remove(e.getKey());
+				if (v != null) {
+					onDelete(e.getKey(), v);
+				}
 			}
+		} finally {
+			writeLock.unlock();
 		}
 	}
 
@@ -174,7 +213,7 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 
 	private void onDelete(byte[] key, Value value) {
 		if (value != null) {
-			used = used - key.length - value.getSize();
+			used = used - getKeyValueLen(key, value);
 			if (replacer != null) {
 				replacer.deleteIndex(key);
 			}
@@ -182,14 +221,14 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 	}
 
 	private void onSet(byte[] key, Value value) {
-		used = used + key.length + value.getSize();
+		used = used + getKeyValueLen(key, value);
 		if (replacer != null) {
 			replacer.addIndex(key);
 		}
 	}
 
 	private void onUpdate(byte[] key, Value oldValue, Value newValue) {
-		used = used - oldValue.getSize() + newValue.getSize();
+		used = used - getKeyValueLen(key, oldValue) + getKeyValueLen(key, newValue);
 		if (replacer != null) {
 			replacer.reIndex(key);
 		}
@@ -199,4 +238,11 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 		this.limit = cacheLimit;
 	}
 
+	public Lock getReadLock() {
+		return readLock;
+	}
+
+	public Lock getWriteLock() {
+		return writeLock;
+	}
 }

@@ -1,4 +1,4 @@
-package com.ebay.kvstore.kvstore;
+package com.ebay.kvstore;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -112,10 +112,24 @@ public class RegionUtil {
 					break;
 				}
 			}
-		}catch(EOFException e){
-		}
-		catch (IOException e) {
+		} catch (EOFException e) {
+		} catch (IOException e) {
 			logger.error("Error occured when loading the log file:" + file, e);
 		}
+	}
+
+	public static long getFileSize(String file) {
+		try {
+			FileStatus status = DFSManager.getDFS().getFileStatus(new Path(file));
+			if (status == null) {
+				return 0;
+			} else {
+				return status.getLen();
+			}
+		} catch (IOException e) {
+			logger.error("Fail to get FileStatus for " + file, e);
+			return 0;
+		}
+
 	}
 }

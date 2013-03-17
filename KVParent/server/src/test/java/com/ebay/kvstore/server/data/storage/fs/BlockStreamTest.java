@@ -13,7 +13,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.storage.BaseFileTest;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.KVFileInputIterator;

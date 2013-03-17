@@ -26,7 +26,7 @@ public class ConfigurationLoaderTest implements IConfigurationKey {
 	public void testLoadString() {
 		try {
 			IConfiguration conf = ConfigurationLoader.load("kvstore.properties");
-			assertEquals("lru", conf.get(DataServer_Cache_Replacement_Policy));
+			assertEquals("fifo", conf.get(DataServer_Cache_Replacement_Policy));
 			assertEquals(new Integer(180), conf.getInt(GC_Check_Interval));
 			assertEquals(new Integer(10), conf.getInt(Checkpoint_Reserve_Days, 10));
 
@@ -39,7 +39,7 @@ public class ConfigurationLoaderTest implements IConfigurationKey {
 	public void testLoad() {
 		try {
 			IConfiguration conf = ConfigurationLoader.load();
-			assertEquals("lru", conf.get(DataServer_Cache_Replacement_Policy));
+			assertEquals("fifo", conf.get(DataServer_Cache_Replacement_Policy));
 			assertEquals("127.0.0.1:20000", conf.get(Master_Addr));
 		} catch (IOException e) {
 			e.printStackTrace();

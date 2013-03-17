@@ -3,8 +3,8 @@ package com.ebay.kvstore.structure;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import com.ebay.kvstore.kvstore.KeyComparable;
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import com.ebay.kvstore.KeyComparable;
+import com.ebay.kvstore.KeyValueUtil;
 
 public class Region implements Serializable, Comparable<Region>, KeyComparable {
 
@@ -17,13 +17,15 @@ public class Region implements Serializable, Comparable<Region>, KeyComparable {
 	// null end is the max
 	private byte[] end;
 	private RegionStat stat;
+	// whether the region has been changed after last stat.
+	private boolean dirty = true;
 
-	public Region(int regionId, byte[] start, byte[] end, RegionStat stat) {
+	public Region(int regionId, byte[] start, byte[] end) {
 		super();
 		this.regionId = regionId;
 		this.start = start;
 		this.end = end;
-		this.stat = stat;
+		this.stat = new RegionStat();
 	}
 
 	public int getRegionId() {
@@ -113,5 +115,13 @@ public class Region implements Serializable, Comparable<Region>, KeyComparable {
 		if (regionId != other.regionId)
 			return false;
 		return true;
+	}
+
+	public boolean isDirty() {
+		return dirty;
+	}
+
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
 	}
 }

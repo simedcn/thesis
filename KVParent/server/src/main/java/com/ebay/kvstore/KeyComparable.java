@@ -1,4 +1,4 @@
-package com.ebay.kvstore.kvstore;
+package com.ebay.kvstore;
 
 /**
  * compare the given range with a given key(byte[])

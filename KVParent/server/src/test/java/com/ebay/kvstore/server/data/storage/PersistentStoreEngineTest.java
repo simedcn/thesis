@@ -1,14 +1,17 @@
 package com.ebay.kvstore.server.data.storage;
 
 import static org.junit.Assert.*;
-
-import java.util.Arrays;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.data.storage.helper.TaskManager;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
 
@@ -20,8 +23,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 
 	@Before
 	public void setUp() throws Exception {
-		region = new Region(id++, new byte[] { 0 }, null, new RegionStat());
-		engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
+		conf.set(IConfigurationKey.DataServer_Cache_Max, 128);
 	}
 
 	@After
@@ -31,8 +33,9 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 
 	@Test
 	public void testOperation() {
-
 		try {
+			region = new Region(0, new byte[] { 0 }, null);
+			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
@@ -63,16 +66,95 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 	@Test
 	public void testLoad() {
 		try {
+			region = new Region(1, new byte[] { 0 }, null);
+			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
-			Region r = engine.unloadRegion(0);
+			Region r = engine.unloadRegion(1);
 			engine.loadRegion(addr, r);
+			for (byte i = 0; i < 100; i++) {
+				try {
+					assertArrayEquals(new byte[] { i }, engine.get(new byte[] { i }).getValue()
+							.getValue());
+				} catch (Exception e) {
+					e.printStackTrace();
+					assertArrayEquals(new byte[] { i }, engine.get(new byte[] { i }).getValue()
+							.getValue());
+				}
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testSplit() {
+		try {
+			region = new Region(2, new byte[] { 0 }, null);
+			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
+			for (byte i = 0; i < 100; i++) {
+				engine.set(new byte[] { i }, new byte[] { i });
+			}
+			while (TaskManager.isRunning()) {
+				Thread.sleep(100);
+			}
+			engine.splitRegion(2, 3);
+			while (TaskManager.isRunning()) {
+				Thread.sleep(100);
+			}
 			for (byte i = 0; i < 100; i++) {
 				assertArrayEquals(new byte[] { i }, engine.get(new byte[] { i }).getValue()
 						.getValue());
 			}
 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testStat() {
+		try {
+			region = new Region(4, new byte[] { 0 }, null);
+			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
+			engine.registerListener(new StoreStatListener());
+			for (byte i = 0; i < 100; i++) {
+				engine.set(new byte[] { i }, new byte[] { i });
+			}
+			engine.get(new byte[] { 0 });
+			engine.incr(new byte[] { 100 }, 10, 0);
+			while (TaskManager.isRunning()) {
+				Thread.sleep(100);
+			}
+			engine.stat();
+			RegionStat stat = engine.getRegions().get(0).getStat();
+			assertEquals(101, stat.writeCount);
+			assertEquals(1, stat.readCount);
+			assertFalse(stat.dirty);
+			System.out.println(stat);
+			for (byte i = 0; i < 100; i++) {
+				engine.set(new byte[] { i }, new byte[] { i });
+			}
+			engine.delete(new byte[] { 0 });
+			engine.stat();
+			System.out.println(stat);
+			engine.unloadRegion(4);
+			engine.loadRegion(addr, region);
+			engine.stat();
+			System.out.println(stat);
+			while(TaskManager.isRunning()){
+				Thread.sleep(100);
+			}
+			engine.splitRegion(4, 5);
+			while(TaskManager.isRunning()){
+				Thread.sleep(100);
+			}
+			engine.stat();
+			System.out.println(stat);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

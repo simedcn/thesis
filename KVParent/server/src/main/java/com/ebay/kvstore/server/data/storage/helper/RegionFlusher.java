@@ -9,10 +9,10 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.PathBuilder;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.kvstore.KeyValueUtil;
-import com.ebay.kvstore.kvstore.PathBuilder;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IBlockOutputStream;
@@ -58,45 +58,51 @@ public class RegionFlusher extends BaseHelper {
 			// Just a temp file
 			String target = baseDir + String.valueOf(System.currentTimeMillis());
 			out = new KVOutputStream(DFSManager.getDFS().create(new Path(target), true), blockSize);
-			Iterator<Entry<byte[], Value>> cacheIt = buffer.iterator();
-			if (dataFile == null) {
-				flushCache(cacheIt, out);
-			} else {
-				fileIt = new KVFileInputIterator(0, -1, blockSize, 0, fs.open(new Path(dataFile)));
-				KeyValue kv = null; // from File
-				Entry<byte[], Value> e = null; // from Cache
-				while (true) {
-					if (kv == null) {
-						kv = (KeyValue) nextEntry(fileIt);
-					}
-					if (e == null) {
-						e = (Entry<byte[], Value>) nextEntry(cacheIt);
-					}
-					if (kv == null || e == null) {
-						break;
-					}
-					int comp = KeyValueUtil.compare(kv.getKey(), e.getKey());
-					if (comp < 0) {
-						// flush the file key
-						KeyValueUtil.writeToExternal(out, kv);
-						kv = null;
-					} else if (comp == 0) {
-						if (!e.getValue().isDeleted()) {
-							KeyValueUtil.writeToExternal(out,
-									new KeyValue(e.getKey(), e.getValue()));
+			try {
+				buffer.getReadLock().lock();
+				Iterator<Entry<byte[], Value>> cacheIt = buffer.iterator();
+				if (dataFile == null) {
+					flushCache(cacheIt, out, null);
+				} else {
+					fileIt = new KVFileInputIterator(0, -1, blockSize, 0,
+							fs.open(new Path(dataFile)));
+					KeyValue kv = null; // from File
+					Entry<byte[], Value> e = null; // from Cache
+					while (true) {
+						if (kv == null) {
+							kv = (KeyValue) nextEntry(fileIt);
 						}
-						kv = null;
-						e = null;
-					} else {
-						if (!e.getValue().isDeleted()) {
-							KeyValueUtil.writeToExternal(out,
-									new KeyValue(e.getKey(), e.getValue()));
+						if (e == null) {
+							e = (Entry<byte[], Value>) nextEntry(cacheIt);
 						}
-						e = null;
+						if (kv == null || e == null) {
+							break;
+						}
+						int comp = KeyValueUtil.compare(kv.getKey(), e.getKey());
+						if (comp < 0) {
+							// flush the file key
+							KeyValueUtil.writeToExternal(out, kv);
+							kv = null;
+						} else if (comp == 0) {
+							if (!e.getValue().isDeleted()) {
+								KeyValueUtil.writeToExternal(out,
+										new KeyValue(e.getKey(), e.getValue()));
+							}
+							kv = null;
+							e = null;
+						} else {
+							if (!e.getValue().isDeleted()) {
+								KeyValueUtil.writeToExternal(out,
+										new KeyValue(e.getKey(), e.getValue()));
+							}
+							e = null;
+						}
 					}
+					flushCache(cacheIt, out, null);
+					flushFile(fileIt, out, null);
 				}
-				flushCache(cacheIt, out);
-				flushFile(fileIt, out);
+			} finally {
+				buffer.getReadLock().unlock();
 			}
 			out.close();
 			if (listener != null) {

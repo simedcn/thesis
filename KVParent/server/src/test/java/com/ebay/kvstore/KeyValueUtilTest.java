@@ -1,6 +1,6 @@
 package com.ebay.kvstore;
 
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import com.ebay.kvstore.KeyValueUtil;
 
 import junit.framework.TestCase;
 

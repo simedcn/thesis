@@ -7,10 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.kvstore.Address;
-import com.ebay.kvstore.kvstore.RegionUtil;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
@@ -72,6 +72,10 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 		return RegionUtil.search(regions, key);
 	}
 
+	protected Region getKeyRegion(List<Region> regions, byte[] key) {
+		return RegionUtil.search(regions, key);
+	}
+
 	protected Region checkKeyRegion(byte[] key) throws InvalidKeyException {
 		Region region = RegionUtil.search(regions, key);
 		if (region == null) {
@@ -81,7 +85,7 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 		return region;
 	}
 
-	protected boolean addRegion(Region region) {
+	protected synchronized boolean addRegion(Region region) {
 		if (regions.contains(region)) {
 			return false;
 		}
@@ -90,7 +94,7 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 		return true;
 	}
 
-	protected Region removeRegion(int regionId) {
+	protected synchronized Region removeRegion(int regionId) {
 		Iterator<Region> it = regions.iterator();
 		Region region = null;
 		while (it.hasNext()) {
@@ -113,26 +117,42 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 	}
 
 	void onSet(byte[] key, byte[] value) {
+		Region region = getKeyRegion(key);
 		for (IStoreListener listener : listeners) {
-			listener.onSet(key, value);
+			listener.onSet(region, key, value);
 		}
 	}
 
 	void onGet(byte[] key, Value value) {
+		Region region = getKeyRegion(key);
 		for (IStoreListener listener : listeners) {
-			listener.onGet(key, value);
+			listener.onGet(region, key, value);
 		}
 	}
 
 	void onIncr(byte[] key, int value) {
+		Region region = getKeyRegion(key);
 		for (IStoreListener listener : listeners) {
-			listener.onIncr(key, value);
+			listener.onIncr(region, key, value);
 		}
 	}
 
 	void onDelete(byte[] key) {
+		Region region = getKeyRegion(key);
 		for (IStoreListener listener : listeners) {
-			listener.onDelete(key);
+			listener.onDelete(region, key);
+		}
+	}
+
+	void onSplit(Region oldRegion, Region newRegion) {
+		for (IStoreListener listener : listeners) {
+			listener.onSplit(oldRegion, newRegion);
+		}
+	}
+
+	public void onLoad(Region region) {
+		for (IStoreListener listener : listeners) {
+			listener.onLoad(region);
 		}
 	}
 }

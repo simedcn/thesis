@@ -5,8 +5,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
+import com.ebay.kvstore.Address;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.kvstore.Address;
 import com.ebay.kvstore.server.data.storage.BaseFileStorageTest;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
@@ -23,7 +24,7 @@ public class RegionLoaderTest extends BaseFileStorageTest {
 	public void setUp() throws Exception {
 		conf.set(IConfigurationKey.Region_Block_Size, 64);
 		addr = Address.parse(conf.get(IConfigurationKey.DataServer_Addr));
-		region = new Region(0, new byte[] { 1 }, new byte[] { (byte) 0xff }, new RegionStat());
+		region = new Region(0, new byte[] { 1 }, new byte[] { (byte) 0xff });
 		storage = new RegionFileStorage(conf, region, true);
 
 	}
@@ -33,7 +34,7 @@ public class RegionLoaderTest extends BaseFileStorageTest {
 		for (int i = 0; i < 100; i++) {
 			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
 		}
-		storage.commit();
+		storage.flush();
 		for (int i = 0; i < 110; i += 15) {
 			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
 		}
@@ -60,6 +61,7 @@ public class RegionLoaderTest extends BaseFileStorageTest {
 
 		@Override
 		public void onLoadCommit(boolean success, IRegionStorage storage) {
+			assertTrue(success);
 			KeyValue kv = storage.getFromBuffer(new byte[] { 15 });
 			assertArrayEquals(new byte[] { 15 }, kv.getKey());
 		}

@@ -2,8 +2,8 @@ package com.ebay.kvstore.server.data.storage;
 
 import java.util.List;
 
-import com.ebay.kvstore.kvstore.Address;
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 
@@ -24,7 +24,7 @@ public class StoreEngineProxy implements IStoreEngine {
 	@Override
 	public KeyValue get(byte[] key) throws InvalidKeyException {
 		KeyValue kv = engine.get(key);
-		if(kv!=null){
+		if (kv != null) {
 			engine.onGet(key, kv.getValue());
 		}
 		return kv;
@@ -91,6 +91,11 @@ public class StoreEngineProxy implements IStoreEngine {
 	@Override
 	public void dispose() {
 		engine.dispose();
+	}
+
+	@Override
+	public void stat() {
+		engine.stat();
 	}
 
 }

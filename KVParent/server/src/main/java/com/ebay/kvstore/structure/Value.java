@@ -3,7 +3,7 @@ package com.ebay.kvstore.structure;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import com.ebay.kvstore.kvstore.KeyValueUtil;
+import com.ebay.kvstore.KeyValueUtil;
 
 public class Value implements Serializable {
 	/**
@@ -12,10 +12,6 @@ public class Value implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private byte[] value;
 	private boolean deleted;
-
-	public int getSize() {
-		return 9 + (value == null ? 0 : value.length);
-	}
 
 	public byte[] getValue() {
 		return value;

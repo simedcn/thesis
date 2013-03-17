@@ -1,4 +1,4 @@
-package com.ebay.kvstore.kvstore;
+package com.ebay.kvstore;
 
 import java.net.InetSocketAddress;
 

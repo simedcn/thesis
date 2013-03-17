@@ -17,10 +17,6 @@ public class FileLoggerInputIterator implements Iterator<IMutation> {
 
 	protected IMutation mutation;
 
-	public FileLoggerInputIterator(ILoggerInputStream in) {
-		this.in = in;
-	}
-
 	public FileLoggerInputIterator(String path) throws IOException {
 		this.in = new FileLoggerInputStream(DFSManager.getDFS().open(new Path(path)));
 	}

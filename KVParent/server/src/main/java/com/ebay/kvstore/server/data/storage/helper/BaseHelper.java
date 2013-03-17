@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.storage.fs.IBlockOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.structure.KeyValue;
@@ -27,9 +27,11 @@ public abstract class BaseHelper implements Runnable {
 		this.conf = conf;
 	}
 
-	protected void flushCache(Iterator<Entry<byte[], Value>> it, IBlockOutputStream out)
-			throws IOException {
-		Entry<byte[], Value> e = null;
+	protected void flushCache(Iterator<Entry<byte[], Value>> it, IBlockOutputStream out,
+			Entry<byte[], Value> e) throws IOException {
+		if (e != null&&!e.getValue().isDeleted()) {
+			KeyValueUtil.writeToExternal(out, new KeyValue(e.getKey(), e.getValue()));
+		}
 		while (it.hasNext()) {
 			e = it.next();
 			if (!e.getValue().isDeleted()) {
@@ -38,8 +40,11 @@ public abstract class BaseHelper implements Runnable {
 		}
 	}
 
-	protected void flushFile(Iterator<KeyValue> it, IBlockOutputStream out) throws IOException {
-		KeyValue kv = null;
+	protected void flushFile(Iterator<KeyValue> it, IBlockOutputStream out, KeyValue kv)
+			throws IOException {
+		if (kv != null) {
+			KeyValueUtil.writeToExternal(out, kv);
+		}
 		while (it.hasNext()) {
 			kv = it.next();
 			KeyValueUtil.writeToExternal(out, kv);
@@ -48,6 +53,9 @@ public abstract class BaseHelper implements Runnable {
 
 	@SuppressWarnings("rawtypes")
 	protected Object nextEntry(Iterator it) {
+		if (it == null) {
+			return null;
+		}
 		if (it.hasNext()) {
 			return it.next();
 		} else {

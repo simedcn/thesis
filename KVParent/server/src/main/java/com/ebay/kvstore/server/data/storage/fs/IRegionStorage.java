@@ -26,7 +26,7 @@ public interface IRegionStorage {
 
 	public long getBufferLimit();
 
-	public void commit();
+	public void flush();
 
 	public long getBufferUsed();
 
@@ -52,8 +52,15 @@ public interface IRegionStorage {
 	 */
 	public void newLogger(String file) throws IOException;
 
+	public void setLogger(String file) throws IOException;
+	
 	public void closeLogger() ;
 
 	public void dispose();
+
+	public void stat() throws IOException;
+
+
+	public void resetBuffer();
 
 }

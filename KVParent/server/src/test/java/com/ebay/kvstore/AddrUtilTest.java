@@ -18,10 +18,6 @@ public class AddrUtilTest {
 
 	@Test
 	public void test() {
-		InetSocketAddress addr = InetSocketAddress.createUnresolved("192.138.12.3", 8080);
-		System.out.println(addr.getHostName());
-		System.out.println(addr.getHostString());
-		System.out.println(addr.getAddress().getHostAddress());
 	}
 
 }

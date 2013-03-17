@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 
 import junit.framework.TestCase;
 
-import com.ebay.kvstore.kvstore.RegionUtil;
+import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.structure.Region;
 
 public class RegionUtilTest extends TestCase {
@@ -19,10 +19,10 @@ public class RegionUtilTest extends TestCase {
 
 	public RegionUtilTest() {
 		regions = new ArrayList<>();
-		regions.add(new Region(0, new byte[] { 1 }, new byte[] { 5 }, null));
-		regions.add(new Region(0, new byte[] { 6 }, new byte[] { 10 }, null));
-		regions.add(new Region(0, new byte[] { 1, 20 }, new byte[] { -50, 10 }, null));
-		regions.add(new Region(0, new byte[] { 1, 1, 1 }, new byte[] { 10, 10, 10 }, null));
+		regions.add(new Region(0, new byte[] { 1 }, new byte[] { 5 }));
+		regions.add(new Region(0, new byte[] { 6 }, new byte[] { 10 }));
+		regions.add(new Region(0, new byte[] { 1, 20 }, new byte[] { -50, 10 }));
+		regions.add(new Region(0, new byte[] { 1, 1, 1 }, new byte[] { 10, 10, 10 }));
 		Collections.sort(regions);
 	}
 

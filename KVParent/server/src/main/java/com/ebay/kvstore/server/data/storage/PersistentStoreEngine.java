@@ -10,9 +10,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.kvstore.Address;
-import com.ebay.kvstore.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
@@ -21,7 +21,6 @@ import com.ebay.kvstore.server.data.storage.helper.IRegionSplitListener;
 import com.ebay.kvstore.server.data.storage.helper.TaskManager;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
-import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
 
 public class PersistentStoreEngine extends BaseStoreEngine {
@@ -69,10 +68,10 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 				kvs = storage.getFromDisk(key);
 				if (kvs != null) {
 					for (KeyValue kv2 : kvs) {
-						cache.set(kv2.getKey(), kv2.getValue());
 						if (Arrays.equals(kv2.getKey(), key)) {
 							kv = kv2;
 						}
+						cache.set(kv2.getKey(), kv2.getValue());
 					}
 				}
 			} catch (IOException e) {
@@ -136,6 +135,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public void splitRegion(int regionId, int newRegionId) {
+		logger.info("Try to split region " + regionId + " into new region " + newRegionId);
 		if (TaskManager.isRunning()) {
 			return;
 		}
@@ -166,7 +166,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		@Override
 		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
 			if (success) {
-				return new Region(regionId, start, end, new RegionStat());
+				return new Region(regionId, start, end);
 			} else {
 				restore();
 				return null;
@@ -182,10 +182,12 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 				Region newRegion = newStorage.getRegion();
 				storages.put(newRegion, newStorage);
 				addRegion(newStorage.getRegion());
+				onSplit(oldStorage.getRegion(), newRegion);
 			}
 		}
 
 		private void restore() {
+			logger.info("Region split failed, source region is:" + regionId);
 			KeyValueCache newBuffer = oldStorage.getBuffer();
 			oldBuffer.addAll(newBuffer);
 			oldStorage.setBuffer(oldBuffer);
@@ -209,6 +211,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		@Override
 		public void onLoadCommit(boolean success, IRegionStorage storage) {
 			if (success) {
+				onLoad(storage.getRegion());
 				storages.put(storage.getRegion(), storage);
 				addRegion(storage.getRegion());
 			}
@@ -221,6 +224,20 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	public void dispose() {
 		for (Entry<Region, IRegionStorage> s : storages.entrySet()) {
 			s.getValue().closeLogger();
+		}
+	}
+
+
+	@Override
+	public void stat() {
+		for (Entry<Region, IRegionStorage> e : storages.entrySet()) {
+			if (e.getKey().getStat().dirty) {
+				try {
+					e.getValue().stat();
+				} catch (Exception ex) {
+					logger.error("Error occured when stat the region:" + e.getValue(), ex);
+				}
+			}
 		}
 	}
 }

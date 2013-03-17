@@ -8,6 +8,10 @@ public interface IRedoLogger {
 	public void close();
 
 	public void flush() throws IOException;
-	
+
+	public void append(String file) throws IOException;
+
+	public void renameTo(String newLog) throws IOException;
+
 	public String getFile();
 }

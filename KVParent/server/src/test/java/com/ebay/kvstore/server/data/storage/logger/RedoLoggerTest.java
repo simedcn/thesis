@@ -42,7 +42,7 @@ public class RedoLoggerTest {
 	@Test
 	public void test() {
 		try {
-			IRedoLogger logger = new FileRedoLogger(path);
+			IRedoLogger logger = FileRedoLogger.forCreate(path);
 			for (byte i = 0; i < 50; i++) {
 				logger.write(new SetMutation(new byte[] { i }, new byte[] { i }));
 			}

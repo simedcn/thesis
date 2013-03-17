@@ -5,8 +5,8 @@ import java.lang.reflect.Constructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.Address;
 import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.kvstore.Address;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.structure.Region;
 

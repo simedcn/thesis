@@ -1,8 +1,10 @@
 package com.ebay.kvstore.server.data.storage.fs;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -11,11 +13,12 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.PathBuilder;
+import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.kvstore.Address;
-import com.ebay.kvstore.kvstore.PathBuilder;
-import com.ebay.kvstore.kvstore.RegionUtil;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.DeleteMutation;
 import com.ebay.kvstore.server.data.logger.FileLoggerInputIterator;
@@ -27,6 +30,7 @@ import com.ebay.kvstore.server.data.storage.helper.IRegionFlushListener;
 import com.ebay.kvstore.server.data.storage.helper.TaskManager;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
 
 /**
@@ -67,6 +71,11 @@ public class RegionFileStorage implements IRegionStorage {
 
 	protected Address addr;
 
+	// these two fields are used to record key/values in data file.
+	protected volatile long dataFileSize = 0;
+
+	protected volatile int dataFileKeyNum = 0;
+
 	protected Lock flushingLock = new ReentrantLock();
 
 	public RegionFileStorage(IConfiguration conf, Region region, String dataFile,
@@ -76,15 +85,16 @@ public class RegionFileStorage implements IRegionStorage {
 		this.region = region;
 		this.bufferLimit = conf.getInt(IConfigurationKey.DataServer_Buffer_Max);
 		this.blockSize = conf.getInt(IConfigurationKey.Region_Block_Size);
-		addr = Address.parse(conf.get(IConfigurationKey.DataServer_Addr));
+		this.indexBlockNum = conf.getInt(IConfigurationKey.Region_Index_Block_Num);
+		this.addr = Address.parse(conf.get(IConfigurationKey.DataServer_Addr));
+		this.buffer = KeyValueCache.forBuffer();
 		if (region != null) {
 			this.baseDir = PathBuilder.getRegionDir(addr, region.getRegionId());
 		}
-		this.buffer = KeyValueCache.forBuffer();
 		if (logger) {
 			String file = PathBuilder.getRegionLogPath(addr, region.getRegionId(),
 					System.currentTimeMillis());
-			this.redoLogger = new FileRedoLogger(file);
+			this.redoLogger = FileRedoLogger.forCreate(file);
 		}
 		this.dataFile = dataFile;
 		if (indices == null && dataFile != null) {
@@ -165,9 +175,11 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
-	public void commit() {
+	public void flush() {
+		logger.info("Try to flush region storage, region id:" + region.getRegionId()
+				+ " current buffer size is:" + buffer.getUsed() + " buffer limit is:" + bufferLimit);
 		if (!TaskManager.isRunning()) {
-			 TaskManager.flush(this, conf, new RegionFlushListener(dataFile));
+			TaskManager.flush(this, conf, new RegionFlushListener(dataFile));
 		}
 	}
 
@@ -176,7 +188,7 @@ public class RegionFileStorage implements IRegionStorage {
 		buffer.set(key, value);
 		redoLogger.write(new SetMutation(key, value));
 		if (buffer.getUsed() > bufferLimit) {
-			commit();
+			flush();
 		}
 	}
 
@@ -193,12 +205,21 @@ public class RegionFileStorage implements IRegionStorage {
 
 	/**
 	 * Build index for region file
+	 * 
+	 * @throws IOException
 	 */
-	protected void buildIndex() {
+	protected void buildIndex() throws IOException {
 		try {
-			indices = IndexBuilder.build(fs.open(new Path(dataFile)), blockSize, indexBlockNum);
+			if (indices == null) {
+				indices = new ArrayList<>();
+			} else {
+				indices.clear();
+			}
+			dataFileKeyNum = IndexBuilder.build(indices, dataFile, blockSize, indexBlockNum);
+			dataFileSize = RegionUtil.getFileSize(dataFile);
 		} catch (IOException e) {
 			logger.error("Fail to build index for " + dataFile, e);
+			throw e;
 		}
 	}
 
@@ -250,9 +271,14 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	public void setDataFile(String file) throws IOException {
-		this.indices = IndexBuilder.build(fs.open(new Path(file)), blockSize,
-				conf.getInt(IConfigurationKey.Region_Index_Block_Num));
-		this.dataFile = file;
+		String oldFile = this.dataFile;
+		try {
+			this.dataFile = file;
+			buildIndex();
+		} catch (IOException e) {
+			this.dataFile = oldFile;
+			throw e;
+		}
 	}
 
 	@Override
@@ -269,7 +295,15 @@ public class RegionFileStorage implements IRegionStorage {
 		if (redoLogger != null) {
 			redoLogger.close();
 		}
-		redoLogger = new FileRedoLogger(file);
+		redoLogger = FileRedoLogger.forCreate(file);
+	}
+
+	@Override
+	public void setLogger(String file) throws IOException {
+		if (redoLogger != null) {
+			redoLogger.close();
+		}
+		redoLogger = FileRedoLogger.forAppend(file);
 	}
 
 	@Override
@@ -282,16 +316,27 @@ public class RegionFileStorage implements IRegionStorage {
 	private class RegionFlushListener implements IRegionFlushListener {
 		private String oldFile;
 		private List<IndexEntry> tmpIndices;
+		private String oldLoggerFile;
+		private String newLoggerFile;
+		private int newKeyNum;
 
 		public RegionFlushListener(String oldFile) {
 			super();
 			this.oldFile = oldFile;
+			oldLoggerFile = redoLogger.getFile();
+
 		}
 
 		@Override
 		public void onFlushBegin() {
 			flushingLock.lock();
 			logger.info("Region flush begin");
+			newLoggerFile = baseDir + System.currentTimeMillis();
+			try {
+				newLogger(newLoggerFile);
+			} catch (IOException e) {
+				logger.error("Fail to create new logger", newLoggerFile);
+			}
 			oldBuffer = buffer;
 			buffer = KeyValueCache.forBuffer();
 		}
@@ -301,8 +346,8 @@ public class RegionFileStorage implements IRegionStorage {
 			logger.info("Region flush end");
 			if (success) {
 				try {
-					tmpIndices = IndexBuilder.build(fs.open(new Path(file)), blockSize,
-							indexBlockNum);
+					tmpIndices = new ArrayList<>();
+					newKeyNum = IndexBuilder.build(tmpIndices, file, blockSize, indexBlockNum);
 				} catch (Exception e) {
 					logger.error("Error occured when building index for data file:" + file, e);
 					restore();
@@ -316,16 +361,19 @@ public class RegionFileStorage implements IRegionStorage {
 
 		@Override
 		public void onFlushCommit(boolean success, String file) {
-			logger.info("Region flush commit");
+			logger.info("Region flush commit "
+					+ (success ? "success." + "new data file:" + file : "failed"));
 			try {
 				if (success) {
 					dataFile = file;
 					indices = tmpIndices;
+					dataFileKeyNum = newKeyNum;
+					dataFileSize = RegionUtil.getFileSize(file);
 					oldBuffer = null;
 					long time = RegionUtil.getRegionFileTimestamp(file);
 					String log = PathBuilder.getRegionLogPath(addr, region.getRegionId(), time);
 					try {
-						newLogger(log);
+						redoLogger.renameTo(log);
 					} catch (IOException e) {
 						logger.error("fail to create new log file" + log, e);
 					}
@@ -342,18 +390,56 @@ public class RegionFileStorage implements IRegionStorage {
 			oldBuffer.addAll(buffer);
 			buffer = oldBuffer;
 			dataFile = oldFile;
+			try {
+				setLogger(oldLoggerFile);
+				redoLogger.append(newLoggerFile);
+			} catch (IOException e) {
+				logger.error("Fail to restore to old logger", e);
+			}
 		}
+	}
 
+	/**
+	 * TODO: Just a kind of approximate. For performance issue and simplicity, I
+	 * am not be able to track every get/set or traverse the data file for every
+	 * time. In contrary, I record the current dataFileKeyNum and dataFileSize
+	 * after every flushing, and just count the key/values in buffer. Note this
+	 * may have some deviations in stat, but I think it should be acceptable.
+	 */
+	@Override
+	public void stat() throws IOException {
+		if (dataFileKeyNum == 0 && dataFile != null) {
+			buildIndex();
+		}
+		RegionStat stat = region.getStat();
+		stat.keyNum = this.dataFileKeyNum;
+		stat.size = this.dataFileSize;
+		for (Entry<byte[], Value> e : buffer) {
+			byte[] key = e.getKey();
+			Value v = e.getValue();
+			if (v.isDeleted()) {
+				stat.keyNum--;
+				stat.size -= KeyValueUtil.getKeyValueLen(key, null);
+			} else {
+				stat.keyNum++;
+				stat.size += KeyValueUtil.getKeyValueLen(key, v);
+			}
+		}
+		stat.dirty = false;
 	}
 
 	@Override
 	public void dispose() {
-		try{
+		try {
 			flushingLock.lock();
 			this.closeLogger();
-		}finally{
+		} finally {
 			flushingLock.unlock();
 		}
-		
+	}
+
+	@Override
+	public void resetBuffer() {
+		this.buffer.reset();
 	}
 }

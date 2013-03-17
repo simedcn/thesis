@@ -1,5 +1,6 @@
 package com.ebay.kvstore.server.data.storage;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -10,11 +11,11 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.kvstore.Address;
-import com.ebay.kvstore.kvstore.KeyValueUtil;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
 
@@ -36,11 +37,9 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			conf2.set(IConfigurationKey.DataServer_Addr, new Address("192.1.1.1", 30000));
 			conf2.set(IConfigurationKey.DataServer_Cache_Max, 4096);
 
-			region = new Region(0, new byte[] { 0 }, new byte[] { 1, 1, 1, 1, 1, 1, 1 },
-					new RegionStat());
+			region = new Region(0, new byte[] { 0 }, new byte[] { 1, 1, 1, 1, 1, 1, 1 });
 			engine = StoreEngineFactory.getInstance().getMemoryStore(conf, region);
 			engine.getRegions().add(region);
-
 			engine2 = StoreEngineFactory.getInstance().getMemoryStore(conf2);
 
 		} catch (IOException e) {
@@ -103,6 +102,34 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			}
 			engine.splitRegion(0, 1);
 			assertEquals(2, engine.getRegions().size());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testStat() {
+		try {
+			engine.registerListener(new StoreStatListener());
+			RegionStat stat = null;
+			for (int i = 0; i < 10; i++) {
+				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
+			}
+			engine.get(new byte[]{0});
+			engine.incr(new byte[]{11},10,0);
+			engine.stat();
+			stat = engine.getRegions().get(0).getStat();
+			assertEquals(11, stat.writeCount);
+			assertEquals(1, stat.readCount);
+			assertEquals(11, stat.keyNum);
+			assertEquals(113, stat.size);
+			assertFalse(stat.dirty);
+			engine.set(new byte[] { (byte)0 }, new byte[] { (byte) 0 });
+			assertTrue(stat.dirty);
+			assertEquals(12, stat.writeCount);
+			assertEquals(1, stat.readCount);
+			assertEquals(11, stat.keyNum);
+			assertEquals(113, stat.size);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

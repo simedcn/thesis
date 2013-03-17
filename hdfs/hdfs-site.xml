@@ -24,4 +24,15 @@
 		<value>65536</value>
 		<description>The default block size for new files. 64k</description>
 	</property>
+
+	<property>
+		<name>dfs.support.append</name>
+		<value>true</value>
+		<description>Does HDFS allow appends to files?
+			This is currently set to
+			false because there are bugs in the
+			"append code" and is not supported
+			in any prodction cluster.
+  </description>
+	</property>
 </configuration>

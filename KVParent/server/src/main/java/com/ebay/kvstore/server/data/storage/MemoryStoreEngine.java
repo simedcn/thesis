@@ -1,6 +1,7 @@
 package com.ebay.kvstore.server.data.storage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -11,11 +12,11 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.PathBuilder;
+import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.kvstore.Address;
-import com.ebay.kvstore.kvstore.KeyValueUtil;
-import com.ebay.kvstore.kvstore.PathBuilder;
-import com.ebay.kvstore.kvstore.RegionUtil;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.FileLoggerInputIterator;
 import com.ebay.kvstore.server.data.logger.FileRedoLogger;
@@ -24,7 +25,6 @@ import com.ebay.kvstore.server.data.logger.IRedoLogger;
 import com.ebay.kvstore.server.data.logger.SetMutation;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
-import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
 
 public class MemoryStoreEngine extends BaseStoreEngine {
@@ -40,7 +40,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		long time = System.currentTimeMillis();
 		for (Region r : regions) {
 			String file = PathBuilder.getRegionLogPath(addr, r.getRegionId(), time);
-			IRedoLogger logger = new FileRedoLogger(file);
+			IRedoLogger logger = FileRedoLogger.forCreate(file);
 			loggers.put(r, logger);
 		}
 	}
@@ -116,7 +116,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			cache.addAll(buffer);
 			String logFile = PathBuilder.getRegionLogPath(this.addr, region.getRegionId(),
 					System.currentTimeMillis());
-			IRedoLogger logger = new FileRedoLogger(logFile);
+			IRedoLogger logger = FileRedoLogger.forCreate(logFile);
 			addRegion(region);
 			loggers.put(region, logger);
 		} catch (IOException e) {
@@ -130,17 +130,24 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public synchronized void splitRegion(int regionId, int newRegionId) {
+
 		Region oldRegion = getRegionById(regionId);
 		if (oldRegion == null) {
 			return;
 		}
 		List<Entry<byte[], Value>> list = new LinkedList<>();
 		int size = 0;
-		for (Entry<byte[], Value> e : cache) {
-			if (oldRegion.compareTo(e.getKey()) == 0) {
-				list.add(e);
-				size += e.getKey().length + e.getValue().getSize();
+		// traverse the cache
+		try {
+			cache.getReadLock().lock();
+			for (Entry<byte[], Value> e : cache) {
+				if (oldRegion.compareTo(e.getKey()) == 0) {
+					list.add(e);
+					size += KeyValueUtil.getKeyValueLen(e.getKey(), e.getValue());
+				}
 			}
+		} finally {
+			cache.getReadLock().unlock();
 		}
 		int current = 0;
 		byte[] newKeyEnd = oldRegion.getEnd();
@@ -149,11 +156,11 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		while (current < size / 2 && it.hasNext()) {
 			Entry<byte[], Value> e = it.next();
 			oldKeyEnd = e.getKey();
-			current += e.getKey().length + e.getValue().getSize();
+			current += KeyValueUtil.getKeyValueLen(e.getKey(), e.getValue());
 		}
 		newKeyStart = KeyValueUtil.nextKey(oldKeyEnd);
 		oldRegion.setEnd(oldKeyEnd);
-		Region newRegion = new Region(newRegionId, newKeyStart, newKeyEnd, new RegionStat());
+		Region newRegion = new Region(newRegionId, newKeyStart, newKeyEnd);
 		IRedoLogger oldLogger = loggers.get(oldRegion);
 		oldLogger.close();
 		String logFile = oldLogger.getFile();
@@ -161,8 +168,8 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		String oldLogPath = PathBuilder.getRegionLogPath(addr, regionId, time);
 		String newLogPath = PathBuilder.getRegionLogPath(addr, newRegionId, time);
 		try {
-			oldLogger = new FileRedoLogger(oldLogPath);
-			IRedoLogger newLogger = new FileRedoLogger(newLogPath);
+			oldLogger = FileRedoLogger.forCreate(oldLogPath);
+			IRedoLogger newLogger = FileRedoLogger.forCreate(newLogPath);
 			loggers.put(oldRegion, oldLogger);
 			loggers.put(newRegion, newLogger);
 			addRegion(newRegion);
@@ -196,4 +203,39 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		}
 	}
 
+	@Override
+	public synchronized void stat() {
+		boolean dirty = false;
+		List<Region> dirtyList = new ArrayList<>();
+		for (Region region : regions) {
+			if (region.isDirty()) {
+				region.getStat().reset();
+				dirtyList.add(region);
+				dirty = true;
+			}
+		}
+		if (!dirty) {
+			return;
+		}
+		try {
+			cache.getReadLock().lock();
+			Iterator<Entry<byte[], Value>> it = cache.iterator();
+			Region region = null;
+			Entry<byte[], Value> e = null;
+			while (it.hasNext()) {
+				e = it.next();
+				region = getKeyRegion(dirtyList, e.getKey());
+				if (region != null) {
+					region.getStat().keyNum++;
+					region.getStat().size += KeyValueUtil.getKeyValueLen(e.getKey(), e.getValue());
+				}
+			}
+			for (Region r : dirtyList) {
+				r.getStat().dirty = false;
+			}
+		} finally {
+			cache.getReadLock().unlock();
+		}
+
+	}
 }
