@@ -7,6 +7,8 @@ public interface IRegionSplitListener extends IRegionListener {
 
 	public void onSplitBegin();
 
+	public void onSplitCommit(boolean success, IRegionStorage oldStorage, IRegionStorage newStorage);
+
 	/**
 	 * Caller should return a valid regionId.
 	 * 
@@ -16,6 +18,4 @@ public interface IRegionSplitListener extends IRegionListener {
 	 * @return
 	 */
 	public Region onSplitEnd(boolean success, byte[] start, byte[] end);
-
-	public void onSplitCommit(boolean success, IRegionStorage oldStorage, IRegionStorage newStorage);
 }

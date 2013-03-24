@@ -72,7 +72,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
 			Region r = engine.unloadRegion(1);
-			engine.loadRegion(addr, r);
+			engine.loadRegion(r);
 			for (byte i = 0; i < 100; i++) {
 				try {
 					assertArrayEquals(new byte[] { i }, engine.get(new byte[] { i }).getValue()
@@ -101,7 +101,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 			while (TaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
-			engine.splitRegion(2, 3);
+			engine.splitRegion(2, 3, null);
 			while (TaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
@@ -142,19 +142,19 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 			engine.stat();
 			System.out.println(stat);
 			engine.unloadRegion(4);
-			engine.loadRegion(addr, region);
+			engine.loadRegion(region);
 			engine.stat();
 			System.out.println(stat);
-			while(TaskManager.isRunning()){
+			while (TaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
-			engine.splitRegion(4, 5);
-			while(TaskManager.isRunning()){
+			engine.splitRegion(4, 5, null);
+			while (TaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
 			engine.stat();
 			System.out.println(stat);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

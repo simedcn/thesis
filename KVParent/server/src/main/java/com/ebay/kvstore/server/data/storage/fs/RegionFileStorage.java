@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ebay.kvstore.Address;
+import com.ebay.kvstore.FSUtil;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.PathBuilder;
 import com.ebay.kvstore.RegionUtil;
@@ -21,10 +22,10 @@ import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.DeleteMutation;
-import com.ebay.kvstore.server.data.logger.FileLoggerInputIterator;
-import com.ebay.kvstore.server.data.logger.FileRedoLogger;
+import com.ebay.kvstore.server.data.logger.FileDataLogger;
+import com.ebay.kvstore.server.data.logger.FileDataLoggerIterator;
+import com.ebay.kvstore.server.data.logger.IDataLogger;
 import com.ebay.kvstore.server.data.logger.IMutation;
-import com.ebay.kvstore.server.data.logger.IRedoLogger;
 import com.ebay.kvstore.server.data.logger.SetMutation;
 import com.ebay.kvstore.server.data.storage.helper.IRegionFlushListener;
 import com.ebay.kvstore.server.data.storage.helper.TaskManager;
@@ -41,11 +42,97 @@ import com.ebay.kvstore.structure.Value;
  */
 public class RegionFileStorage implements IRegionStorage {
 
+	private class RegionFlushListener implements IRegionFlushListener {
+		private String oldFile;
+		private List<IndexEntry> tmpIndices;
+		private String oldLoggerFile;
+		private String newLoggerFile;
+		private int newKeyNum;
+
+		public RegionFlushListener(String oldFile) {
+			super();
+			this.oldFile = oldFile;
+			oldLoggerFile = redoLogger.getFile();
+
+		}
+
+		@Override
+		public void onFlushBegin() {
+			flushingLock.lock();
+			logger.info("Region flush begin");
+			newLoggerFile = baseDir + System.currentTimeMillis();
+			try {
+				newLogger(newLoggerFile);
+			} catch (IOException e) {
+				logger.error("Fail to create new logger", newLoggerFile);
+			}
+			oldBuffer = buffer;
+			buffer = KeyValueCache.forBuffer();
+		}
+
+		@Override
+		public void onFlushCommit(boolean success, String file) {
+			logger.info("Region flush commit "
+					+ (success ? "success." + "new data file:" + file : "failed"));
+			try {
+				if (success) {
+					dataFile = file;
+					indices = tmpIndices;
+					dataFileKeyNum = newKeyNum;
+					dataFileSize = FSUtil.getFileSize(file);
+					oldBuffer = null;
+					long time = FSUtil.getRegionFileTimestamp(file);
+					String log = PathBuilder.getRegionLogPath(region.getRegionId(), time);
+					try {
+						redoLogger.renameTo(log);
+					} catch (IOException e) {
+						logger.error("fail to create new log file" + log, e);
+					}
+				} else {
+					restore();
+				}
+			} finally {
+				flushingLock.unlock();
+			}
+
+		}
+
+		@Override
+		public void onFlushEnd(boolean success, String file) {
+			logger.info("Region flush end");
+			if (success) {
+				try {
+					tmpIndices = new ArrayList<>();
+					newKeyNum = IndexBuilder.build(tmpIndices, file, blockSize, indexBlockNum);
+				} catch (Exception e) {
+					logger.error("Error occured when building index for data file:" + file, e);
+					restore();
+					throw new RuntimeException(e);
+				}
+			} else {
+				flushingLock.unlock();
+				restore();
+			}
+		}
+
+		private void restore() {
+			oldBuffer.addAll(buffer);
+			buffer = oldBuffer;
+			dataFile = oldFile;
+			try {
+				setLogger(oldLoggerFile);
+				redoLogger.append(newLoggerFile);
+			} catch (IOException e) {
+				logger.error("Fail to restore to old logger", e);
+			}
+		}
+	}
+
 	private static Logger logger = LoggerFactory.getLogger(RegionFileStorage.class);
 
 	protected volatile Region region;
 
-	protected volatile IRedoLogger redoLogger;
+	protected volatile IDataLogger redoLogger;
 
 	protected volatile KeyValueCache buffer;
 
@@ -78,6 +165,14 @@ public class RegionFileStorage implements IRegionStorage {
 
 	protected Lock flushingLock = new ReentrantLock();
 
+	public RegionFileStorage(IConfiguration conf, Region region) throws IOException {
+		this(conf, region, null, null, false);
+	}
+
+	public RegionFileStorage(IConfiguration conf, Region region, boolean logger) throws IOException {
+		this(conf, region, null, null, true);
+	}
+
 	public RegionFileStorage(IConfiguration conf, Region region, String dataFile,
 			List<IndexEntry> indices, boolean logger) throws IOException {
 		fs = DFSManager.getDFS();
@@ -89,12 +184,12 @@ public class RegionFileStorage implements IRegionStorage {
 		this.addr = Address.parse(conf.get(IConfigurationKey.DataServer_Addr));
 		this.buffer = KeyValueCache.forBuffer();
 		if (region != null) {
-			this.baseDir = PathBuilder.getRegionDir(addr, region.getRegionId());
+			this.baseDir = PathBuilder.getRegionDir(region.getRegionId());
 		}
 		if (logger) {
-			String file = PathBuilder.getRegionLogPath(addr, region.getRegionId(),
+			String file = PathBuilder.getRegionLogPath(region.getRegionId(),
 					System.currentTimeMillis());
-			this.redoLogger = FileRedoLogger.forCreate(file);
+			this.redoLogger = FileDataLogger.forCreate(file);
 		}
 		this.dataFile = dataFile;
 		if (indices == null && dataFile != null) {
@@ -106,39 +201,69 @@ public class RegionFileStorage implements IRegionStorage {
 
 	}
 
-	public RegionFileStorage(IConfiguration conf, Region region, boolean logger) throws IOException {
-		this(conf, region, null, null, true);
-	}
-
-	public RegionFileStorage(IConfiguration conf, Region region) throws IOException {
-		this(conf, region, null, null, false);
-	}
-
 	public RegionFileStorage(IConfiguration conf, String dataFile) throws IOException {
 		this(conf, null, dataFile, null, false);
 	}
 
-	public void reset() {
-		region = null;
-		if (buffer != null) {
-			buffer.reset();
-		}
-		if (indices != null) {
-			indices.clear();
-		}
+	@Override
+	public synchronized void closeLogger() {
 		if (redoLogger != null) {
 			redoLogger.close();
 		}
 	}
 
 	@Override
-	public void setBufferLimit(int limit) {
-		this.bufferLimit = limit;
+	public void deleteFromBuffer(byte[] key) {
+		buffer.set(key, new Value(null, true));
+		redoLogger.write(new DeleteMutation(key));
+	}
+
+	@Override
+	public void dispose() {
+		try {
+			flushingLock.lock();
+			this.closeLogger();
+		} finally {
+			flushingLock.unlock();
+		}
+	}
+
+	@Override
+	public void flush() {
+		logger.info("Try to flush region storage, region id:" + region.getRegionId()
+				+ " current buffer size is:" + buffer.getUsed() + " buffer limit is:" + bufferLimit);
+		if (!TaskManager.isRunning()) {
+			TaskManager.flush(this, conf, new RegionFlushListener(dataFile));
+		}
+	}
+
+	@Override
+	public String getBaseDir() {
+		if (region == null) {
+			throw new UnsupportedOperationException(
+					"BaseDir has not been initialized properly, as region is null");
+		}
+		return baseDir;
+	}
+
+	@Override
+	public KeyValueCache getBuffer() {
+		return buffer;
 	}
 
 	@Override
 	public long getBufferLimit() {
 		return bufferLimit;
+	}
+
+	@Override
+	public long getBufferUsed() {
+		return buffer.getUsed();
+	}
+
+	@Override
+	public String getDataFile() {
+		return dataFile;
 	}
 
 	@Override
@@ -164,8 +289,8 @@ public class RegionFileStorage implements IRegionStorage {
 			return null;
 		}
 		// TODO add input file
-		KVFileInputIterator it = new KVFileInputIterator(e.blockStart, e.blockEnd, blockSize,
-				e.offset, fs.open(new Path(dataFile)));
+		KVFileIterator it = new KVFileIterator(e.blockStart, e.blockEnd, blockSize, e.offset,
+				fs.open(new Path(dataFile)));
 		List<KeyValue> list = new LinkedList<>();
 		while (it.hasNext()) {
 			list.add(it.next());
@@ -175,89 +300,35 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
-	public void flush() {
-		logger.info("Try to flush region storage, region id:" + region.getRegionId()
-				+ " current buffer size is:" + buffer.getUsed() + " buffer limit is:" + bufferLimit);
-		if (!TaskManager.isRunning()) {
-			TaskManager.flush(this, conf, new RegionFlushListener(dataFile));
+	public Region getRegion() {
+		return region;
+	}
+
+	@Override
+	public synchronized void newLogger(String file) throws IOException {
+		if (redoLogger != null) {
+			redoLogger.close();
+		}
+		redoLogger = FileDataLogger.forCreate(file);
+	}
+
+	@Override
+	public void reset() {
+		region = null;
+		if (buffer != null) {
+			buffer.reset();
+		}
+		if (indices != null) {
+			indices.clear();
+		}
+		if (redoLogger != null) {
+			redoLogger.close();
 		}
 	}
 
 	@Override
-	public void storeInBuffer(byte[] key, byte[] value) {
-		buffer.set(key, value);
-		redoLogger.write(new SetMutation(key, value));
-		if (buffer.getUsed() > bufferLimit) {
-			flush();
-		}
-	}
-
-	@Override
-	public void deleteFromBuffer(byte[] key) {
-		buffer.set(key, new Value(null, true));
-		redoLogger.write(new DeleteMutation(key));
-	}
-
-	@Override
-	public long getBufferUsed() {
-		return buffer.getUsed();
-	}
-
-	/**
-	 * Build index for region file
-	 * 
-	 * @throws IOException
-	 */
-	protected void buildIndex() throws IOException {
-		try {
-			if (indices == null) {
-				indices = new ArrayList<>();
-			} else {
-				indices.clear();
-			}
-			dataFileKeyNum = IndexBuilder.build(indices, dataFile, blockSize, indexBlockNum);
-			dataFileSize = RegionUtil.getFileSize(dataFile);
-		} catch (IOException e) {
-			logger.error("Fail to build index for " + dataFile, e);
-			throw e;
-		}
-	}
-
-	private IndexEntry getKeyIndex(byte[] key) {
-		return RegionUtil.search(indices, key);
-	}
-
-	protected void loadLogger(String file) {
-		try {
-			FileLoggerInputIterator it = new FileLoggerInputIterator(file);
-			while (it.hasNext()) {
-				IMutation mutation = it.next();
-				switch (mutation.getType()) {
-				case IMutation.Set:
-					buffer.set(mutation.getKey(), mutation.getValue());
-					break;
-				case IMutation.Delete:
-					buffer.set(mutation.getKey(), new Value(null, true));
-					break;
-				}
-			}
-		} catch (IOException e) {
-			logger.error("Error occured when loading the log file:" + file, e);
-		}
-	}
-
-	@Override
-	public String getBaseDir() {
-		if (region == null) {
-			throw new UnsupportedOperationException(
-					"BaseDir has not been initialized properly, as region is null");
-		}
-		return baseDir;
-	}
-
-	@Override
-	public KeyValueCache getBuffer() {
-		return buffer;
+	public void resetBuffer() {
+		this.buffer.reset();
 	}
 
 	@Override
@@ -266,10 +337,11 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
-	public String getDataFile() {
-		return dataFile;
+	public void setBufferLimit(int limit) {
+		this.bufferLimit = limit;
 	}
 
+	@Override
 	public void setDataFile(String file) throws IOException {
 		String oldFile = this.dataFile;
 		try {
@@ -282,121 +354,15 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
-	public Region getRegion() {
-		return region;
-	}
-
-	public void setRegion(Region region) {
-		this.region = region;
-	}
-
-	@Override
-	public synchronized void newLogger(String file) throws IOException {
-		if (redoLogger != null) {
-			redoLogger.close();
-		}
-		redoLogger = FileRedoLogger.forCreate(file);
-	}
-
-	@Override
 	public void setLogger(String file) throws IOException {
 		if (redoLogger != null) {
 			redoLogger.close();
 		}
-		redoLogger = FileRedoLogger.forAppend(file);
+		redoLogger = FileDataLogger.forAppend(file);
 	}
 
-	@Override
-	public synchronized void closeLogger() {
-		if (redoLogger != null) {
-			redoLogger.close();
-		}
-	}
-
-	private class RegionFlushListener implements IRegionFlushListener {
-		private String oldFile;
-		private List<IndexEntry> tmpIndices;
-		private String oldLoggerFile;
-		private String newLoggerFile;
-		private int newKeyNum;
-
-		public RegionFlushListener(String oldFile) {
-			super();
-			this.oldFile = oldFile;
-			oldLoggerFile = redoLogger.getFile();
-
-		}
-
-		@Override
-		public void onFlushBegin() {
-			flushingLock.lock();
-			logger.info("Region flush begin");
-			newLoggerFile = baseDir + System.currentTimeMillis();
-			try {
-				newLogger(newLoggerFile);
-			} catch (IOException e) {
-				logger.error("Fail to create new logger", newLoggerFile);
-			}
-			oldBuffer = buffer;
-			buffer = KeyValueCache.forBuffer();
-		}
-
-		@Override
-		public void onFlushEnd(boolean success, String file) {
-			logger.info("Region flush end");
-			if (success) {
-				try {
-					tmpIndices = new ArrayList<>();
-					newKeyNum = IndexBuilder.build(tmpIndices, file, blockSize, indexBlockNum);
-				} catch (Exception e) {
-					logger.error("Error occured when building index for data file:" + file, e);
-					restore();
-					throw new RuntimeException(e);
-				}
-			} else {
-				flushingLock.unlock();
-				restore();
-			}
-		}
-
-		@Override
-		public void onFlushCommit(boolean success, String file) {
-			logger.info("Region flush commit "
-					+ (success ? "success." + "new data file:" + file : "failed"));
-			try {
-				if (success) {
-					dataFile = file;
-					indices = tmpIndices;
-					dataFileKeyNum = newKeyNum;
-					dataFileSize = RegionUtil.getFileSize(file);
-					oldBuffer = null;
-					long time = RegionUtil.getRegionFileTimestamp(file);
-					String log = PathBuilder.getRegionLogPath(addr, region.getRegionId(), time);
-					try {
-						redoLogger.renameTo(log);
-					} catch (IOException e) {
-						logger.error("fail to create new log file" + log, e);
-					}
-				} else {
-					restore();
-				}
-			} finally {
-				flushingLock.unlock();
-			}
-
-		}
-
-		private void restore() {
-			oldBuffer.addAll(buffer);
-			buffer = oldBuffer;
-			dataFile = oldFile;
-			try {
-				setLogger(oldLoggerFile);
-				redoLogger.append(newLoggerFile);
-			} catch (IOException e) {
-				logger.error("Fail to restore to old logger", e);
-			}
-		}
+	public void setRegion(Region region) {
+		this.region = region;
 	}
 
 	/**
@@ -429,17 +395,54 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
-	public void dispose() {
-		try {
-			flushingLock.lock();
-			this.closeLogger();
-		} finally {
-			flushingLock.unlock();
+	public void storeInBuffer(byte[] key, byte[] value) {
+		buffer.set(key, value);
+		redoLogger.write(new SetMutation(key, value));
+		if (buffer.getUsed() > bufferLimit) {
+			flush();
 		}
 	}
 
-	@Override
-	public void resetBuffer() {
-		this.buffer.reset();
+	/**
+	 * Build index for region file
+	 * 
+	 * @throws IOException
+	 */
+	protected void buildIndex() throws IOException {
+		try {
+			if (indices == null) {
+				indices = new ArrayList<>();
+			} else {
+				indices.clear();
+			}
+			dataFileKeyNum = IndexBuilder.build(indices, dataFile, blockSize, indexBlockNum);
+			dataFileSize = FSUtil.getFileSize(dataFile);
+		} catch (IOException e) {
+			logger.error("Fail to build index for " + dataFile, e);
+			throw e;
+		}
+	}
+
+	protected void loadLogger(String file) {
+		try {
+			FileDataLoggerIterator it = new FileDataLoggerIterator(file);
+			while (it.hasNext()) {
+				IMutation mutation = it.next();
+				switch (mutation.getType()) {
+				case IMutation.Set:
+					buffer.set(mutation.getKey(), mutation.getValue());
+					break;
+				case IMutation.Delete:
+					buffer.set(mutation.getKey(), new Value(null, true));
+					break;
+				}
+			}
+		} catch (IOException e) {
+			logger.error("Error occured when loading the log file:" + file, e);
+		}
+	}
+
+	private IndexEntry getKeyIndex(byte[] key) {
+		return RegionUtil.search(indices, key);
 	}
 }

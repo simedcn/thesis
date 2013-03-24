@@ -63,7 +63,7 @@ public class EngineListenerTest extends BaseFileTest {
 			while (TaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
-			engine.splitRegion(0, 5);
+			engine.splitRegion(0, 5, null);
 			while (TaskManager.isRunning()) {
 				Thread.sleep(100);
 			}

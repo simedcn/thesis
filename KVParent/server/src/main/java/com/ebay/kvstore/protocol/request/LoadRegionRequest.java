@@ -1,6 +1,6 @@
 package com.ebay.kvstore.protocol.request;
 
-import com.ebay.kvstore.protocol.ProtocolType;
+import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.structure.Region;
 
 public class LoadRegionRequest extends ServerRequest {
@@ -12,38 +12,27 @@ public class LoadRegionRequest extends ServerRequest {
 
 	private Region region;
 
-	private String srcIp;
-
-	@Override
-	public int getType() {
-		return ProtocolType.Load_Region_Req;
-	}
-
-	public LoadRegionRequest(Region region, String srcIp) {
+	public LoadRegionRequest(Region region) {
 		super();
 		this.region = region;
-		this.srcIp = srcIp;
 	}
 
 	public Region getRegion() {
 		return region;
 	}
 
+	@Override
+	public int getType() {
+		return IProtocolType.Load_Region_Req;
+	}
+
 	public void setRegion(Region region) {
 		this.region = region;
 	}
 
-	public String getSrcIp() {
-		return srcIp;
-	}
-
-	public void setSrcIp(String srcIp) {
-		this.srcIp = srcIp;
-	}
-
 	@Override
 	public String toString() {
-		return "LoadRegionRequest [region=" + region + ", srcIp=" + srcIp + "]";
+		return "LoadRegionRequest [region=" + region + "]";
 	}
 
 }

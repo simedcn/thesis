@@ -40,47 +40,60 @@ public class KVInputStream extends FilterInputStream implements IBlockInputStrea
 		blockStream.skip(offset);
 	}
 
-	/**
-	 * This method reads a block from file and fills the blockStream, the old
-	 * blockStream will be deprecated. Note that if a new block is loaded, the
-	 * old ones are overrode by it.
-	 * 
-	 * @throws IOException
-	 */
-	private void readNextBlock() throws IOException {
-		if (eof) {
-			throw new EOFException();
-		}
-
-		currentBlock++;
-		if (in.read(blockBuffer, 0, blockSize) < blockSize) {
-			// the file has reached the end
-			eof = true;
-		}
-		blockStream = new ByteArrayInputStream(blockBuffer);
+	@Override
+	public void close() throws IOException {
+		super.close();
+		blockStream.close();
 	}
 
-	// pos = blockSize*currentBlock + blockStream.pos()
-	public int getPos() {
-		return blockSize * (currentBlock + 1) - blockStream.available();
-	}
-
-	public int getBlockPos() {
-		return blockSize - blockStream.available();
-	}
-
-	public int getCurrentBlock() {
-		return currentBlock;
-	}
-
+	@Override
 	public int getBlockAvailable() {
 		return blockStream.available();
 	}
 
 	@Override
-	public void close() throws IOException {
-		super.close();
-		blockStream.close();
+	public int getBlockPos() {
+		return blockSize - blockStream.available();
+	}
+
+	@Override
+	public int getCurrentBlock() {
+		return currentBlock;
+	}
+
+	// pos = blockSize*currentBlock + blockStream.pos()
+	@Override
+	public int getPos() {
+		return blockSize * (currentBlock + 1) - blockStream.available();
+	}
+
+	@Override
+	public boolean readBoolean() throws IOException {
+		return false;
+	}
+
+	@Override
+	public byte readByte() throws IOException {
+		if (blockStream.available() < 1) {
+			readNextBlock();
+		}
+		int ch = blockStream.read();
+		return (byte) (ch);
+	}
+
+	@Override
+	public char readChar() throws IOException {
+		return 0;
+	}
+
+	@Override
+	public double readDouble() throws IOException {
+		return 0;
+	}
+
+	@Override
+	public float readFloat() throws IOException {
+		return 0;
 	}
 
 	@Override
@@ -128,6 +141,55 @@ public class KVInputStream extends FilterInputStream implements IBlockInputStrea
 		}
 	}
 
+	@Override
+	public int readInt() throws IOException {
+		if (blockStream.available() < 4) {
+			readNextBlock();
+		}
+		int ch1 = blockStream.read();
+		int ch2 = blockStream.read();
+		int ch3 = blockStream.read();
+		int ch4 = blockStream.read();
+		if ((ch1 | ch2 | ch3 | ch4) < 0)
+			throw new EOFException();
+		return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+	}
+
+	@Override
+	public String readLine() throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public long readLong() throws IOException {
+		return 0;
+	}
+
+	@Override
+	public short readShort() throws IOException {
+		return 0;
+	}
+
+	@Override
+	public int readUnsignedByte() throws IOException {
+		if (blockStream.available() < 1) {
+			readNextBlock();
+		}
+		int ch = blockStream.read();
+		return (byte) (ch);
+	}
+
+	@Override
+	public int readUnsignedShort() throws IOException {
+		return 0;
+	}
+
+	@Override
+	public String readUTF() throws IOException {
+		throw new UnsupportedOperationException();
+
+	}
+
 	/**
 	 * Skip n bytes, n could either be positive or negative. if n < 0, make sure
 	 * n<= {@link KVInputStream#getBlockPos()}. if n>0, n should not exceed the
@@ -166,82 +228,24 @@ public class KVInputStream extends FilterInputStream implements IBlockInputStrea
 		return 0;
 	}
 
-	@Override
-	public int readInt() throws IOException {
-		if (blockStream.available() < 4) {
-			readNextBlock();
-		}
-		int ch1 = blockStream.read();
-		int ch2 = blockStream.read();
-		int ch3 = blockStream.read();
-		int ch4 = blockStream.read();
-		if ((ch1 | ch2 | ch3 | ch4) < 0)
+	/**
+	 * This method reads a block from file and fills the blockStream, the old
+	 * blockStream will be deprecated. Note that if a new block is loaded, the
+	 * old ones are overrode by it.
+	 * 
+	 * @throws IOException
+	 */
+	private void readNextBlock() throws IOException {
+		if (eof) {
 			throw new EOFException();
-		return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
-	}
-
-	@Override
-	public byte readByte() throws IOException {
-		if (blockStream.available() < 1) {
-			readNextBlock();
 		}
-		int ch = blockStream.read();
-		return (byte) (ch);
-	}
 
-	@Override
-	public int readUnsignedByte() throws IOException {
-		if (blockStream.available() < 1) {
-			readNextBlock();
+		currentBlock++;
+		if (in.read(blockBuffer, 0, blockSize) < blockSize) {
+			// the file has reached the end
+			eof = true;
 		}
-		int ch = blockStream.read();
-		return (byte) (ch);
-	}
-
-	@Override
-	public boolean readBoolean() throws IOException {
-		return false;
-	}
-
-	@Override
-	public short readShort() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public int readUnsignedShort() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public char readChar() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public long readLong() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public float readFloat() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public double readDouble() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public String readLine() throws IOException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String readUTF() throws IOException {
-		throw new UnsupportedOperationException();
-
+		blockStream = new ByteArrayInputStream(blockBuffer);
 	}
 
 }

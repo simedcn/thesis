@@ -5,11 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.Address;
+import com.ebay.kvstore.FSUtil;
 import com.ebay.kvstore.PathBuilder;
 import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
@@ -24,22 +23,31 @@ import com.ebay.kvstore.structure.Region;
 
 public class RegionLoader extends BaseHelper {
 
+	private class LoaderResult {
+		public List<IndexEntry> indices;
+		public KeyValueCache cache;
+
+		public LoaderResult(List<IndexEntry> indices, KeyValueCache cache) {
+			this.indices = indices;
+			this.cache = cache;
+		}
+
+	}
+
 	private static Logger logger = LoggerFactory.getLogger(RegionLoader.class);
 	protected Region region;
 	protected int regionId;
-	protected Address addr;
 	protected IRegionLoadListener listener;
 	protected FileSystem fs;
 	protected int blockSize;
+
 	protected int indexBlockNum;
 
-	public RegionLoader(IConfiguration conf, IRegionLoadListener listener, Region region,
-			Address addr) {
+	public RegionLoader(IConfiguration conf, IRegionLoadListener listener, Region region) {
 		super(null, conf);
 		this.listener = listener;
 		this.region = region;
 		this.regionId = region.getRegionId();
-		this.addr = addr;
 		this.fs = DFSManager.getDFS();
 		this.blockSize = conf.getInt(IConfigurationKey.Region_Block_Size);
 		this.indexBlockNum = conf.getInt(IConfigurationKey.Region_Index_Block_Num);
@@ -52,12 +60,13 @@ public class RegionLoader extends BaseHelper {
 	 * @param regionId
 	 * @throws IOException
 	 */
+	@Override
 	public void run() {
 		Phase phase = Phase.Begin;
 		try {
-			String baseDir = PathBuilder.getRegionDir(addr, regionId);
-			String[] dataFiles = RegionUtil.getRegionFiles(baseDir);
-			String[] logFiles = RegionUtil.getRegionLogFiles(baseDir);
+			String baseDir = PathBuilder.getRegionDir(regionId);
+			String[] dataFiles = FSUtil.getRegionFiles(baseDir);
+			String[] logFiles = FSUtil.getRegionLogFiles(baseDir);
 			String dataFile = null;
 			boolean success = false;
 			listener.onLoadBegin();
@@ -97,17 +106,10 @@ public class RegionLoader extends BaseHelper {
 			phase = Phase.End;
 			// commit
 			long time = System.currentTimeMillis();
-			String logFile = PathBuilder.getRegionLogPath(addr, region.getRegionId(), time);
+			String logFile = PathBuilder.getRegionLogPath(region.getRegionId(), time);
 			IRegionStorage storage = null;
 			if (dataFile != null) {
-				String newDataFile = PathBuilder
-						.getRegionFilePath(addr, region.getRegionId(), time);
-				String dataDir = PathBuilder.getRegionDir(addr, region.getRegionId());
-				if (!fs.exists(new Path(dataDir))) {
-					fs.mkdirs(new Path(dataDir));
-				}
-				success = fs.rename(new Path(baseDir, dataFile), new Path(newDataFile));
-				storage = new RegionFileStorage(conf, region, newDataFile, indices, false);
+				storage = new RegionFileStorage(conf, region, baseDir + dataFile, indices, false);
 			} else {
 				storage = new RegionFileStorage(conf, region);
 			}
@@ -115,7 +117,7 @@ public class RegionLoader extends BaseHelper {
 			storage.setBuffer(buffer);
 			listener.onLoadCommit(success, storage);
 			phase = Phase.Commit;
-		} catch (Exception e) {
+		} catch (IOException e) {
 			logger.error("Fail to load region:" + regionId, e);
 			if (phase == Phase.Begin) {
 				listener.onLoadEnd(false);
@@ -137,9 +139,9 @@ public class RegionLoader extends BaseHelper {
 		IndexBuilder.build(indices, dir + file, blockSize, indexBlockNum);
 		KeyValueCache buffer = KeyValueCache.forBuffer();
 		// load log files
-		long dataTime = RegionUtil.getRegionFileTimestamp(file);
+		long dataTime = FSUtil.getRegionFileTimestamp(file);
 		for (int i = logFiles.length - 1; i >= 0; i--) {
-			long logTime = RegionUtil.getRegionFileTimestamp(logFiles[i]);
+			long logTime = FSUtil.getRegionFileTimestamp(logFiles[i]);
 			if (logTime >= dataTime) {
 				RegionUtil.loadLogger(dir + logFiles[i], buffer);
 			} else {
@@ -147,17 +149,6 @@ public class RegionLoader extends BaseHelper {
 			}
 		}
 		return new LoaderResult(indices, buffer);
-	}
-
-	private class LoaderResult {
-		public List<IndexEntry> indices;
-		public KeyValueCache cache;
-
-		public LoaderResult(List<IndexEntry> indices, KeyValueCache cache) {
-			this.indices = indices;
-			this.cache = cache;
-		}
-
 	}
 
 }

@@ -7,22 +7,12 @@ public class LRUCacheReplacer extends BaseCacheReplacer {
 
 	protected List<byte[]> index;
 
-	@Override
-	public byte[] getReplacement() {
-		if (index.size() > 0) {
-			return index.remove(0);
-		} else {
-			return null;
-		}
-	}
-
 	public LRUCacheReplacer() {
 		index = new LinkedList<>();
 	}
 
 	@Override
-	public void reIndex(byte[] key) {
-		index.remove(key);
+	public void addIndex(byte[] key) {
 		index.add(key);
 	}
 
@@ -32,7 +22,17 @@ public class LRUCacheReplacer extends BaseCacheReplacer {
 	}
 
 	@Override
-	public void addIndex(byte[] key) {
+	public byte[] getReplacement() {
+		if (index.size() > 0) {
+			return index.remove(0);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public void reIndex(byte[] key) {
+		index.remove(key);
 		index.add(key);
 	}
 

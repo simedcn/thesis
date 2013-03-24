@@ -18,10 +18,6 @@ public interface IConfigurationKey {
 
 	public static final String ZooKeeper_Addr = "zookeeper.addr";
 
-	public static final String Master_Client_Port = "master.client.port";
-
-	public static final String Master_DataServer_Port = "master.dataserver.addr";
-
 	public static final String Storage_Policy = "storage.policy";
 
 	public static final String Master_RedoLog_Max = "master.redolog.max";
@@ -55,5 +51,13 @@ public interface IConfigurationKey {
 
 	public static final String Checkpoint_Reserve_Days = "checkpoint.reserve.days";
 
+	public static final String Checkpoint_Interval = "checkpoint.interval";
+
 	public static final String ZooKeeper_Session_Timeout = "zookeeper.session.timeout";
+
+	public static final String DataServer_Reconnect_Interval = "dataserver.reconnect.interval";
+
+	public static final String DataServer_Reconnect_Retry = "dataserver.reconnect.retry";
+
+	public static final String DataServer_Weight = "dataserver.weight";
 }

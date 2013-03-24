@@ -8,7 +8,7 @@ public class StoreStatListener implements IStoreListener {
 	private RegionStat stat;
 
 	@Override
-	public void onSet(Region region, byte[] key, byte[] value) {
+	public void onDelete(Region region, byte[] key) {
 		stat = region.getStat();
 		stat.writeCount++;
 		stat.dirty = true;
@@ -21,14 +21,20 @@ public class StoreStatListener implements IStoreListener {
 	}
 
 	@Override
-	public void onDelete(Region region, byte[] key) {
+	public void onIncr(Region region, byte[] key, int value) {
 		stat = region.getStat();
 		stat.writeCount++;
 		stat.dirty = true;
 	}
 
 	@Override
-	public void onIncr(Region region, byte[] key, int value) {
+	public void onLoad(Region region) {
+		stat = region.getStat();
+		stat.dirty = true;
+	}
+
+	@Override
+	public void onSet(Region region, byte[] key, byte[] value) {
 		stat = region.getStat();
 		stat.writeCount++;
 		stat.dirty = true;
@@ -37,12 +43,6 @@ public class StoreStatListener implements IStoreListener {
 	@Override
 	public void onSplit(Region oldRegion, Region newRegion) {
 		stat = oldRegion.getStat();
-		stat.dirty = true;
-	}
-
-	@Override
-	public void onLoad(Region region) {
-		stat = region.getStat();
 		stat.dirty = true;
 	}
 

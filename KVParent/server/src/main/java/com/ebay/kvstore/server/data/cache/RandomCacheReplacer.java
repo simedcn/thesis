@@ -13,6 +13,16 @@ public class RandomCacheReplacer extends BaseCacheReplacer {
 	}
 
 	@Override
+	public void addIndex(byte[] key) {
+		index.add(key);
+	}
+
+	@Override
+	public void deleteIndex(byte[] key) {
+		index.remove(key);
+	}
+
+	@Override
 	public byte[] getReplacement() {
 		byte[] result = null;
 		Iterator<byte[]> it = index.iterator();
@@ -26,16 +36,6 @@ public class RandomCacheReplacer extends BaseCacheReplacer {
 	@Override
 	public void reIndex(byte[] key) {
 
-	}
-
-	@Override
-	public void deleteIndex(byte[] key) {
-		index.remove(key);
-	}
-
-	@Override
-	public void addIndex(byte[] key) {
-		index.add(key);
 	}
 
 }

@@ -11,10 +11,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ebay.kvstore.server.data.logger.DeleteMutation;
-import com.ebay.kvstore.server.data.logger.FileRedoLogger;
+import com.ebay.kvstore.server.data.logger.FileDataLogger;
 import com.ebay.kvstore.server.data.logger.IMutation;
-import com.ebay.kvstore.server.data.logger.IRedoLogger;
-import com.ebay.kvstore.server.data.logger.FileLoggerInputIterator;
+import com.ebay.kvstore.server.data.logger.IDataLogger;
+import com.ebay.kvstore.server.data.logger.FileDataLoggerIterator;
 import com.ebay.kvstore.server.data.logger.SetMutation;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 
@@ -42,7 +42,7 @@ public class RedoLoggerTest {
 	@Test
 	public void test() {
 		try {
-			IRedoLogger logger = FileRedoLogger.forCreate(path);
+			IDataLogger logger = FileDataLogger.forCreate(path);
 			for (byte i = 0; i < 50; i++) {
 				logger.write(new SetMutation(new byte[] { i }, new byte[] { i }));
 			}
@@ -50,7 +50,7 @@ public class RedoLoggerTest {
 				logger.write(new DeleteMutation(new byte[] { i }));
 			}
 			logger.close();
-			FileLoggerInputIterator it = new FileLoggerInputIterator(path);
+			FileDataLoggerIterator it = new FileDataLoggerIterator(path);
 			byte i = 0;
 			while (it.hasNext()) {
 				IMutation mutation = it.next();

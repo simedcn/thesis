@@ -24,6 +24,19 @@ public class IndexEntry implements Comparable<IndexEntry>, KeyComparable {
 	}
 
 	@Override
+	public int compareTo(byte[] key) {
+		int e1 = KeyValueUtil.compare(key, keyStart);
+		int e2 = KeyValueUtil.compare(key, keyEnd);
+		if (e1 >= 0 && e2 <= 0) {
+			return 0;
+		} else if (e1 < 0) {
+			return 1;
+		} else {
+			return -1;
+		}
+	}
+
+	@Override
 	public int compareTo(IndexEntry e) {
 		int e1 = KeyValueUtil.compare(keyStart, e.keyEnd);
 		int e2 = KeyValueUtil.compare(keyEnd, e.keyEnd);
@@ -40,17 +53,44 @@ public class IndexEntry implements Comparable<IndexEntry>, KeyComparable {
 		}
 	}
 
-	@Override
-	public int compareTo(byte[] key) {
-		int e1 = KeyValueUtil.compare(key, keyStart);
-		int e2 = KeyValueUtil.compare(key, keyEnd);
-		if (e1 >= 0 && e2 <= 0) {
-			return 0;
-		} else if (e1 < 0) {
-			return 1;
-		} else {
-			return -1;
-		}
+	public int getBlockEnd() {
+		return blockEnd;
+	}
+
+	public int getBlockStart() {
+		return blockStart;
+	}
+
+	public byte[] getKeyEnd() {
+		return keyEnd;
+	}
+
+	public byte[] getKeyStart() {
+		return keyStart;
+	}
+
+	public int getOffset() {
+		return offset;
+	}
+
+	public void setBlockEnd(int blockEnd) {
+		this.blockEnd = blockEnd;
+	}
+
+	public void setBlockStart(int blockStart) {
+		this.blockStart = blockStart;
+	}
+
+	public void setKeyEnd(byte[] keyEnd) {
+		this.keyEnd = keyEnd;
+	}
+
+	public void setKeyStart(byte[] keyStart) {
+		this.keyStart = keyStart;
+	}
+
+	public void setOffset(int offset) {
+		this.offset = offset;
 	}
 
 	@Override
@@ -58,46 +98,6 @@ public class IndexEntry implements Comparable<IndexEntry>, KeyComparable {
 		return "IndexEntry [keyStart=" + Arrays.toString(keyStart) + ", keyEnd="
 				+ Arrays.toString(keyEnd) + ", blockStart=" + blockStart + ", blockEnd=" + blockEnd
 				+ ", offset=" + offset + "]";
-	}
-
-	public byte[] getKeyStart() {
-		return keyStart;
-	}
-
-	public void setKeyStart(byte[] keyStart) {
-		this.keyStart = keyStart;
-	}
-
-	public byte[] getKeyEnd() {
-		return keyEnd;
-	}
-
-	public void setKeyEnd(byte[] keyEnd) {
-		this.keyEnd = keyEnd;
-	}
-
-	public int getBlockStart() {
-		return blockStart;
-	}
-
-	public void setBlockStart(int blockStart) {
-		this.blockStart = blockStart;
-	}
-
-	public int getBlockEnd() {
-		return blockEnd;
-	}
-
-	public void setBlockEnd(int blockEnd) {
-		this.blockEnd = blockEnd;
-	}
-
-	public int getOffset() {
-		return offset;
-	}
-
-	public void setOffset(int offset) {
-		this.offset = offset;
 	}
 
 }

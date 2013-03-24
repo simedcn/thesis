@@ -15,14 +15,6 @@ public class ProtocolDispatcher {
 		handlers = new HashMap<>();
 	}
 
-	public void registerHandler(int type, IProtocolHandler handler) {
-		handlers.put(type, handler);
-	}
-
-	public IProtocolHandler unregisterHandler(int type) {
-		return handlers.remove(type);
-	}
-
 	@SuppressWarnings("unchecked")
 	public void handle(Object obj, IContext context) {
 		if (!(obj instanceof IProtocol)) {
@@ -36,5 +28,13 @@ public class ProtocolDispatcher {
 					+ protocol.getType() + " has not been registered");
 		}
 		handler.handle(context, protocol);
+	}
+
+	public void registerHandler(int type, IProtocolHandler handler) {
+		handlers.put(type, handler);
+	}
+
+	public IProtocolHandler unregisterHandler(int type) {
+		return handlers.remove(type);
 	}
 }

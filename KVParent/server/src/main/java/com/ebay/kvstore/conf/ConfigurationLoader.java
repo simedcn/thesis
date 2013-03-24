@@ -10,23 +10,6 @@ import org.slf4j.LoggerFactory;
 public class ConfigurationLoader {
 	private static Logger logger = LoggerFactory.getLogger(ConfigurationLoader.class);
 
-	public static IConfiguration load(String path) throws IOException {
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		if (cl == null) {
-			ConfigurationLoader.class.getClassLoader();
-		}
-		InputStream in = cl.getResourceAsStream(path);
-		try {
-			Properties p = new Properties();
-			p.load(in);
-			return new KVConfiguration(p);
-		} finally {
-			if (in != null) {
-				in.close();
-			}
-		}
-	}
-
 	/**
 	 * Load properties by the following sequence: 1. load
 	 * kvstore.default.properties. 2. load kvstore.properties
@@ -39,12 +22,31 @@ public class ConfigurationLoader {
 		IConfiguration conf = null;
 		try {
 			conf = load(ServerConstants.Conf_Path);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			logger.warn("Fail to load property file:" + ServerConstants.Conf_Path, e);
 		}
 		if (conf != null) {
 			defaultConf.merge(conf);
 		}
 		return defaultConf;
+	}
+
+	public static IConfiguration load(String path) throws IOException {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		if (cl == null) {
+			ConfigurationLoader.class.getClassLoader();
+		}
+		InputStream in = cl.getResourceAsStream(path);
+		try {
+			Properties p = new Properties();
+			if (in != null) {
+				p.load(in);
+			}
+			return new KVConfiguration(p);
+		} finally {
+			if (in != null) {
+				in.close();
+			}
+		}
 	}
 }

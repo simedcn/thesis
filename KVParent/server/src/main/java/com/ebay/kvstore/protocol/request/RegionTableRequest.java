@@ -1,6 +1,6 @@
 package com.ebay.kvstore.protocol.request;
 
-import com.ebay.kvstore.protocol.ProtocolType;
+import com.ebay.kvstore.protocol.IProtocolType;
 
 public class RegionTableRequest extends ClientRequest {
 
@@ -11,7 +11,7 @@ public class RegionTableRequest extends ClientRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Region_Table_Req;
+		return IProtocolType.Region_Table_Req;
 	}
 
 }

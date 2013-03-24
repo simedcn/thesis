@@ -10,7 +10,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
@@ -25,6 +24,78 @@ import com.ebay.kvstore.structure.Value;
 
 public class PersistentStoreEngine extends BaseStoreEngine {
 
+	private class RegionLoadListener implements IRegionLoadListener {
+
+		@Override
+		public void onLoadBegin() {
+			logger.info("Region load begin");
+		}
+
+		@Override
+		public void onLoadCommit(boolean success, IRegionStorage storage) {
+			if (success) {
+				onLoad(storage.getRegion());
+				storages.put(storage.getRegion(), storage);
+				addRegion(storage.getRegion());
+			}
+			logger.info("Region load commit");
+		}
+
+		@Override
+		public void onLoadEnd(boolean success) {
+			logger.info("Region load end");
+
+		}
+
+	}
+
+	private class RegionSplitListener implements IRegionSplitListener {
+
+		private KeyValueCache oldBuffer;
+		private int regionId;
+		private IRegionStorage oldStorage;
+
+		public RegionSplitListener(IRegionStorage storage, int regionId) {
+			this.oldStorage = storage;
+			this.regionId = regionId;
+		}
+
+		@Override
+		public void onSplitBegin() {
+			oldBuffer = oldStorage.getBuffer();
+		}
+
+		@Override
+		public void onSplitCommit(boolean success, IRegionStorage oldStorage,
+				IRegionStorage newStorage) {
+			if (!success) {
+				restore();
+			} else {
+				Region newRegion = newStorage.getRegion();
+				storages.put(newRegion, newStorage);
+				addRegion(newStorage.getRegion());
+				onSplit(oldStorage.getRegion(), newRegion);
+			}
+		}
+
+		@Override
+		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
+			if (success) {
+				return new Region(regionId, start, end);
+			} else {
+				restore();
+				return null;
+			}
+		}
+
+		private void restore() {
+			logger.info("Region split failed, source region is:" + regionId);
+			KeyValueCache newBuffer = oldStorage.getBuffer();
+			oldBuffer.addAll(newBuffer);
+			oldStorage.setBuffer(oldBuffer);
+		}
+	}
+
 	protected Map<Region, IRegionStorage> storages;
 
 	private static Logger logger = LoggerFactory.getLogger(PersistentStoreEngine.class);
@@ -38,16 +109,22 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public void set(byte[] key, byte[] value) throws InvalidKeyException {
-		// TODO Auto-generated method stub
+	public void delete(byte[] key) throws InvalidKeyException {
 		Region region = checkKeyRegion(key);
 		IRegionStorage storage = storages.get(region);
-		storage.storeInBuffer(key, value);
-		cache.set(key, value);
+		storage.deleteFromBuffer(key);
+		cache.delete(key);
 	}
 
 	@Override
-	public KeyValue get(byte[] key) throws InvalidKeyException {
+	public void dispose() {
+		for (Entry<Region, IRegionStorage> s : storages.entrySet()) {
+			s.getValue().closeLogger();
+		}
+	}
+
+	@Override
+	public KeyValue get(byte[] key) throws InvalidKeyException, IOException {
 		Region region = checkKeyRegion(key);
 		IRegionStorage storage = storages.get(region);
 		// 1. get from buffer
@@ -76,35 +153,10 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 				}
 			} catch (IOException e) {
 				logger.error("Error occured when reading from disk for key:" + key, e);
+				throw e;
 			}
 		}
 		return kv;
-	}
-
-	@Override
-	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException {
-		KeyValue kv = this.get(key);
-		byte[] value = null;
-		if (kv == null) {
-			value = KeyValueUtil.intToBytes(initValue + incremental);
-			kv = new KeyValue(key, new Value(value));
-		} else {
-			kv.getValue().incr(incremental);
-		}
-		Region region = getKeyRegion(key);
-		IRegionStorage storage = storages.get(region);
-		storage.storeInBuffer(key, kv.getValue().getValue());
-		cache.set(key, value);
-
-		return kv;
-	}
-
-	@Override
-	public void delete(byte[] key) throws InvalidKeyException {
-		Region region = checkKeyRegion(key);
-		IRegionStorage storage = storages.get(region);
-		storage.deleteFromBuffer(key);
-		cache.delete(key);
 	}
 
 	@Override
@@ -118,23 +170,39 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public Region unloadRegion(int regionId) {
-		Region region = removeRegion(regionId);
-		if (region == null) {
-			return null;
+	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException,
+			IOException {
+		KeyValue kv = this.get(key);
+		byte[] value = null;
+		if (kv == null) {
+			value = KeyValueUtil.intToBytes(initValue + incremental);
+			kv = new KeyValue(key, new Value(value));
+		} else {
+			kv.getValue().incr(incremental);
 		}
-		IRegionStorage storage = storages.remove(region);
-		storage.dispose();
-		return region;
+		Region region = getKeyRegion(key);
+		IRegionStorage storage = storages.get(region);
+		storage.storeInBuffer(key, kv.getValue().getValue());
+		cache.set(key, value);
+		return kv;
 	}
 
 	@Override
-	public void loadRegion(Address addr, Region region) {
-		TaskManager.load(conf, new RegionLoadListener(), region, addr, false);
+	public void loadRegion(Region region) {
+		TaskManager.load(conf, new RegionLoadListener(), region);
 	}
 
 	@Override
-	public void splitRegion(int regionId, int newRegionId) {
+	public void set(byte[] key, byte[] value) throws InvalidKeyException {
+		// TODO Auto-generated method stub
+		Region region = checkKeyRegion(key);
+		IRegionStorage storage = storages.get(region);
+		storage.storeInBuffer(key, value);
+		cache.set(key, value);
+	}
+
+	@Override
+	public void splitRegion(int regionId, int newRegionId, IRegionSplitCallback callback) {
 		logger.info("Try to split region " + regionId + " into new region " + newRegionId);
 		if (TaskManager.isRunning()) {
 			return;
@@ -147,87 +215,6 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		TaskManager.split(storage, conf, new RegionSplitListener(storage, newRegionId));
 	}
 
-	private class RegionSplitListener implements IRegionSplitListener {
-
-		private KeyValueCache oldBuffer;
-		private int regionId;
-		private IRegionStorage oldStorage;
-
-		public RegionSplitListener(IRegionStorage storage, int regionId) {
-			this.oldStorage = storage;
-			this.regionId = regionId;
-		}
-
-		@Override
-		public void onSplitBegin() {
-			oldBuffer = oldStorage.getBuffer();
-		}
-
-		@Override
-		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
-			if (success) {
-				return new Region(regionId, start, end);
-			} else {
-				restore();
-				return null;
-			}
-		}
-
-		@Override
-		public void onSplitCommit(boolean success, IRegionStorage oldStorage,
-				IRegionStorage newStorage) {
-			if (!success) {
-				restore();
-			} else {
-				Region newRegion = newStorage.getRegion();
-				storages.put(newRegion, newStorage);
-				addRegion(newStorage.getRegion());
-				onSplit(oldStorage.getRegion(), newRegion);
-			}
-		}
-
-		private void restore() {
-			logger.info("Region split failed, source region is:" + regionId);
-			KeyValueCache newBuffer = oldStorage.getBuffer();
-			oldBuffer.addAll(newBuffer);
-			oldStorage.setBuffer(oldBuffer);
-		}
-	}
-
-	private class RegionLoadListener implements IRegionLoadListener {
-
-		@Override
-		public void onLoadBegin() {
-			// do nothing
-			logger.debug("Region load begin");
-		}
-
-		@Override
-		public void onLoadEnd(boolean success) {
-			logger.debug("Region load end");
-
-		}
-
-		@Override
-		public void onLoadCommit(boolean success, IRegionStorage storage) {
-			if (success) {
-				onLoad(storage.getRegion());
-				storages.put(storage.getRegion(), storage);
-				addRegion(storage.getRegion());
-			}
-			logger.debug("Region load commit");
-		}
-
-	}
-
-	@Override
-	public void dispose() {
-		for (Entry<Region, IRegionStorage> s : storages.entrySet()) {
-			s.getValue().closeLogger();
-		}
-	}
-
-
 	@Override
 	public void stat() {
 		for (Entry<Region, IRegionStorage> e : storages.entrySet()) {
@@ -239,5 +226,16 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 				}
 			}
 		}
+	}
+
+	@Override
+	public Region unloadRegion(int regionId) {
+		Region region = removeRegion(regionId);
+		if (region == null) {
+			return null;
+		}
+		IRegionStorage storage = storages.remove(region);
+		storage.dispose();
+		return region;
 	}
 }

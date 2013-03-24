@@ -4,13 +4,13 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 public interface IBlockOutputStream extends DataOutput {
-	public int getCurrentBlock();
-
-	public int getPos();
-
-	public int getBlockPos();
+	public void close() throws IOException;
 
 	public int getBlockAvailable();
 
-	public void close() throws IOException;
+	public int getBlockPos();
+
+	public int getCurrentBlock();
+
+	public int getPos();
 }

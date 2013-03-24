@@ -13,39 +13,15 @@ public class Value implements Serializable {
 	private byte[] value;
 	private boolean deleted;
 
-	public byte[] getValue() {
-		return value;
-	}
-
-	public void setValue(byte[] value) {
+	public Value(byte[] value) {
+		super();
 		this.value = value;
+		this.deleted = false;
 	}
 
-	public boolean isDeleted() {
-		return deleted;
-	}
-
-	public void setDeleted(boolean deleted) {
+	public Value(byte[] value, boolean deleted) {
+		this.value = value;
 		this.deleted = deleted;
-	}
-
-	public void incr(int incremental) {
-		// the default value is 0
-		if (value.length != 4) {
-			throw new UnsupportedOperationException("The current value:" + value
-					+ " is not a valid integer");
-		}
-		int counter = KeyValueUtil.bytesToInt(value);
-		counter += incremental;
-		value = KeyValueUtil.intToBytes(counter);
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(value);
-		return result;
 	}
 
 	@Override
@@ -62,15 +38,39 @@ public class Value implements Serializable {
 		return true;
 	}
 
-	public Value(byte[] value) {
-		super();
-		this.value = value;
-		this.deleted = false;
+	public byte[] getValue() {
+		return value;
 	}
 
-	public Value(byte[] value, boolean deleted) {
-		this.value = value;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(value);
+		return result;
+	}
+
+	public void incr(int incremental) {
+		// the default value is 0
+		if (value.length != 4) {
+			throw new UnsupportedOperationException("The current value:" + value
+					+ " is not a valid integer");
+		}
+		int counter = KeyValueUtil.bytesToInt(value);
+		counter += incremental;
+		value = KeyValueUtil.intToBytes(counter);
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
 		this.deleted = deleted;
+	}
+
+	public void setValue(byte[] value) {
+		this.value = value;
 	}
 
 	@Override

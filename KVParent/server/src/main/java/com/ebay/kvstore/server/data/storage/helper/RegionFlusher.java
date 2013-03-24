@@ -17,7 +17,7 @@ import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IBlockOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
-import com.ebay.kvstore.server.data.storage.fs.KVFileInputIterator;
+import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Value;
@@ -44,7 +44,7 @@ public class RegionFlusher extends BaseHelper {
 	@Override
 	public synchronized void run() {
 		IBlockOutputStream out = null;
-		KVFileInputIterator fileIt = null;
+		KVFileIterator fileIt = null;
 		Phase state = Phase.Begin;
 		String baseDir = storage.getBaseDir();
 		int blockSize = conf.getInt(IConfigurationKey.Region_Block_Size);
@@ -64,8 +64,7 @@ public class RegionFlusher extends BaseHelper {
 				if (dataFile == null) {
 					flushCache(cacheIt, out, null);
 				} else {
-					fileIt = new KVFileInputIterator(0, -1, blockSize, 0,
-							fs.open(new Path(dataFile)));
+					fileIt = new KVFileIterator(0, -1, blockSize, 0, fs.open(new Path(dataFile)));
 					KeyValue kv = null; // from File
 					Entry<byte[], Value> e = null; // from Cache
 					while (true) {

@@ -15,7 +15,7 @@ import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.fs.IBlockInputStream;
 import com.ebay.kvstore.server.data.storage.fs.IBlockOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
-import com.ebay.kvstore.server.data.storage.fs.KVFileInputIterator;
+import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 
 public class BaseFileTest {
 	protected File file;
@@ -25,7 +25,7 @@ public class BaseFileTest {
 	protected IBlockOutputStream out;
 	protected IBlockInputStream in;
 
-	protected KVFileInputIterator it;
+	protected KVFileIterator it;
 
 	protected final int blockSize = 16;
 

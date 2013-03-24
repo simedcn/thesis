@@ -1,8 +1,8 @@
 package com.ebay.kvstore.server.data.storage;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -86,7 +86,7 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
 			}
 			engine.unloadRegion(0);
-			engine2.loadRegion(Address.parse(conf.get(IConfigurationKey.DataServer_Addr)), region);
+			engine2.loadRegion(region);
 			assertArrayEquals(new byte[] { 0 }, engine2.get(new byte[] { 0 }).getValue().getValue());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -100,7 +100,7 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			for (int i = 0; i < 100; i++) {
 				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
 			}
-			engine.splitRegion(0, 1);
+			engine.splitRegion(0, 1, null);
 			assertEquals(2, engine.getRegions().size());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -115,8 +115,8 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			for (int i = 0; i < 10; i++) {
 				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
 			}
-			engine.get(new byte[]{0});
-			engine.incr(new byte[]{11},10,0);
+			engine.get(new byte[] { 0 });
+			engine.incr(new byte[] { 11 }, 10, 0);
 			engine.stat();
 			stat = engine.getRegions().get(0).getStat();
 			assertEquals(11, stat.writeCount);
@@ -124,7 +124,7 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			assertEquals(11, stat.keyNum);
 			assertEquals(113, stat.size);
 			assertFalse(stat.dirty);
-			engine.set(new byte[] { (byte)0 }, new byte[] { (byte) 0 });
+			engine.set(new byte[] { (byte) 0 }, new byte[] { (byte) 0 });
 			assertTrue(stat.dirty);
 			assertEquals(12, stat.writeCount);
 			assertEquals(1, stat.readCount);

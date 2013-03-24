@@ -31,21 +31,18 @@ public class PathBuilderTest {
 
 	@Test
 	public void testGetRegionDir() {
-		assertEquals("/kvstore/data/192.1.1.1-8080/1/",
-				PathBuilder.getRegionDir(new Address("192.1.1.1", 8080), 1));
+		assertEquals("/kvstore/data/1/", PathBuilder.getRegionDir(1));
 	}
 
 	@Test
 	public void testGetRegionFilePath() {
-		assertEquals("/kvstore/data/192.1.1.1-8080/1/1-12345.data",
-				PathBuilder.getRegionFilePath(new Address("192.1.1.1", 8080), 1, 12345));
+		assertEquals("/kvstore/data/1/1-12345.data", PathBuilder.getRegionFilePath(1, 12345));
 
 	}
 
 	@Test
 	public void testGetRegionLogPath() {
-		assertEquals("/kvstore/data/192.1.1.1-8080/1/1-12345.log",
-				PathBuilder.getRegionLogPath(new Address("192.1.1.1", 8080), 1, 12345));
+		assertEquals("/kvstore/data/1/1-12345.log", PathBuilder.getRegionLogPath(1, 12345));
 	}
 
 }

@@ -18,6 +18,13 @@ public class DFSManager {
 
 	private static FileSystem dfs = null;
 
+	public static synchronized FileSystem getDFS() {
+		if (dfs == null) {
+			throw new NullPointerException("The DFS client has not been initialized properly");
+		}
+		return dfs;
+	}
+
 	@SuppressWarnings("deprecation")
 	public static synchronized void init(InetSocketAddress addr, Configuration conf)
 			throws IOException {
@@ -25,13 +32,6 @@ public class DFSManager {
 			throw new RuntimeException("The DFSClient has been inited!");
 		}
 		dfs = new DistributedFileSystem(addr, conf);
-	}
-
-	public static synchronized FileSystem getDFS() {
-		if (dfs == null) {
-			throw new NullPointerException("The DFS client has not been initialized properly");
-		}
-		return dfs;
 	}
 
 }

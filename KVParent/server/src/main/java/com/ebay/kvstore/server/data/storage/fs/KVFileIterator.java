@@ -18,7 +18,7 @@ import com.ebay.kvstore.structure.KeyValue;
  * @author luochen
  * 
  */
-public class KVFileInputIterator implements Iterator<KeyValue> {
+public class KVFileIterator implements Iterator<KeyValue> {
 
 	protected final int blockSize;
 
@@ -30,15 +30,19 @@ public class KVFileInputIterator implements Iterator<KeyValue> {
 
 	protected int nextLen;
 
-	private static Logger logger = LoggerFactory.getLogger(KVFileInputIterator.class);
+	private static Logger logger = LoggerFactory.getLogger(KVFileIterator.class);
 
-	public KVFileInputIterator(int start, int end, int blockSize, int offset, InputStream in)
+	public KVFileIterator(int start, int end, int blockSize, int offset, InputStream in)
 			throws IOException {
 		super();
 		this.blockStart = start;
 		this.blockEnd = end;
 		this.blockSize = blockSize;
 		this.in = new KVInputStream(in, blockSize, blockStart, offset);
+	}
+
+	public void close() throws IOException {
+		in.close();
 	}
 
 	@Override
@@ -85,10 +89,6 @@ public class KVFileInputIterator implements Iterator<KeyValue> {
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException();
-	}
-
-	public void close() throws IOException {
-		in.close();
 	}
 
 }

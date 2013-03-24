@@ -29,7 +29,7 @@ public abstract class BaseHelper implements Runnable {
 
 	protected void flushCache(Iterator<Entry<byte[], Value>> it, IBlockOutputStream out,
 			Entry<byte[], Value> e) throws IOException {
-		if (e != null&&!e.getValue().isDeleted()) {
+		if (e != null && !e.getValue().isDeleted()) {
 			KeyValueUtil.writeToExternal(out, new KeyValue(e.getKey(), e.getValue()));
 		}
 		while (it.hasNext()) {

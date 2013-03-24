@@ -1,6 +1,6 @@
 package com.ebay.kvstore.protocol;
 
-public interface ProtocolType {
+public interface IProtocolType {
 	public static final int Heart_Beart_Req = 0;
 	public static final int Heart_Beart_Resp = 1;
 
@@ -12,6 +12,9 @@ public interface ProtocolType {
 
 	public static final int Split_Region_Req = 6;
 	public static final int Split_Region_Resp = 7;
+
+	public static final int DataServer_Join_Request = 8;
+	public static final int DataServer_Join_Response = 9;
 
 	public static final int Set_Req = 10001;
 	public static final int Set_Resp = 10002;
@@ -30,4 +33,5 @@ public interface ProtocolType {
 
 	public static final int Region_Table_Req = 10011;
 	public static final int Region_Table_Resp = 10012;
+
 }

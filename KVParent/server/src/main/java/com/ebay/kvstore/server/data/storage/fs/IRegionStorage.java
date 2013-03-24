@@ -8,41 +8,29 @@ import com.ebay.kvstore.structure.Region;
 
 public interface IRegionStorage {
 
-	public KeyValue getFromBuffer(byte[] key);
-
-	public KeyValue[] getFromDisk(byte[] key) throws IOException;
-
-	/**
-	 * 1.put the key/value into buffer, and 2.write redo log
-	 * 
-	 * @param key
-	 * @param value
-	 */
-	public void storeInBuffer(byte[] key, byte[] value);
-
-	public void setBufferLimit(int limit);
+	public void closeLogger();
 
 	public void deleteFromBuffer(byte[] key);
 
-	public long getBufferLimit();
+	public void dispose();
 
 	public void flush();
-
-	public long getBufferUsed();
-
-	public void reset();
 
 	public String getBaseDir();
 
 	public KeyValueCache getBuffer();
 
-	public void setBuffer(KeyValueCache buffer);
+	public long getBufferLimit();
+
+	public long getBufferUsed();
 
 	public String getDataFile();
 
-	public Region getRegion();
+	public KeyValue getFromBuffer(byte[] key);
 
-	public void setDataFile(String file) throws IOException;
+	public KeyValue[] getFromDisk(byte[] key) throws IOException;
+
+	public Region getRegion();
 
 	/**
 	 * Create a new logger, and close the old one
@@ -52,15 +40,26 @@ public interface IRegionStorage {
 	 */
 	public void newLogger(String file) throws IOException;
 
-	public void setLogger(String file) throws IOException;
-	
-	public void closeLogger() ;
+	public void reset();
 
-	public void dispose();
+	public void resetBuffer();
+
+	public void setBuffer(KeyValueCache buffer);
+
+	public void setBufferLimit(int limit);
+
+	public void setDataFile(String file) throws IOException;
+
+	public void setLogger(String file) throws IOException;
 
 	public void stat() throws IOException;
 
-
-	public void resetBuffer();
+	/**
+	 * 1.put the key/value into buffer, and 2.write redo log
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	public void storeInBuffer(byte[] key, byte[] value);
 
 }

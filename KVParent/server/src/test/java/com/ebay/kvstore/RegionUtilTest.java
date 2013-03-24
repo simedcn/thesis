@@ -50,23 +50,23 @@ public class RegionUtilTest extends TestCase {
 
 	@Test
 	public void testValid() {
-		assertTrue(RegionUtil.isValidRegionFile("1-44294829.data"));
-		assertTrue(RegionUtil.isValidRegionFile("002-44294829.data"));
-		assertTrue(RegionUtil.isValidLogFile("002-44294829.log"));
-		assertTrue(RegionUtil.isValidLogFile("002-44294829.log"));
+		assertTrue(FSUtil.isValidRegionFile("1-44294829.data"));
+		assertTrue(FSUtil.isValidRegionFile("002-44294829.data"));
+		assertTrue(FSUtil.isValidRegionLogFile("002-44294829.log"));
+		assertTrue(FSUtil.isValidRegionLogFile("002-44294829.log"));
 
-		assertFalse(RegionUtil.isValidLogFile("002-44294829.log1"));
-		assertFalse(RegionUtil.isValidLogFile("002-44294829."));
-		assertFalse(RegionUtil.isValidLogFile("002-.log"));
+		assertFalse(FSUtil.isValidRegionLogFile("002-44294829.log1"));
+		assertFalse(FSUtil.isValidRegionLogFile("002-44294829."));
+		assertFalse(FSUtil.isValidRegionLogFile("002-.log"));
 
-		assertFalse(RegionUtil.isValidRegionFile("002-44294829.data1"));
-		assertFalse(RegionUtil.isValidRegionFile("002-44294829."));
-		assertFalse(RegionUtil.isValidRegionFile("002-.data"));
+		assertFalse(FSUtil.isValidRegionFile("002-44294829.data1"));
+		assertFalse(FSUtil.isValidRegionFile("002-44294829."));
+		assertFalse(FSUtil.isValidRegionFile("002-.data"));
 	}
 
 	@Test
 	public void testTimestamp() {
-		assertEquals(1234567, RegionUtil.getRegionFileTimestamp("1-1234567.data"));
-		assertEquals(1234567, RegionUtil.getRegionFileTimestamp("1-1234567.log"));
+		assertEquals(1234567, FSUtil.getRegionFileTimestamp("1-1234567.data"));
+		assertEquals(1234567, FSUtil.getRegionFileTimestamp("1-1234567.log"));
 	}
 }

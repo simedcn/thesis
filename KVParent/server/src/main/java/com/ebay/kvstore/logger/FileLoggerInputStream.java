@@ -1,4 +1,4 @@
-package com.ebay.kvstore.server.data.logger;
+package com.ebay.kvstore.logger;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -18,6 +18,19 @@ public class FileLoggerInputStream implements ILoggerInputStream {
 	}
 
 	@Override
+	public byte read() throws IOException {
+		int ch = in.read();
+		if (ch < 0)
+			throw new EOFException();
+		return (byte) ch;
+	}
+
+	@Override
+	public int read(byte[] b) throws IOException {
+		return in.read(b, 0, b.length);
+	}
+
+	@Override
 	public int readInt() throws IOException {
 		int ch1 = in.read();
 		int ch2 = in.read();
@@ -30,16 +43,11 @@ public class FileLoggerInputStream implements ILoggerInputStream {
 	}
 
 	@Override
-	public byte read() throws IOException {
-		int ch = in.read();
-		if (ch < 0)
-			throw new EOFException();
-		return (byte) ch;
-	}
-
-	@Override
-	public int read(byte[] b) throws IOException {
-		return in.read(b, 0, b.length);
+	public String readUTF() throws IOException {
+		int length = readInt();
+		byte[] bytes = new byte[length];
+		read(bytes);
+		return new String(bytes);
 	}
 
 }

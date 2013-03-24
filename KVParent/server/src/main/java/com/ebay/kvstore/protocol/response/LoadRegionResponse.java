@@ -1,6 +1,6 @@
 package com.ebay.kvstore.protocol.response;
 
-import com.ebay.kvstore.protocol.ProtocolType;
+import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.structure.Region;
 
 public class LoadRegionResponse extends BaseResponse {
@@ -11,21 +11,21 @@ public class LoadRegionResponse extends BaseResponse {
 
 	protected Region region;
 
-	@Override
-	public int getType() {
-		return ProtocolType.Load_Region_Resp;
+	public LoadRegionResponse(int retCode, Region region) {
+		super(retCode);
+		this.region = region;
 	}
 
 	public Region getRegion() {
 		return region;
 	}
 
-	public void setRegion(Region region) {
-		this.region = region;
+	@Override
+	public int getType() {
+		return IProtocolType.Load_Region_Resp;
 	}
 
-	public LoadRegionResponse(int retCode, Region region) {
-		super(retCode);
+	public void setRegion(Region region) {
 		this.region = region;
 	}
 }

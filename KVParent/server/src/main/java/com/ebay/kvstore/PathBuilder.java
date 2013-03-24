@@ -17,6 +17,14 @@ public class PathBuilder implements ServerConstants {
 		return sb.toString();
 	}
 
+	public static String getMasterCheckPointPath(long time) {
+		StringBuilder sb = new StringBuilder(48);
+		sb.append(getMasterCheckPointDir());
+		sb.append(time);
+		sb.append(CheckPoint_Suffix);
+		return sb.toString();
+	}
+
 	public static String getMasterLogDir() {
 		StringBuilder sb = new StringBuilder(32);
 		sb.append(DFS_Master_Dir);
@@ -24,22 +32,19 @@ public class PathBuilder implements ServerConstants {
 		return sb.toString();
 	}
 
-	public static String getRegionDir(Address addr, int regionId) {
+	public static String getMasterLogPath(long time) {
 		StringBuilder sb = new StringBuilder(48);
-		sb.append(DFS_Data_Dir);
-		sb.append(addr.ip);
-		sb.append('-');
-		sb.append(addr.port);
-		sb.append('/');
-		sb.append(regionId);
-		sb.append('/');
+		sb.append(getMasterLogDir());
+		sb.append(time);
+		sb.append(Log_Suffix);
 		return sb.toString();
 	}
 
-	public static String getRegionFilePath(Address addr, int regionId, long timestamp) {
+	public static String getRegionDir(int regionId) {
 		StringBuilder sb = new StringBuilder(48);
-		sb.append(getRegionDir(addr, regionId));
-		sb.append(getRegionFileName(regionId, timestamp));
+		sb.append(DFS_Data_Dir);
+		sb.append(regionId);
+		sb.append('/');
 		return sb.toString();
 	}
 
@@ -52,10 +57,10 @@ public class PathBuilder implements ServerConstants {
 		return sb.toString();
 	}
 
-	public static String getRegionLogPath(Address addr, int regionId, long timestamp) {
+	public static String getRegionFilePath(int regionId, long timestamp) {
 		StringBuilder sb = new StringBuilder(48);
-		sb.append(getRegionDir(addr, regionId));
-		sb.append(getRegionLogName(regionId, timestamp));
+		sb.append(getRegionDir(regionId));
+		sb.append(getRegionFileName(regionId, timestamp));
 		return sb.toString();
 	}
 
@@ -65,6 +70,13 @@ public class PathBuilder implements ServerConstants {
 		sb.append('-');
 		sb.append(timestamp);
 		sb.append(Log_Suffix);
+		return sb.toString();
+	}
+
+	public static String getRegionLogPath(int regionId, long timestamp) {
+		StringBuilder sb = new StringBuilder(48);
+		sb.append(getRegionDir(regionId));
+		sb.append(getRegionLogName(regionId, timestamp));
 		return sb.toString();
 	}
 }

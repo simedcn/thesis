@@ -2,8 +2,6 @@ package com.ebay.kvstore.server.data.storage.fs;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.fs.Path;

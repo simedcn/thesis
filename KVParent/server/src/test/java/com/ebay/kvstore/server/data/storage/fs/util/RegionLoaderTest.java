@@ -1,10 +1,12 @@
 package com.ebay.kvstore.server.data.storage.fs.util;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import com.ebay.kvstore.Address;
 import com.ebay.kvstore.conf.IConfigurationKey;
@@ -15,7 +17,6 @@ import com.ebay.kvstore.server.data.storage.helper.IRegionLoadListener;
 import com.ebay.kvstore.server.data.storage.helper.TaskManager;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
-import com.ebay.kvstore.structure.RegionStat;
 
 public class RegionLoaderTest extends BaseFileStorageTest {
 	protected Address addr;
@@ -31,6 +32,10 @@ public class RegionLoaderTest extends BaseFileStorageTest {
 
 	@After
 	public void tearDown() throws Exception {
+	}
+
+	@Test
+	public void testRun() {
 		for (int i = 0; i < 100; i++) {
 			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
 		}
@@ -39,11 +44,8 @@ public class RegionLoaderTest extends BaseFileStorageTest {
 			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
 		}
 		storage.closeLogger();
-		TaskManager.load(conf, new RegionLoadListener(), region, addr, false);
-	}
+		TaskManager.load(conf, new RegionLoadListener(), region);
 
-	@Test
-	public void testRun() {
 	}
 
 	private class RegionLoadListener implements IRegionLoadListener {

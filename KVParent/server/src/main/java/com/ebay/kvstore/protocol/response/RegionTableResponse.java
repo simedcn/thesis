@@ -1,9 +1,7 @@
 package com.ebay.kvstore.protocol.response;
 
-import java.util.Arrays;
-
-import com.ebay.kvstore.protocol.ProtocolType;
-import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.protocol.IProtocolType;
+import com.ebay.kvstore.structure.RegionTable;
 
 public class RegionTableResponse extends BaseResponse {
 
@@ -12,29 +10,29 @@ public class RegionTableResponse extends BaseResponse {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	protected Region[] regions;
+	protected RegionTable table;
+
+	public RegionTableResponse(int retCode, RegionTable table) {
+		super(retCode);
+		this.table = table;
+	}
+
+	public RegionTable getTable() {
+		return table;
+	}
 
 	@Override
 	public int getType() {
-		return ProtocolType.Region_Table_Resp;
+		return IProtocolType.Region_Table_Resp;
 	}
 
-	public RegionTableResponse(int retCode, Region[] regions) {
-		super(retCode);
-		this.regions = regions;
-	}
-
-	public Region[] getRegions() {
-		return regions;
-	}
-
-	public void setRegions(Region[] regions) {
-		this.regions = regions;
+	public void setTable(RegionTable table) {
+		this.table = table;
 	}
 
 	@Override
 	public String toString() {
-		return "RegionTableResponse [regions=" + Arrays.toString(regions) + "]";
+		return "RegionTableResponse [table=" + table + "]";
 	}
 
 }

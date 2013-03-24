@@ -1,6 +1,6 @@
 package com.ebay.kvstore.protocol.response;
 
-import com.ebay.kvstore.protocol.ProtocolType;
+import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.structure.Region;
 
 public class SplitRegionResponse extends BaseResponse {
@@ -10,40 +10,40 @@ public class SplitRegionResponse extends BaseResponse {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	protected Region orgRegion;
+	protected Region oldRegion;
 
 	protected Region newRegion;
 
-	public SplitRegionResponse(int retCode, Region orgRegion, Region newRegion) {
+	public SplitRegionResponse(int retCode, Region oldRegion, Region newRegion) {
 		super(retCode);
-		this.orgRegion = orgRegion;
+		this.oldRegion = oldRegion;
 		this.newRegion = newRegion;
-	}
-
-	@Override
-	public int getType() {
-		return ProtocolType.Split_Region_Resp;
-	}
-
-	public Region getOrgRegion() {
-		return orgRegion;
-	}
-
-	public void setOrgRegion(Region orgRegion) {
-		this.orgRegion = orgRegion;
 	}
 
 	public Region getNewRegion() {
 		return newRegion;
 	}
 
+	public Region getOldRegion() {
+		return oldRegion;
+	}
+
+	@Override
+	public int getType() {
+		return IProtocolType.Split_Region_Resp;
+	}
+
 	public void setNewRegion(Region newRegion) {
 		this.newRegion = newRegion;
 	}
 
+	public void setOldRegion(Region oldRegion) {
+		this.oldRegion = oldRegion;
+	}
+
 	@Override
 	public String toString() {
-		return "SplitRegionResponse [orgRegion=" + orgRegion + ", newRegion=" + newRegion + "]";
+		return "SplitRegionResponse [oldegion=" + oldRegion + ", newRegion=" + newRegion + "]";
 	}
 
 }

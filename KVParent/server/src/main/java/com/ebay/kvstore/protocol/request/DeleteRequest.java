@@ -2,7 +2,7 @@ package com.ebay.kvstore.protocol.request;
 
 import java.util.Arrays;
 
-import com.ebay.kvstore.protocol.ProtocolType;
+import com.ebay.kvstore.protocol.IProtocolType;
 
 public class DeleteRequest extends ClientRequest {
 	/**
@@ -11,30 +11,9 @@ public class DeleteRequest extends ClientRequest {
 	private static final long serialVersionUID = 1L;
 	protected byte[] key;
 
-	@Override
-	public int getType() {
-		return ProtocolType.Delete_Req;
-	}
-
 	public DeleteRequest(byte[] key) {
 		super();
 		this.key = key;
-	}
-
-	public byte[] getKey() {
-		return key;
-	}
-
-	public void setKey(byte[] key) {
-		this.key = key;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(key);
-		return result;
 	}
 
 	@Override
@@ -49,6 +28,27 @@ public class DeleteRequest extends ClientRequest {
 		if (!Arrays.equals(key, other.key))
 			return false;
 		return true;
+	}
+
+	public byte[] getKey() {
+		return key;
+	}
+
+	@Override
+	public int getType() {
+		return IProtocolType.Delete_Req;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(key);
+		return result;
+	}
+
+	public void setKey(byte[] key) {
+		this.key = key;
 	}
 
 	@Override

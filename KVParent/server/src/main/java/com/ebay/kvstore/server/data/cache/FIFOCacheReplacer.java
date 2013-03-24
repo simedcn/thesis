@@ -12,8 +12,8 @@ public class FIFOCacheReplacer extends BaseCacheReplacer {
 	}
 
 	@Override
-	public void reIndex(byte[] key) {
-
+	public void addIndex(byte[] key) {
+		index.add(key);
 	}
 
 	@Override
@@ -32,8 +32,8 @@ public class FIFOCacheReplacer extends BaseCacheReplacer {
 	}
 
 	@Override
-	public void addIndex(byte[] key) {
-		index.add(key);
+	public void reIndex(byte[] key) {
+
 	}
 
 }

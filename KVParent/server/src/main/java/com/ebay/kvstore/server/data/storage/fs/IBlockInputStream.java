@@ -5,13 +5,13 @@ import java.io.IOException;
 
 public interface IBlockInputStream extends DataInput {
 
-	public int getCurrentBlock();
-
-	public int getPos();
-
-	public int getBlockPos();
+	public void close() throws IOException;
 
 	public int getBlockAvailable();
 
-	public void close() throws IOException;
+	public int getBlockPos();
+
+	public int getCurrentBlock();
+
+	public int getPos();
 }

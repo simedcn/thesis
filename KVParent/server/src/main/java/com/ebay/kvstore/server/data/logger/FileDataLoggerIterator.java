@@ -7,17 +7,19 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.logger.FileLoggerInputStream;
+import com.ebay.kvstore.logger.ILoggerInputStream;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 
-public class FileLoggerInputIterator implements Iterator<IMutation> {
+public class FileDataLoggerIterator implements Iterator<IMutation> {
 
-	private static Logger logger = LoggerFactory.getLogger(FileLoggerInputIterator.class);
+	private static Logger logger = LoggerFactory.getLogger(FileDataLoggerIterator.class);
 
 	protected ILoggerInputStream in;
 
 	protected IMutation mutation;
 
-	public FileLoggerInputIterator(String path) throws IOException {
+	public FileDataLoggerIterator(String path) throws IOException {
 		this.in = new FileLoggerInputStream(DFSManager.getDFS().open(new Path(path)));
 	}
 
@@ -53,7 +55,7 @@ public class FileLoggerInputIterator implements Iterator<IMutation> {
 			mutation.readFromExternal(in);
 			return mutation;
 		} catch (IOException e) {
-			logger.error("Error occured when reading the RegionDataFile.", e);
+			logger.error("Error occured when reading the RegionLoggerFile.", e);
 			return null;
 		}
 

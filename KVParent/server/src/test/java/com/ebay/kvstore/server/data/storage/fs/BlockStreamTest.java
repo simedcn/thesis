@@ -16,7 +16,7 @@ import org.junit.Test;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.storage.BaseFileTest;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
-import com.ebay.kvstore.server.data.storage.fs.KVFileInputIterator;
+import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Value;
@@ -53,7 +53,7 @@ public class BlockStreamTest extends BaseFileTest {
 			e.printStackTrace();
 		}
 		try {
-			it = new KVFileInputIterator(0, end, blockSize, 0, fs.open(new Path(path)));
+			it = new KVFileIterator(0, end, blockSize, 0, fs.open(new Path(path)));
 			int counter = 0;
 			while (it.hasNext()) {
 				KeyValue kv = it.next();
@@ -68,7 +68,7 @@ public class BlockStreamTest extends BaseFileTest {
 			e.printStackTrace();
 		}
 		try {
-			it = new KVFileInputIterator(1, end, blockSize, 6, fs.open(new Path(path)));
+			it = new KVFileIterator(1, end, blockSize, 6, fs.open(new Path(path)));
 			int counter = 2;
 			while (it.hasNext()) {
 				KeyValue kv = it.next();

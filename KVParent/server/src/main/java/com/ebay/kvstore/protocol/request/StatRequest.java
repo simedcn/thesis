@@ -1,6 +1,6 @@
 package com.ebay.kvstore.protocol.request;
 
-import com.ebay.kvstore.protocol.ProtocolType;
+import com.ebay.kvstore.protocol.IProtocolType;
 
 public class StatRequest extends ClientRequest {
 
@@ -11,7 +11,7 @@ public class StatRequest extends ClientRequest {
 
 	@Override
 	public int getType() {
-		return ProtocolType.Stat_Req;
+		return IProtocolType.Stat_Req;
 	}
 
 }

@@ -10,7 +10,6 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.PathBuilder;
 import com.ebay.kvstore.conf.IConfiguration;
@@ -19,7 +18,7 @@ import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IBlockOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
-import com.ebay.kvstore.server.data.storage.fs.KVFileInputIterator;
+import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
 import com.ebay.kvstore.structure.KeyValue;
@@ -27,6 +26,21 @@ import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
 
 public class RegionSplitter extends BaseHelper {
+
+	private class FlushResult {
+		public long currentSize;
+		public byte[] lastKey;
+		public KeyValue kv;
+		public Entry<byte[], Value> e;
+
+		public FlushResult(long currentSize, byte[] lastKey, KeyValue kv, Entry<byte[], Value> e) {
+			super();
+			this.currentSize = currentSize;
+			this.lastKey = lastKey;
+			this.kv = kv;
+			this.e = e;
+		}
+	}
 
 	private static Logger logger = LoggerFactory.getLogger(RegionSplitter.class);
 
@@ -46,17 +60,18 @@ public class RegionSplitter extends BaseHelper {
 		String oldTempFile = baseDir + time;
 		String newTempFile = baseDir + time + "-new";
 		KeyValueCache cache = storage.getBuffer();
-		KVFileInputIterator fileIt = null;
+		KVFileIterator fileIt = null;
 		Iterator<Entry<byte[], Value>> cacheIt = null;
 		Phase phase = Phase.Begin;
 		FileSystem fs = DFSManager.getDFS();
 		IBlockOutputStream oldTempOut = null;
 		IBlockOutputStream newTempOut = null;
-		Address addr = Address.parse(conf.get(IConfigurationKey.DataServer_Addr));
 		IRegionStorage newStorage = null;
 		long currentSize = 0;
 		byte[] oldKeyEnd = null;
 		boolean splitted = false;
+		KeyValue kv = null;
+		Entry<byte[], Value> e = null;
 		try {
 			listener.onSplitBegin();
 			oldTempOut = new KVOutputStream(fs.create(new Path(oldTempFile)), blockSize);
@@ -65,13 +80,11 @@ public class RegionSplitter extends BaseHelper {
 			if (dataFile != null) {
 				FileStatus status = fs.getFileStatus(new Path(dataFile));
 				fileSize = fileSize + status.getLen();
-				fileIt = new KVFileInputIterator(0, -1, blockSize, 0, fs.open(new Path(dataFile)));
+				fileIt = new KVFileIterator(0, -1, blockSize, 0, fs.open(new Path(dataFile)));
 			}
 			try {
 				cache.getWriteLock().lock();
 				cacheIt = cache.iterator();
-				KeyValue kv = null;
-				Entry<byte[], Value> e = null;
 				FlushResult result = flush(fileIt, cacheIt, oldTempOut, fileSize / 2, null, null);
 				currentSize = result.currentSize;
 				if (currentSize >= fileSize / 2) {
@@ -109,9 +122,9 @@ public class RegionSplitter extends BaseHelper {
 						flushFile(fileIt, newTempOut, null);
 					} else {
 						if (result.e != null && !result.e.getValue().isDeleted()) {
-							KeyValue kv2 = new KeyValue(result.e.getKey(), result.e.getValue());
-							KeyValueUtil.writeToExternal(oldTempOut, kv2);
-							currentSize += KeyValueUtil.getKeyValueLen(kv2);
+							kv = new KeyValue(result.e.getKey(), result.e.getValue());
+							KeyValueUtil.writeToExternal(oldTempOut, kv);
+							currentSize += KeyValueUtil.getKeyValueLen(kv);
 						}
 						while (cacheIt.hasNext()) {
 							e = cacheIt.next();
@@ -127,21 +140,18 @@ public class RegionSplitter extends BaseHelper {
 					}
 					storage.resetBuffer();
 				}
-				// TODO potential issue
 				oldTempOut.close();
 				newTempOut.close();
 
+				// has finished the split operation.
 				byte[] newKeyStart = KeyValueUtil.nextKey(oldKeyEnd);
 				Region oldRegion = storage.getRegion();
-				// has finished the split operation.
 				Region newRegion = listener.onSplitEnd(true, newKeyStart, oldRegion.getEnd());
-				phase = Phase.End;
 				oldRegion.setEnd(oldKeyEnd);
-				String oldRegionFile = PathBuilder.getRegionFilePath(addr, oldRegion.getRegionId(),
-						time);
-				String newRegionFile = PathBuilder.getRegionFilePath(addr, newRegion.getRegionId(),
-						time);
-				String newRegionDir = PathBuilder.getRegionDir(addr, newRegion.getRegionId());
+				phase = Phase.End;
+				String oldRegionFile = PathBuilder.getRegionFilePath(oldRegion.getRegionId(), time);
+				String newRegionFile = PathBuilder.getRegionFilePath(newRegion.getRegionId(), time);
+				String newRegionDir = PathBuilder.getRegionDir(newRegion.getRegionId());
 				if (!fs.exists(new Path(newRegionDir))) {
 					fs.mkdirs(new Path(newRegionDir));
 				}
@@ -152,10 +162,8 @@ public class RegionSplitter extends BaseHelper {
 					return;
 				}
 				newStorage = new RegionFileStorage(conf, newRegion);
-				String oldLogFile = PathBuilder.getRegionLogPath(addr, oldRegion.getRegionId(),
-						time);
-				String newLogFile = PathBuilder.getRegionLogPath(addr, newRegion.getRegionId(),
-						time);
+				String oldLogFile = PathBuilder.getRegionLogPath(oldRegion.getRegionId(), time);
+				String newLogFile = PathBuilder.getRegionLogPath(newRegion.getRegionId(), time);
 				storage.newLogger(oldLogFile);
 				newStorage.newLogger(newLogFile);
 				storage.setDataFile(oldRegionFile);
@@ -164,7 +172,7 @@ public class RegionSplitter extends BaseHelper {
 				cache.getWriteLock().unlock();
 			}
 			listener.onSplitCommit(true, storage, newStorage);
-		} catch (Exception e) {
+		} catch (Exception ex) {
 			logger.error(
 					"Error occured when splitting region:" + storage.getRegion().getRegionId(), e);
 			if (phase == Phase.Begin) {
@@ -183,13 +191,14 @@ public class RegionSplitter extends BaseHelper {
 				if (fileIt != null) {
 					fileIt.close();
 				}
-			} catch (IOException e) {
+			} catch (IOException ex) {
 			}
 
 		}
 	}
 
-	private FlushResult flush(KVFileInputIterator fileIt, Iterator<Entry<byte[], Value>> cacheIt,
+	@SuppressWarnings("unchecked")
+	private FlushResult flush(KVFileIterator fileIt, Iterator<Entry<byte[], Value>> cacheIt,
 			IBlockOutputStream out, long max, KeyValue kv, Entry<byte[], Value> e)
 			throws IOException {
 		long currentSize = 0;
@@ -230,20 +239,5 @@ public class RegionSplitter extends BaseHelper {
 			}
 		}
 		return new FlushResult(currentSize, lastKey, kv, e);
-	}
-
-	private class FlushResult {
-		public long currentSize;
-		public byte[] lastKey;
-		public KeyValue kv;
-		public Entry<byte[], Value> e;
-
-		public FlushResult(long currentSize, byte[] lastKey, KeyValue kv, Entry<byte[], Value> e) {
-			super();
-			this.currentSize = currentSize;
-			this.lastKey = lastKey;
-			this.kv = kv;
-			this.e = e;
-		}
 	}
 }

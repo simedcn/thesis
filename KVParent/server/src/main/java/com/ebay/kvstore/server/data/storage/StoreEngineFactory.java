@@ -9,10 +9,6 @@ public class StoreEngineFactory {
 
 	private static StoreEngineFactory instance;
 
-	private StoreEngineFactory() {
-
-	}
-
 	public static StoreEngineFactory getInstance() {
 		if (instance == null) {
 			instance = new StoreEngineFactory();
@@ -20,12 +16,16 @@ public class StoreEngineFactory {
 		return instance;
 	}
 
-	public IStoreEngine getPersistentStore(IConfiguration conf, Region... regions)
-			throws IOException {
-		return new StoreEngineProxy(new PersistentStoreEngine(conf, regions));
+	private StoreEngineFactory() {
+
 	}
 
 	public IStoreEngine getMemoryStore(IConfiguration conf, Region... regions) throws IOException {
 		return new StoreEngineProxy(new MemoryStoreEngine(conf, regions));
+	}
+
+	public IStoreEngine getPersistentStore(IConfiguration conf, Region... regions)
+			throws IOException {
+		return new StoreEngineProxy(new PersistentStoreEngine(conf, regions));
 	}
 }

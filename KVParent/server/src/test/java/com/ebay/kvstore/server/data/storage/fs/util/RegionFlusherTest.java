@@ -17,7 +17,7 @@ import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.BaseFileStorageTest;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
-import com.ebay.kvstore.server.data.storage.fs.KVFileInputIterator;
+import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
 import com.ebay.kvstore.server.data.storage.helper.IRegionFlushListener;
@@ -67,7 +67,7 @@ public class RegionFlusherTest extends BaseFileStorageTest {
 						public void onFlushEnd(boolean success, String file) {
 							try {
 								assertTrue(success);
-								it = new KVFileInputIterator(0, -1, blockSize, 0, fs.open(new Path(
+								it = new KVFileIterator(0, -1, blockSize, 0, fs.open(new Path(
 										file)));
 								int i = 0;
 								while (it.hasNext()) {
@@ -106,7 +106,7 @@ public class RegionFlusherTest extends BaseFileStorageTest {
 				public void onFlushEnd(boolean success, String file) {
 					assertTrue(success);
 					try {
-						it = new KVFileInputIterator(0, -1, blockSize, 0, fs.open(new Path(file)));
+						it = new KVFileIterator(0, -1, blockSize, 0, fs.open(new Path(file)));
 						int i = 0;
 						while (it.hasNext()) {
 							KeyValue kv = it.next();

@@ -28,44 +28,7 @@ public class Region implements Serializable, Comparable<Region>, KeyComparable {
 		this.stat = new RegionStat();
 	}
 
-	public int getRegionId() {
-		return regionId;
-	}
-
-	public void setRegionId(int regionId) {
-		this.regionId = regionId;
-	}
-
-	public byte[] getStart() {
-		return start;
-	}
-
-	public void setStart(byte[] start) {
-		this.start = start;
-	}
-
-	public byte[] getEnd() {
-		return end;
-	}
-
-	public void setEnd(byte[] end) {
-		this.end = end;
-	}
-
 	@Override
-	public String toString() {
-		return "Region [regionId=" + regionId + ", start=" + Arrays.toString(start) + ", end="
-				+ Arrays.toString(end) + "]";
-	}
-
-	public RegionStat getStat() {
-		return stat;
-	}
-
-	public void setStat(RegionStat stat) {
-		this.stat = stat;
-	}
-
 	public int compareTo(byte[] key) {
 		int e1 = KeyValueUtil.compare(key, start);
 		int e2 = KeyValueUtil.compare(key, end);
@@ -96,14 +59,6 @@ public class Region implements Serializable, Comparable<Region>, KeyComparable {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + regionId;
-		return result;
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
@@ -117,11 +72,57 @@ public class Region implements Serializable, Comparable<Region>, KeyComparable {
 		return true;
 	}
 
+	public byte[] getEnd() {
+		return end;
+	}
+
+	public int getRegionId() {
+		return regionId;
+	}
+
+	public byte[] getStart() {
+		return start;
+	}
+
+	public RegionStat getStat() {
+		return stat;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + regionId;
+		return result;
+	}
+
 	public boolean isDirty() {
 		return dirty;
 	}
 
 	public void setDirty(boolean dirty) {
 		this.dirty = dirty;
+	}
+
+	public void setEnd(byte[] end) {
+		this.end = end;
+	}
+
+	public void setRegionId(int regionId) {
+		this.regionId = regionId;
+	}
+
+	public void setStart(byte[] start) {
+		this.start = start;
+	}
+
+	public void setStat(RegionStat stat) {
+		this.stat = stat;
+	}
+
+	@Override
+	public String toString() {
+		return "Region [regionId=" + regionId + ", start=" + Arrays.toString(start) + ", end="
+				+ Arrays.toString(end) + "]";
 	}
 }

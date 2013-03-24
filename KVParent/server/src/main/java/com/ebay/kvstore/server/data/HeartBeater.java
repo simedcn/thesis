@@ -1,0 +1,80 @@
+package com.ebay.kvstore.server.data;
+
+import org.apache.mina.core.session.IoSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ebay.kvstore.Address;
+import com.ebay.kvstore.conf.IConfiguration;
+import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.protocol.IProtocol;
+import com.ebay.kvstore.protocol.request.HeartBeat;
+import com.ebay.kvstore.server.data.storage.IStoreEngine;
+import com.ebay.kvstore.structure.DataServerStruct;
+
+/**
+ * Used for sending heat beat periodically.
+ * 
+ * @author luochen
+ * 
+ */
+public class HeartBeater {
+	private class Runner implements Runnable {
+		@Override
+		public void run() {
+			try {
+				heatbeat();
+				Thread.sleep(interval);
+			} catch (Exception e) {
+				logger.error("Error orrcued during heartbeat", e);
+			}
+		}
+	}
+
+	// in milliseconds
+	private static Logger logger = LoggerFactory.getLogger(HeartBeater.class);
+
+	private int interval;
+
+	private IoSession session;
+
+	private IStoreEngine engine;
+
+	private IConfiguration conf;
+
+	private Address addr;
+
+	private Thread runner;
+
+	private int weight;
+
+	public HeartBeater(IConfiguration conf, IStoreEngine engine, IoSession session) {
+		this.conf = conf;
+		this.engine = engine;
+		this.session = session;
+		this.addr = Address.parse(this.conf.get(IConfigurationKey.DataServer_Addr));
+		this.weight = this.conf.getInt(IConfigurationKey.DataServer_Weight);
+	}
+
+	public void start() {
+		runner = new Thread(new Runner());
+		runner.start();
+	}
+
+	@SuppressWarnings("deprecation")
+	public void stop() {
+		if (runner != null) {
+			runner.stop();
+			runner = null;
+		}
+	}
+
+	private void heatbeat() {
+		engine.stat();
+		DataServerStruct struct = new DataServerStruct(addr, weight);
+		struct.addRegions(engine.getRegions());
+		IProtocol heatbeat = new HeartBeat(struct);
+		session.write(heatbeat);
+	}
+
+}

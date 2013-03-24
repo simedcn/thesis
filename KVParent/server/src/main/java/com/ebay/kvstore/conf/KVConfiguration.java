@@ -23,6 +23,26 @@ public class KVConfiguration implements IConfiguration {
 	}
 
 	@Override
+	public Double getDouble(String key) {
+		return getDouble(key, 0.0);
+	}
+
+	@Override
+	public Double getDouble(String key, Double defaultValue) {
+		String value = properties.getProperty(key);
+		if (value == null) {
+			return defaultValue;
+		} else {
+			return Double.valueOf(value);
+		}
+	}
+
+	@Override
+	public Integer getInt(String key) {
+		return getInt(key, null);
+	}
+
+	@Override
 	public Integer getInt(String key, Integer defaultValue) {
 		String value = properties.getProperty(key);
 		if (value == null) {
@@ -33,8 +53,8 @@ public class KVConfiguration implements IConfiguration {
 	}
 
 	@Override
-	public Integer getInt(String key) {
-		return getInt(key, null);
+	public Long getLong(String key) {
+		return getLong(key, null);
 	}
 
 	@Override
@@ -48,8 +68,8 @@ public class KVConfiguration implements IConfiguration {
 	}
 
 	@Override
-	public Long getLong(String key) {
-		return getLong(key, null);
+	public Iterator<Entry<Object, Object>> iterator() {
+		return properties.entrySet().iterator();
 	}
 
 	@Override
@@ -58,11 +78,6 @@ public class KVConfiguration implements IConfiguration {
 			properties.put(e.getKey(), e.getValue());
 		}
 		return this;
-	}
-
-	@Override
-	public Iterator<Entry<Object, Object>> iterator() {
-		return properties.entrySet().iterator();
 	}
 
 	@Override

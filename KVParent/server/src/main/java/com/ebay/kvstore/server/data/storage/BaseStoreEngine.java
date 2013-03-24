@@ -1,6 +1,7 @@
 package com.ebay.kvstore.server.data.storage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -43,8 +44,24 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 	}
 
 	@Override
+	public int getCacheLimit() {
+		return cacheLimit;
+	}
+
+	@Override
 	public List<Region> getRegions() {
 		return regions;
+	}
+
+	public void onLoad(Region region) {
+		for (IStoreListener listener : listeners) {
+			listener.onLoad(region);
+		}
+	}
+
+	@Override
+	public void registerListener(IStoreListener listener) {
+		listeners.add(listener);
 	}
 
 	@Override
@@ -54,72 +71,14 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 	}
 
 	@Override
-	public int getCacheLimit() {
-		return cacheLimit;
-	}
-
-	@Override
-	public void registerListener(IStoreListener listener) {
-		listeners.add(listener);
-	}
-
-	@Override
 	public void unregisterListener(IStoreListener listener) {
 		listeners.remove(listener);
 	}
 
-	protected Region getKeyRegion(byte[] key) {
-		return RegionUtil.search(regions, key);
-	}
-
-	protected Region getKeyRegion(List<Region> regions, byte[] key) {
-		return RegionUtil.search(regions, key);
-	}
-
-	protected Region checkKeyRegion(byte[] key) throws InvalidKeyException {
-		Region region = RegionUtil.search(regions, key);
-		if (region == null) {
-			throw new InvalidKeyException("The given key:" + key.toString()
-					+ " is not served in this data server!");
-		}
-		return region;
-	}
-
-	protected synchronized boolean addRegion(Region region) {
-		if (regions.contains(region)) {
-			return false;
-		}
-		regions.add(region);
-		Collections.sort(regions);
-		return true;
-	}
-
-	protected synchronized Region removeRegion(int regionId) {
-		Iterator<Region> it = regions.iterator();
-		Region region = null;
-		while (it.hasNext()) {
-			region = it.next();
-			if (region.getRegionId() == regionId) {
-				it.remove();
-				break;
-			}
-		}
-		return region;
-	}
-
-	protected Region getRegionById(int regionId) {
-		for (Region region : regions) {
-			if (region.getRegionId() == regionId) {
-				return region;
-			}
-		}
-		return null;
-	}
-
-	void onSet(byte[] key, byte[] value) {
+	void onDelete(byte[] key) {
 		Region region = getKeyRegion(key);
 		for (IStoreListener listener : listeners) {
-			listener.onSet(region, key, value);
+			listener.onDelete(region, key);
 		}
 	}
 
@@ -137,10 +96,10 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 		}
 	}
 
-	void onDelete(byte[] key) {
+	void onSet(byte[] key, byte[] value) {
 		Region region = getKeyRegion(key);
 		for (IStoreListener listener : listeners) {
-			listener.onDelete(region, key);
+			listener.onSet(region, key, value);
 		}
 	}
 
@@ -150,9 +109,51 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 		}
 	}
 
-	public void onLoad(Region region) {
-		for (IStoreListener listener : listeners) {
-			listener.onLoad(region);
+	protected synchronized boolean addRegion(Region region) {
+		if (regions.contains(region)) {
+			return false;
 		}
+		regions.add(region);
+		Collections.sort(regions);
+		return true;
+	}
+
+	protected Region checkKeyRegion(byte[] key) throws InvalidKeyException {
+		Region region = RegionUtil.search(regions, key);
+		if (region == null) {
+			throw new InvalidKeyException("The given key:" + Arrays.toString(key)
+					+ " is not served in this data server!");
+		}
+		return region;
+	}
+
+	protected Region getKeyRegion(byte[] key) {
+		return RegionUtil.search(regions, key);
+	}
+
+	protected Region getKeyRegion(List<Region> regions, byte[] key) {
+		return RegionUtil.search(regions, key);
+	}
+
+	protected Region getRegionById(int regionId) {
+		for (Region region : regions) {
+			if (region.getRegionId() == regionId) {
+				return region;
+			}
+		}
+		return null;
+	}
+
+	protected synchronized Region removeRegion(int regionId) {
+		Iterator<Region> it = regions.iterator();
+		Region region = null;
+		while (it.hasNext()) {
+			region = it.next();
+			if (region.getRegionId() == regionId) {
+				it.remove();
+				break;
+			}
+		}
+		return region;
 	}
 }

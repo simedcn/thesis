@@ -1,12 +1,8 @@
 package com.ebay.kvstore.protocol.request;
 
-import com.ebay.kvstore.protocol.ProtocolType;
+import com.ebay.kvstore.protocol.IProtocolType;
 
 public class UnloadRegionRequest extends ServerRequest {
-
-	public static final byte StartUnload = 0;
-
-	public static final byte CommitUnload = 1;
 
 	/**
 	 * 
@@ -15,29 +11,18 @@ public class UnloadRegionRequest extends ServerRequest {
 
 	protected int regionId;
 
-	protected byte phase;
-
-	@Override
-	public int getType() {
-		return ProtocolType.Unload_Region_Req;
-	}
-
-	public UnloadRegionRequest(int regionId, byte phase) {
+	public UnloadRegionRequest(int regionId) {
 		super();
 		this.regionId = regionId;
-		this.phase = phase;
 	}
 
 	public int getRegionId() {
 		return regionId;
 	}
 
-	public byte getPhase() {
-		return phase;
-	}
-
-	public void setPhase(byte phase) {
-		this.phase = phase;
+	@Override
+	public int getType() {
+		return IProtocolType.Unload_Region_Req;
 	}
 
 	public void setRegionId(int regionId) {
@@ -46,7 +31,7 @@ public class UnloadRegionRequest extends ServerRequest {
 
 	@Override
 	public String toString() {
-		return "UnloadRegionRequest [regionId=" + regionId + ", phase=" + phase + "]";
+		return "UnloadRegionRequest [regionId=" + regionId + "]";
 	}
 
 }
