@@ -19,18 +19,6 @@ import com.ebay.kvstore.structure.DataServerStruct;
  * 
  */
 public class HeartBeater {
-	private class Runner implements Runnable {
-		@Override
-		public void run() {
-			try {
-				heatbeat();
-				Thread.sleep(interval);
-			} catch (Exception e) {
-				logger.error("Error orrcued during heartbeat", e);
-			}
-		}
-	}
-
 	// in milliseconds
 	private static Logger logger = LoggerFactory.getLogger(HeartBeater.class);
 
@@ -75,6 +63,18 @@ public class HeartBeater {
 		struct.addRegions(engine.getRegions());
 		IProtocol heatbeat = new HeartBeat(struct);
 		session.write(heatbeat);
+	}
+
+	private class Runner implements Runnable {
+		@Override
+		public void run() {
+			try {
+				heatbeat();
+				Thread.sleep(interval);
+			} catch (Exception e) {
+				logger.error("Error orrcued during heartbeat", e);
+			}
+		}
 	}
 
 }

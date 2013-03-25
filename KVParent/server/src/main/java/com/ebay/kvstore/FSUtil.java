@@ -13,15 +13,11 @@ import org.apache.hadoop.fs.Path;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 
 public class FSUtil {
-	private static interface Predictor {
-		public boolean predict(String filename);
-	}
-
 	private static Pattern regionFilePattern = Pattern.compile("^[0-9]+\\-[0-9]+\\.data$");
 
 	private static Pattern regionLogPattern = Pattern.compile("^[0-9]+\\-[0-9]+\\.log$");
-	private static Pattern checkPointPattern = Pattern.compile("^[0-9]*\\.ckp$");
 
+	private static Pattern checkPointPattern = Pattern.compile("^[0-9]*\\.ckp$");
 	private static Pattern masterLogPattern = Pattern.compile("^[0-9]*\\.log$");
 
 	public static long getFileSize(String file) {
@@ -124,5 +120,9 @@ public class FSUtil {
 		Collections.sort(list);
 		String[] result = new String[list.size()];
 		return list.toArray(result);
+	}
+
+	private static interface Predictor {
+		public boolean predict(String filename);
 	}
 }

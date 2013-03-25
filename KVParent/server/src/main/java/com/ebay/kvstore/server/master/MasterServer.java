@@ -36,57 +36,6 @@ import com.ebay.kvstore.server.master.helper.IMasterEngine;
 import com.ebay.kvstore.server.master.helper.MasterEngine;
 
 public class MasterServer implements IServer, IConfigurationKey, Watcher {
-	private class MasterServerHandler implements IoHandler {
-		private Logger logger = LoggerFactory.getLogger(MasterServerHandler.class);
-
-		@Override
-		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
-			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
-		}
-
-		@Override
-		public void messageReceived(IoSession session, Object obj) throws Exception {
-			logger.info("Message received from " + session.getRemoteAddress().toString() + " "
-					+ obj);
-			try {
-				IContext context = new MasterContext(engine, session, conf);
-				dispatcher.handle(obj, context);
-			} catch (Exception e) {
-				logger.error("Error occured when processing message from "
-						+ session.getRemoteAddress().toString(), e);
-			}
-		}
-
-		@Override
-		public void messageSent(IoSession session, Object arg1) throws Exception {
-
-		}
-
-		@Override
-		public void sessionClosed(IoSession session) throws Exception {
-			System.out.println("Session closed " + session.getRemoteAddress().toString());
-			engine.removeDataServer(Address.parse(session.getRemoteAddress()));
-		}
-
-		@Override
-		public void sessionCreated(IoSession session) throws Exception {
-			System.out.println("Session created " + session.getRemoteAddress().toString());
-
-		}
-
-		@Override
-		public void sessionIdle(IoSession session, IdleStatus arg1) throws Exception {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void sessionOpened(IoSession session) throws Exception {
-			System.out.println("Session opened " + session.getRemoteAddress().toString());
-
-		}
-	}
-
 	private static Logger logger = LoggerFactory.getLogger(MasterServer.class);
 
 	public static void main(String[] args) {
@@ -100,6 +49,7 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	private Address masterAddr;
+
 	private Address zkAddr;
 	private Address hdfsAddr;
 	private IoAcceptor acceptor;
@@ -107,7 +57,6 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 	private int zkSessionTimeout;
 	private boolean active = false;
 	private String znode;
-
 	private IMasterEngine engine;
 
 	private IConfiguration conf;
@@ -245,5 +194,56 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 		initEngine();
 		initServer();
 		logger.info("{} become master now, waiting for connections", masterAddr);
+	}
+
+	private class MasterServerHandler implements IoHandler {
+		private Logger logger = LoggerFactory.getLogger(MasterServerHandler.class);
+
+		@Override
+		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
+			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
+		}
+
+		@Override
+		public void messageReceived(IoSession session, Object obj) throws Exception {
+			logger.info("Message received from " + session.getRemoteAddress().toString() + " "
+					+ obj);
+			try {
+				IContext context = new MasterContext(engine, session, conf);
+				dispatcher.handle(obj, context);
+			} catch (Exception e) {
+				logger.error("Error occured when processing message from "
+						+ session.getRemoteAddress().toString(), e);
+			}
+		}
+
+		@Override
+		public void messageSent(IoSession session, Object arg1) throws Exception {
+
+		}
+
+		@Override
+		public void sessionClosed(IoSession session) throws Exception {
+			System.out.println("Session closed " + session.getRemoteAddress().toString());
+			engine.removeDataServer(Address.parse(session.getRemoteAddress()));
+		}
+
+		@Override
+		public void sessionCreated(IoSession session) throws Exception {
+			System.out.println("Session created " + session.getRemoteAddress().toString());
+
+		}
+
+		@Override
+		public void sessionIdle(IoSession session, IdleStatus arg1) throws Exception {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void sessionOpened(IoSession session) throws Exception {
+			System.out.println("Session opened " + session.getRemoteAddress().toString());
+
+		}
 	}
 }

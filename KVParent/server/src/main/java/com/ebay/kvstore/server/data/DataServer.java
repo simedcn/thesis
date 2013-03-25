@@ -38,55 +38,6 @@ import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.structure.DataServerStruct;
 
 public class DataServer implements IServer, IConfigurationKey, Watcher {
-	private class DataServerHandler implements IoHandler {
-		private Logger logger = LoggerFactory.getLogger(DataServerHandler.class);
-
-		@Override
-		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
-			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
-
-		}
-
-		@Override
-		public void messageReceived(IoSession session, Object obj) throws Exception {
-			logger.info("Message received from " + session.getRemoteAddress().toString() + " "
-					+ obj);
-			try {
-				IContext context = new DataServerContext(engine, session);
-				dispatcher.handle(obj, context);
-			} catch (Exception e) {
-				logger.error("Error occured when processing message from "
-						+ session.getRemoteAddress().toString(), e);
-			}
-
-		}
-
-		@Override
-		public void messageSent(IoSession session, Object obj) throws Exception {
-
-		}
-
-		@Override
-		public void sessionClosed(IoSession session) throws Exception {
-			System.out.println("Session closed " + session.getRemoteAddress().toString());
-		}
-
-		@Override
-		public void sessionCreated(IoSession session) throws Exception {
-			System.out.println("Session created " + session.getRemoteAddress().toString());
-
-		}
-
-		@Override
-		public void sessionIdle(IoSession session, IdleStatus arg1) throws Exception {
-
-		}
-
-		@Override
-		public void sessionOpened(IoSession session) throws Exception {
-		}
-	}
-
 	private static Logger logger = LoggerFactory.getLogger(DataServer.class);
 
 	public static void main(String[] args) {
@@ -102,6 +53,7 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	private Address dsAddr;
+
 	private Address hdfsAddr;
 	private Address zkAddr;
 	private IoAcceptor acceptor;
@@ -113,7 +65,6 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 	private HeartBeater heartBeater;
 	private IStoreEngine engine;
 	private int reconnectInteval;
-
 	private int reconnectRetry;
 
 	private int weight;
@@ -283,5 +234,54 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 
 	private void initZookeeper() throws Exception {
 		zooKeeper = new ZooKeeper(zkAddr.toString(), zkSessionTimeout, this);
+	}
+
+	private class DataServerHandler implements IoHandler {
+		private Logger logger = LoggerFactory.getLogger(DataServerHandler.class);
+
+		@Override
+		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
+			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
+
+		}
+
+		@Override
+		public void messageReceived(IoSession session, Object obj) throws Exception {
+			logger.info("Message received from " + session.getRemoteAddress().toString() + " "
+					+ obj);
+			try {
+				IContext context = new DataServerContext(engine, session);
+				dispatcher.handle(obj, context);
+			} catch (Exception e) {
+				logger.error("Error occured when processing message from "
+						+ session.getRemoteAddress().toString(), e);
+			}
+
+		}
+
+		@Override
+		public void messageSent(IoSession session, Object obj) throws Exception {
+
+		}
+
+		@Override
+		public void sessionClosed(IoSession session) throws Exception {
+			System.out.println("Session closed " + session.getRemoteAddress().toString());
+		}
+
+		@Override
+		public void sessionCreated(IoSession session) throws Exception {
+			System.out.println("Session created " + session.getRemoteAddress().toString());
+
+		}
+
+		@Override
+		public void sessionIdle(IoSession session, IdleStatus arg1) throws Exception {
+
+		}
+
+		@Override
+		public void sessionOpened(IoSession session) throws Exception {
+		}
 	}
 }

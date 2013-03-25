@@ -48,19 +48,6 @@ import com.ebay.kvstore.structure.RegionTable;
  */
 public class MasterEngine implements IMasterEngine {
 
-	private class CheckpointTask extends TimerTask {
-		@Override
-		public void run() {
-			long time = System.currentTimeMillis();
-			if (time - checkpointTime > checkpointInterval)
-				try {
-					checkPoint();
-				} catch (IOException e) {
-					logger.error("Fail to generate master point", e);
-				}
-		}
-	}
-
 	private Logger logger = LoggerFactory.getLogger(MasterEngine.class);
 
 	private Map<DataServerStruct, IoSession> dataServers;
@@ -405,6 +392,19 @@ public class MasterEngine implements IMasterEngine {
 			logger.info(
 					"Create master checkpoint successfully, create new checkpoint file {} and new log file {}",
 					path, log);
+		}
+	}
+
+	private class CheckpointTask extends TimerTask {
+		@Override
+		public void run() {
+			long time = System.currentTimeMillis();
+			if (time - checkpointTime > checkpointInterval)
+				try {
+					checkPoint();
+				} catch (IOException e) {
+					logger.error("Fail to generate master point", e);
+				}
 		}
 	}
 

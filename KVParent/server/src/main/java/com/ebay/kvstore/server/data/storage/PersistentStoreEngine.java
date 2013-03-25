@@ -24,78 +24,6 @@ import com.ebay.kvstore.structure.Value;
 
 public class PersistentStoreEngine extends BaseStoreEngine {
 
-	private class RegionLoadListener implements IRegionLoadListener {
-
-		@Override
-		public void onLoadBegin() {
-			logger.info("Region load begin");
-		}
-
-		@Override
-		public void onLoadCommit(boolean success, IRegionStorage storage) {
-			if (success) {
-				onLoad(storage.getRegion());
-				storages.put(storage.getRegion(), storage);
-				addRegion(storage.getRegion());
-			}
-			logger.info("Region load commit");
-		}
-
-		@Override
-		public void onLoadEnd(boolean success) {
-			logger.info("Region load end");
-
-		}
-
-	}
-
-	private class RegionSplitListener implements IRegionSplitListener {
-
-		private KeyValueCache oldBuffer;
-		private int regionId;
-		private IRegionStorage oldStorage;
-
-		public RegionSplitListener(IRegionStorage storage, int regionId) {
-			this.oldStorage = storage;
-			this.regionId = regionId;
-		}
-
-		@Override
-		public void onSplitBegin() {
-			oldBuffer = oldStorage.getBuffer();
-		}
-
-		@Override
-		public void onSplitCommit(boolean success, IRegionStorage oldStorage,
-				IRegionStorage newStorage) {
-			if (!success) {
-				restore();
-			} else {
-				Region newRegion = newStorage.getRegion();
-				storages.put(newRegion, newStorage);
-				addRegion(newStorage.getRegion());
-				onSplit(oldStorage.getRegion(), newRegion);
-			}
-		}
-
-		@Override
-		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
-			if (success) {
-				return new Region(regionId, start, end);
-			} else {
-				restore();
-				return null;
-			}
-		}
-
-		private void restore() {
-			logger.info("Region split failed, source region is:" + regionId);
-			KeyValueCache newBuffer = oldStorage.getBuffer();
-			oldBuffer.addAll(newBuffer);
-			oldStorage.setBuffer(oldBuffer);
-		}
-	}
-
 	protected Map<Region, IRegionStorage> storages;
 
 	private static Logger logger = LoggerFactory.getLogger(PersistentStoreEngine.class);
@@ -237,5 +165,77 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		IRegionStorage storage = storages.remove(region);
 		storage.dispose();
 		return region;
+	}
+
+	private class RegionLoadListener implements IRegionLoadListener {
+
+		@Override
+		public void onLoadBegin() {
+			logger.info("Region load begin");
+		}
+
+		@Override
+		public void onLoadCommit(boolean success, IRegionStorage storage) {
+			if (success) {
+				onLoad(storage.getRegion());
+				storages.put(storage.getRegion(), storage);
+				addRegion(storage.getRegion());
+			}
+			logger.info("Region load commit");
+		}
+
+		@Override
+		public void onLoadEnd(boolean success) {
+			logger.info("Region load end");
+
+		}
+
+	}
+
+	private class RegionSplitListener implements IRegionSplitListener {
+
+		private KeyValueCache oldBuffer;
+		private int regionId;
+		private IRegionStorage oldStorage;
+
+		public RegionSplitListener(IRegionStorage storage, int regionId) {
+			this.oldStorage = storage;
+			this.regionId = regionId;
+		}
+
+		@Override
+		public void onSplitBegin() {
+			oldBuffer = oldStorage.getBuffer();
+		}
+
+		@Override
+		public void onSplitCommit(boolean success, IRegionStorage oldStorage,
+				IRegionStorage newStorage) {
+			if (!success) {
+				restore();
+			} else {
+				Region newRegion = newStorage.getRegion();
+				storages.put(newRegion, newStorage);
+				addRegion(newStorage.getRegion());
+				onSplit(oldStorage.getRegion(), newRegion);
+			}
+		}
+
+		@Override
+		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
+			if (success) {
+				return new Region(regionId, start, end);
+			} else {
+				restore();
+				return null;
+			}
+		}
+
+		private void restore() {
+			logger.info("Region split failed, source region is:" + regionId);
+			KeyValueCache newBuffer = oldStorage.getBuffer();
+			oldBuffer.addAll(newBuffer);
+			oldStorage.setBuffer(oldBuffer);
+		}
 	}
 }

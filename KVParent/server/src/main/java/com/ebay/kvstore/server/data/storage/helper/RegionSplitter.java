@@ -27,21 +27,6 @@ import com.ebay.kvstore.structure.Value;
 
 public class RegionSplitter extends BaseHelper {
 
-	private class FlushResult {
-		public long currentSize;
-		public byte[] lastKey;
-		public KeyValue kv;
-		public Entry<byte[], Value> e;
-
-		public FlushResult(long currentSize, byte[] lastKey, KeyValue kv, Entry<byte[], Value> e) {
-			super();
-			this.currentSize = currentSize;
-			this.lastKey = lastKey;
-			this.kv = kv;
-			this.e = e;
-		}
-	}
-
 	private static Logger logger = LoggerFactory.getLogger(RegionSplitter.class);
 
 	protected IRegionSplitListener listener;
@@ -239,5 +224,20 @@ public class RegionSplitter extends BaseHelper {
 			}
 		}
 		return new FlushResult(currentSize, lastKey, kv, e);
+	}
+
+	private class FlushResult {
+		public long currentSize;
+		public byte[] lastKey;
+		public KeyValue kv;
+		public Entry<byte[], Value> e;
+
+		public FlushResult(long currentSize, byte[] lastKey, KeyValue kv, Entry<byte[], Value> e) {
+			super();
+			this.currentSize = currentSize;
+			this.lastKey = lastKey;
+			this.kv = kv;
+			this.e = e;
+		}
 	}
 }

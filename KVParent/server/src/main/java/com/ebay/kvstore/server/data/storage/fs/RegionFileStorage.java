@@ -42,92 +42,6 @@ import com.ebay.kvstore.structure.Value;
  */
 public class RegionFileStorage implements IRegionStorage {
 
-	private class RegionFlushListener implements IRegionFlushListener {
-		private String oldFile;
-		private List<IndexEntry> tmpIndices;
-		private String oldLoggerFile;
-		private String newLoggerFile;
-		private int newKeyNum;
-
-		public RegionFlushListener(String oldFile) {
-			super();
-			this.oldFile = oldFile;
-			oldLoggerFile = redoLogger.getFile();
-
-		}
-
-		@Override
-		public void onFlushBegin() {
-			flushingLock.lock();
-			logger.info("Region flush begin");
-			newLoggerFile = baseDir + System.currentTimeMillis();
-			try {
-				newLogger(newLoggerFile);
-			} catch (IOException e) {
-				logger.error("Fail to create new logger", newLoggerFile);
-			}
-			oldBuffer = buffer;
-			buffer = KeyValueCache.forBuffer();
-		}
-
-		@Override
-		public void onFlushCommit(boolean success, String file) {
-			logger.info("Region flush commit "
-					+ (success ? "success." + "new data file:" + file : "failed"));
-			try {
-				if (success) {
-					dataFile = file;
-					indices = tmpIndices;
-					dataFileKeyNum = newKeyNum;
-					dataFileSize = FSUtil.getFileSize(file);
-					oldBuffer = null;
-					long time = FSUtil.getRegionFileTimestamp(file);
-					String log = PathBuilder.getRegionLogPath(region.getRegionId(), time);
-					try {
-						redoLogger.renameTo(log);
-					} catch (IOException e) {
-						logger.error("fail to create new log file" + log, e);
-					}
-				} else {
-					restore();
-				}
-			} finally {
-				flushingLock.unlock();
-			}
-
-		}
-
-		@Override
-		public void onFlushEnd(boolean success, String file) {
-			logger.info("Region flush end");
-			if (success) {
-				try {
-					tmpIndices = new ArrayList<>();
-					newKeyNum = IndexBuilder.build(tmpIndices, file, blockSize, indexBlockNum);
-				} catch (Exception e) {
-					logger.error("Error occured when building index for data file:" + file, e);
-					restore();
-					throw new RuntimeException(e);
-				}
-			} else {
-				flushingLock.unlock();
-				restore();
-			}
-		}
-
-		private void restore() {
-			oldBuffer.addAll(buffer);
-			buffer = oldBuffer;
-			dataFile = oldFile;
-			try {
-				setLogger(oldLoggerFile);
-				redoLogger.append(newLoggerFile);
-			} catch (IOException e) {
-				logger.error("Fail to restore to old logger", e);
-			}
-		}
-	}
-
 	private static Logger logger = LoggerFactory.getLogger(RegionFileStorage.class);
 
 	protected volatile Region region;
@@ -444,5 +358,91 @@ public class RegionFileStorage implements IRegionStorage {
 
 	private IndexEntry getKeyIndex(byte[] key) {
 		return RegionUtil.search(indices, key);
+	}
+
+	private class RegionFlushListener implements IRegionFlushListener {
+		private String oldFile;
+		private List<IndexEntry> tmpIndices;
+		private String oldLoggerFile;
+		private String newLoggerFile;
+		private int newKeyNum;
+
+		public RegionFlushListener(String oldFile) {
+			super();
+			this.oldFile = oldFile;
+			oldLoggerFile = redoLogger.getFile();
+
+		}
+
+		@Override
+		public void onFlushBegin() {
+			flushingLock.lock();
+			logger.info("Region flush begin");
+			newLoggerFile = baseDir + System.currentTimeMillis();
+			try {
+				newLogger(newLoggerFile);
+			} catch (IOException e) {
+				logger.error("Fail to create new logger", newLoggerFile);
+			}
+			oldBuffer = buffer;
+			buffer = KeyValueCache.forBuffer();
+		}
+
+		@Override
+		public void onFlushCommit(boolean success, String file) {
+			logger.info("Region flush commit "
+					+ (success ? "success." + "new data file:" + file : "failed"));
+			try {
+				if (success) {
+					dataFile = file;
+					indices = tmpIndices;
+					dataFileKeyNum = newKeyNum;
+					dataFileSize = FSUtil.getFileSize(file);
+					oldBuffer = null;
+					long time = FSUtil.getRegionFileTimestamp(file);
+					String log = PathBuilder.getRegionLogPath(region.getRegionId(), time);
+					try {
+						redoLogger.renameTo(log);
+					} catch (IOException e) {
+						logger.error("fail to create new log file" + log, e);
+					}
+				} else {
+					restore();
+				}
+			} finally {
+				flushingLock.unlock();
+			}
+
+		}
+
+		@Override
+		public void onFlushEnd(boolean success, String file) {
+			logger.info("Region flush end");
+			if (success) {
+				try {
+					tmpIndices = new ArrayList<>();
+					newKeyNum = IndexBuilder.build(tmpIndices, file, blockSize, indexBlockNum);
+				} catch (Exception e) {
+					logger.error("Error occured when building index for data file:" + file, e);
+					restore();
+					throw new RuntimeException(e);
+				}
+			} else {
+				flushingLock.unlock();
+				restore();
+			}
+		}
+
+		private void restore() {
+			oldBuffer.addAll(buffer);
+			buffer = oldBuffer;
+			dataFile = oldFile;
+			try {
+				setLogger(oldLoggerFile);
+				redoLogger.append(newLoggerFile);
+			} catch (IOException e) {
+				logger.error("Fail to restore to old logger", e);
+			}
+		}
 	}
 }

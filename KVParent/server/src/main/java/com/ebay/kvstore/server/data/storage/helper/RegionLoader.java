@@ -23,24 +23,13 @@ import com.ebay.kvstore.structure.Region;
 
 public class RegionLoader extends BaseHelper {
 
-	private class LoaderResult {
-		public List<IndexEntry> indices;
-		public KeyValueCache cache;
-
-		public LoaderResult(List<IndexEntry> indices, KeyValueCache cache) {
-			this.indices = indices;
-			this.cache = cache;
-		}
-
-	}
-
 	private static Logger logger = LoggerFactory.getLogger(RegionLoader.class);
+
 	protected Region region;
 	protected int regionId;
 	protected IRegionLoadListener listener;
 	protected FileSystem fs;
 	protected int blockSize;
-
 	protected int indexBlockNum;
 
 	public RegionLoader(IConfiguration conf, IRegionLoadListener listener, Region region) {
@@ -149,6 +138,17 @@ public class RegionLoader extends BaseHelper {
 			}
 		}
 		return new LoaderResult(indices, buffer);
+	}
+
+	private class LoaderResult {
+		public List<IndexEntry> indices;
+		public KeyValueCache cache;
+
+		public LoaderResult(List<IndexEntry> indices, KeyValueCache cache) {
+			this.indices = indices;
+			this.cache = cache;
+		}
+
 	}
 
 }

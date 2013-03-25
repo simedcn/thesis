@@ -23,66 +23,12 @@ import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.kvstore.server.data.storage.IStoreEngine;
 
 public class DataClient {
-	class DataClientHandler implements IoHandler {
-		private Logger logger = LoggerFactory.getLogger(DataClientHandler.class);
-
-		@Override
-		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
-			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
-
-		}
-
-		@Override
-		public void messageReceived(IoSession session, Object obj) throws Exception {
-			logger.info("Message received from " + session.getRemoteAddress().toString() + " "
-					+ obj);
-			try {
-				IContext context = new DataServerContext(engine, session);
-				dispatcher.handle(obj, context);
-			} catch (Exception e) {
-				logger.error("Error occured when processing message from "
-						+ session.getRemoteAddress().toString(), e);
-			}
-		}
-
-		@Override
-		public void messageSent(IoSession session, Object message) throws Exception {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void sessionClosed(IoSession session) throws Exception {
-			// TODO Auto-generated method stub
-			System.out.println("Session closed " + session.getRemoteAddress().toString());
-		}
-
-		@Override
-		public void sessionCreated(IoSession session) throws Exception {
-			// TODO Auto-generated method stub
-			System.out.println("Session created " + session.getRemoteAddress().toString());
-		}
-
-		@Override
-		public void sessionIdle(IoSession session, IdleStatus arg1) throws Exception {
-			// TODO Auto-generated method stub
-			System.out.println("Session idle " + session.getRemoteAddress().toString());
-
-		}
-
-		@Override
-		public void sessionOpened(IoSession session) throws Exception {
-			// TODO Auto-generated method stub
-			System.out.println("Session opened " + session.getRemoteAddress().toString());
-		}
-	}
-
 	private Address masterAddr;
+
 	private int timeout;
 	private IoSession session;
 	private ProtocolDispatcher dispatcher;
 	private IConfiguration conf;
-
 	private IStoreEngine engine;
 
 	public DataClient(Address masterAddr, IConfiguration conf, IStoreEngine engine) {
@@ -137,5 +83,59 @@ public class DataClient {
 
 	public void setMasterAddr(Address masterAddr) {
 		this.masterAddr = masterAddr;
+	}
+
+	class DataClientHandler implements IoHandler {
+		private Logger logger = LoggerFactory.getLogger(DataClientHandler.class);
+
+		@Override
+		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
+			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
+
+		}
+
+		@Override
+		public void messageReceived(IoSession session, Object obj) throws Exception {
+			logger.info("Message received from " + session.getRemoteAddress().toString() + " "
+					+ obj);
+			try {
+				IContext context = new DataServerContext(engine, session);
+				dispatcher.handle(obj, context);
+			} catch (Exception e) {
+				logger.error("Error occured when processing message from "
+						+ session.getRemoteAddress().toString(), e);
+			}
+		}
+
+		@Override
+		public void messageSent(IoSession session, Object message) throws Exception {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void sessionClosed(IoSession session) throws Exception {
+			// TODO Auto-generated method stub
+			System.out.println("Session closed " + session.getRemoteAddress().toString());
+		}
+
+		@Override
+		public void sessionCreated(IoSession session) throws Exception {
+			// TODO Auto-generated method stub
+			System.out.println("Session created " + session.getRemoteAddress().toString());
+		}
+
+		@Override
+		public void sessionIdle(IoSession session, IdleStatus arg1) throws Exception {
+			// TODO Auto-generated method stub
+			System.out.println("Session idle " + session.getRemoteAddress().toString());
+
+		}
+
+		@Override
+		public void sessionOpened(IoSession session) throws Exception {
+			// TODO Auto-generated method stub
+			System.out.println("Session opened " + session.getRemoteAddress().toString());
+		}
 	}
 }
