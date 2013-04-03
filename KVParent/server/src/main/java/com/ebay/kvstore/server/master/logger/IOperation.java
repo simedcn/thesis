@@ -2,9 +2,9 @@ package com.ebay.kvstore.server.master.logger;
 
 import java.io.IOException;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.logger.ILoggerInputStream;
 import com.ebay.kvstore.logger.ILoggerOutputStream;
+import com.ebay.kvstore.structure.Address;
 
 public interface IOperation {
 	public static byte Load = 0;

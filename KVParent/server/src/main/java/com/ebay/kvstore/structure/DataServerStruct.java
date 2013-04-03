@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.ebay.kvstore.Address;
-
 public class DataServerStruct implements Serializable {
 	/**
 	 * 
@@ -66,15 +64,11 @@ public class DataServerStruct implements Serializable {
 		return addr;
 	}
 
-	public Region[] getAllRegions() {
-		return regions.toArray(new Region[] {});
-	}
-
 	public SystemInfo getInfo() {
 		return info;
 	}
 
-	public SortedSet<Region> getRegions() {
+	public Collection<Region> getRegions() {
 		return regions;
 	}
 

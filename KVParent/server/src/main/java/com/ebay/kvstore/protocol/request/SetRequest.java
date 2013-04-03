@@ -15,7 +15,12 @@ public class SetRequest extends ClientRequest {
 	protected byte[] value;
 
 	public SetRequest(byte[] key, byte[] value) {
-		super();
+		this.key = key;
+		this.value = value;
+	}
+
+	public SetRequest(byte[] key, byte[] value, boolean retry) {
+		super(retry);
 		this.key = key;
 		this.value = value;
 	}
@@ -42,7 +47,7 @@ public class SetRequest extends ClientRequest {
 
 	@Override
 	public int getType() {
-		return IProtocolType.Get_Req;
+		return IProtocolType.Set_Req;
 	}
 
 	public byte[] getValue() {

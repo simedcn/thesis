@@ -28,4 +28,9 @@ public class LoadRegionResponse extends BaseResponse {
 	public void setRegion(Region region) {
 		this.region = region;
 	}
+
+	@Override
+	public String toString() {
+		return "LoadRegionResponse [region=" + region + "]";
+	}
 }

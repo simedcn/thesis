@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 
@@ -59,8 +60,8 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
-	public void loadRegion(Region region) throws IOException {
-		engine.loadRegion(region);
+	public boolean loadRegion(Region region) throws IOException {
+		return engine.loadRegion(region);
 	}
 
 	@Override

@@ -8,13 +8,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.BaseFileStorageTest;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
 import com.ebay.kvstore.server.data.storage.helper.IRegionLoadListener;
 import com.ebay.kvstore.server.data.storage.helper.TaskManager;
+import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 

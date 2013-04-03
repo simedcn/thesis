@@ -9,10 +9,6 @@ import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
-import org.apache.mina.filter.logging.LoggingFilter;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -22,8 +18,8 @@ import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.IServer;
+import com.ebay.kvstore.MinaUtil;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
@@ -32,8 +28,19 @@ import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.master.handler.DataServerJoinRequestHandler;
+import com.ebay.kvstore.server.master.handler.HeartBeatHandler;
+import com.ebay.kvstore.server.master.handler.LoadRegionResponseHandler;
+import com.ebay.kvstore.server.master.handler.RegionTableRequestHandler;
+import com.ebay.kvstore.server.master.handler.SplitRegionResponseHandler;
+import com.ebay.kvstore.server.master.handler.UnloadRegionResponseHandler;
 import com.ebay.kvstore.server.master.helper.IMasterEngine;
 import com.ebay.kvstore.server.master.helper.MasterEngine;
+import com.ebay.kvstore.server.master.task.CheckpointTask;
+import com.ebay.kvstore.server.master.task.RegionAssignTask;
+import com.ebay.kvstore.server.master.task.RegionSplitTask;
+import com.ebay.kvstore.server.master.task.RegionUnassignTask;
+import com.ebay.kvstore.structure.Address;
 
 public class MasterServer implements IServer, IConfigurationKey, Watcher {
 	private static Logger logger = LoggerFactory.getLogger(MasterServer.class);
@@ -102,7 +109,19 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	@Override
-	public synchronized void shutdown() {
+	public synchronized void start() throws Exception {
+		initZookeeper();
+		if (active) {
+			run();
+		} else {
+			synchronized (zooKeeper) {
+				zooKeeper.wait();
+			}
+		}
+	}
+
+	@Override
+	public synchronized void stop() {
 		if (acceptor != null) {
 			acceptor.unbind();
 			acceptor.dispose();
@@ -117,20 +136,12 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 		}
 	}
 
-	@Override
-	public synchronized void start() throws Exception {
-		initZookeeper();
-		if (active) {
-			run();
-		} else {
-			synchronized (zooKeeper) {
-				zooKeeper.wait();
-			}
-		}
-	}
-
 	private void initEngine() throws Exception {
 		engine = new MasterEngine(conf, zooKeeper);
+		engine.registerTask(new CheckpointTask(conf, engine), true);
+		engine.registerTask(new RegionAssignTask(conf, engine), true);
+		engine.registerTask(new RegionSplitTask(conf, engine), true);
+		engine.registerTask(new RegionUnassignTask(conf, engine), true);
 		engine.start();
 	}
 
@@ -139,12 +150,7 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	private void initServer() throws IOException {
-		acceptor = new NioSocketAcceptor();
-		// filter chain
-		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
-		acceptor.getFilterChain().addLast("codec",
-				new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
-		// filter handler
+		acceptor = MinaUtil.getDefaultAcceptor();
 		acceptor.setHandler(new MasterServerHandler());
 		// config
 		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
@@ -201,7 +207,6 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 
 		@Override
 		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
-			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
 		}
 
 		@Override
@@ -224,19 +229,16 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 
 		@Override
 		public void sessionClosed(IoSession session) throws Exception {
-			System.out.println("Session closed " + session.getRemoteAddress().toString());
-			engine.removeDataServer(Address.parse(session.getRemoteAddress()));
+			engine.removeDataServer(session);
 		}
 
 		@Override
 		public void sessionCreated(IoSession session) throws Exception {
 			System.out.println("Session created " + session.getRemoteAddress().toString());
-
 		}
 
 		@Override
 		public void sessionIdle(IoSession session, IdleStatus arg1) throws Exception {
-			// TODO Auto-generated method stub
 
 		}
 

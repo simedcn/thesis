@@ -29,4 +29,9 @@ public class DataServerJoinRequest extends ServerRequest {
 		this.struct = struct;
 	}
 
+	@Override
+	public String toString() {
+		return "DataServerJoinRequest [struct=" + struct + "]";
+	}
+
 }

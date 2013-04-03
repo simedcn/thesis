@@ -18,7 +18,13 @@ public class IncrRequest extends ClientRequest {
 	protected int initValue;
 
 	public IncrRequest(byte[] key, int incremental, int initValue) {
-		super();
+		this.key = key;
+		this.incremental = incremental;
+		this.initValue = initValue;
+	}
+
+	public IncrRequest(byte[] key, int incremental, int initValue, boolean retry) {
+		super(retry);
 		this.key = key;
 		this.incremental = incremental;
 		this.initValue = initValue;

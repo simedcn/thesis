@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.IConfiguration;
+import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
@@ -116,8 +117,11 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public void loadRegion(Region region) {
-		TaskManager.load(conf, new RegionLoadListener(), region);
+	public boolean loadRegion(Region region) {
+		if (!regions.contains(region)) {
+			return TaskManager.load(conf, new RegionLoadListener(), region);
+		}
+		return true;
 	}
 
 	@Override
@@ -177,19 +181,20 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		@Override
 		public void onLoadCommit(boolean success, IRegionStorage storage) {
 			if (success) {
+				logger.info("Region load success");
 				onLoad(storage.getRegion());
 				storages.put(storage.getRegion(), storage);
 				addRegion(storage.getRegion());
+			} else {
+				logger.info("Region load commit failed");
 			}
-			logger.info("Region load commit");
 		}
 
 		@Override
 		public void onLoadEnd(boolean success) {
-			logger.info("Region load end");
+			logger.info("Region load end, result:{}", success ? "success" : "fail");
 
 		}
-
 	}
 
 	private class RegionSplitListener implements IRegionSplitListener {

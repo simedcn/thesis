@@ -42,15 +42,7 @@ public class RegionLoader extends BaseHelper {
 		this.indexBlockNum = conf.getInt(IConfigurationKey.Region_Index_Block_Num);
 	}
 
-	/**
-	 * TODO Region Loader
-	 * 
-	 * @param addr
-	 * @param regionId
-	 * @throws IOException
-	 */
-	@Override
-	public void run() {
+	public boolean load() {
 		Phase phase = Phase.Begin;
 		try {
 			String baseDir = PathBuilder.getRegionDir(regionId);
@@ -62,13 +54,18 @@ public class RegionLoader extends BaseHelper {
 			List<IndexEntry> indices = null;
 			KeyValueCache buffer = null;
 			if (dataFiles == null || dataFiles.length == 0) {
-				for (int i = logFiles.length - 1; i >= 0; i--) {
-					try {
-						buffer = KeyValueCache.forBuffer();
-						RegionUtil.loadLogger(baseDir + logFiles[i], buffer);
-						success = true;
-					} catch (Exception e) {
-						logger.warn("Fail to load region from log file:" + logFiles[i], e);
+				if (logFiles == null || logFiles.length == 0) {
+					buffer = KeyValueCache.forBuffer();
+					success = true;
+				} else {
+					for (int i = logFiles.length - 1; i >= 0; i--) {
+						try {
+							buffer = KeyValueCache.forBuffer();
+							RegionUtil.loadLogger(baseDir + logFiles[i], buffer);
+							success = true;
+						} catch (Exception e) {
+							logger.warn("Fail to load region from log file:" + logFiles[i], e);
+						}
 					}
 				}
 			} else {
@@ -90,7 +87,7 @@ public class RegionLoader extends BaseHelper {
 				listener.onLoadEnd(true);
 			} else {
 				listener.onLoadEnd(false);
-				return;
+				return false;
 			}
 			phase = Phase.End;
 			// commit
@@ -106,6 +103,7 @@ public class RegionLoader extends BaseHelper {
 			storage.setBuffer(buffer);
 			listener.onLoadCommit(success, storage);
 			phase = Phase.Commit;
+			return true;
 		} catch (IOException e) {
 			logger.error("Fail to load region:" + regionId, e);
 			if (phase == Phase.Begin) {
@@ -115,6 +113,17 @@ public class RegionLoader extends BaseHelper {
 			}
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * TODO Region Loader
+	 * 
+	 * @param addr
+	 * @param regionId
+	 * @throws IOException
+	 */
+	@Override
+	public void run() {
 	}
 
 	/**

@@ -36,27 +36,4 @@ public class LRUCacheReplacer extends BaseCacheReplacer {
 		index.add(key);
 	}
 
-	/*
-	 * private static class Entry implements Comparable<Entry> { byte[] key;
-	 * long time;
-	 * 
-	 * public Entry(byte[] key, long time) { super(); this.key = key; this.time
-	 * = time; }
-	 * 
-	 * @Override public int compareTo(Entry o) { return Long.compare(time,
-	 * o.time); }
-	 * 
-	 * @Override public int hashCode() { final int prime = 31; int result = 1;
-	 * result = prime * result + Arrays.hashCode(key); return result; }
-	 * 
-	 * @Override public boolean equals(Object obj) { if (this == obj) return
-	 * true; if (obj == null) return false; if (getClass() != obj.getClass())
-	 * return false; Entry other = (Entry) obj; return Arrays.equals(key,
-	 * other.key); }
-	 * 
-	 * @Override public String toString() { return "Entry [key=" +
-	 * Arrays.toString(key) + ", time=" + time + "]"; }
-	 * 
-	 * }
-	 */
 }

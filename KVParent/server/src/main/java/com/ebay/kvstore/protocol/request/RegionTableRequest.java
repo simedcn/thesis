@@ -14,4 +14,9 @@ public class RegionTableRequest extends ClientRequest {
 		return IProtocolType.Region_Table_Req;
 	}
 
+	@Override
+	public String toString() {
+		return "RegionTableRequest []";
+	}
+
 }

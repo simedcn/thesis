@@ -21,6 +21,12 @@ public class SetResponse extends BaseResponse {
 		this.value = value;
 	}
 
+	public SetResponse(int retCode, byte[] key, byte[] value, boolean retry) {
+		super(retCode, retry);
+		this.key = key;
+		this.value = value;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

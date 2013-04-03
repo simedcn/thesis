@@ -15,7 +15,12 @@ public class DataServerJoinResponse extends BaseResponse {
 
 	@Override
 	public int getType() {
-		return IProtocolType.DataServer_Join_Response;
+		return IProtocolType.DataServer_Join_Resp;
+	}
+
+	@Override
+	public String toString() {
+		return "DataServerJoinResponse []";
 	}
 
 }

@@ -17,6 +17,7 @@ import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.PathBuilder;
 import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
+import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.FileDataLogger;
 import com.ebay.kvstore.server.data.logger.FileDataLoggerIterator;
@@ -80,29 +81,33 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public synchronized void loadRegion(Region region) throws IOException {
+	public synchronized boolean loadRegion(Region region) throws IOException {
 		KeyValueCache buffer = null;
 		if (regions.contains(region)) {
-			return;
+			return true;
 		}
 		try {
 			String regionDir = PathBuilder.getRegionDir(region.getRegionId());
 			String[] logFiles = FSUtil.getRegionLogFiles(regionDir);
 			boolean success = false;
-			for (int i = logFiles.length - 1; i >= 0; i--) {
-				buffer = KeyValueCache.forBuffer();
-				try {
-					RegionUtil.loadLogger(regionDir + logFiles[i], buffer);
-					success = true;
-					break;
-				} catch (Exception e) {
-					logger.error("Fail to load region from " + logFiles[i] + ", try to load next",
-							e);
+			if (logFiles == null || logFiles.length == 0) {
+				success = true;
+			} else {
+				for (int i = logFiles.length - 1; i >= 0; i--) {
+					buffer = KeyValueCache.forBuffer();
+					try {
+						RegionUtil.loadLogger(regionDir + logFiles[i], buffer);
+						success = true;
+						break;
+					} catch (Exception e) {
+						logger.error("Fail to load region from " + logFiles[i]
+								+ ", try to load next", e);
+					}
 				}
 			}
 			if (!success) {
 				logger.error("Fail to load region from all available log files");
-				return;
+				return false;
 			}
 			// there should be no overlap in keys
 			cache.addAll(buffer);
@@ -111,6 +116,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			IDataLogger logger = FileDataLogger.forCreate(logFile);
 			addRegion(region);
 			loggers.put(region, logger);
+			return true;
 		} catch (IOException e) {
 			logger.error("Fail to load region from" + addr + ":" + region.getRegionId(), e);
 			if (buffer != null) {

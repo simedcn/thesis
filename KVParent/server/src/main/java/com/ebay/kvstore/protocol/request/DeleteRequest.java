@@ -12,7 +12,11 @@ public class DeleteRequest extends ClientRequest {
 	protected byte[] key;
 
 	public DeleteRequest(byte[] key) {
-		super();
+		this.key = key;
+	}
+
+	public DeleteRequest(byte[] key, boolean retry) {
+		super(retry);
 		this.key = key;
 	}
 

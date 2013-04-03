@@ -13,7 +13,6 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.FSUtil;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.PathBuilder;
@@ -29,6 +28,7 @@ import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
 import com.ebay.kvstore.server.data.storage.helper.IRegionFlushListener;
 import com.ebay.kvstore.server.data.storage.helper.TaskManager;
+import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;

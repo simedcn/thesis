@@ -35,9 +35,9 @@ public class TaskManager {
 		return lock;
 	}
 
-	public static void load(IConfiguration conf, IRegionLoadListener listener, Region region) {
+	public static boolean load(IConfiguration conf, IRegionLoadListener listener, Region region) {
 		RegionLoader loader = new RegionLoader(conf, listener, region);
-		loader.run();
+		return loader.load();
 	}
 
 	public static boolean split(IRegionStorage storage, IConfiguration conf,

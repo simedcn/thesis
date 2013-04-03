@@ -23,7 +23,6 @@ public class SystemInfo implements Serializable {
 		memoryTotal = osmb.getTotalPhysicalMemorySize();
 		memoryFree = osmb.getFreePhysicalMemorySize();
 		cpuUsage = osmb.getSystemCpuLoad();
-
 	}
 
 	public double getCpuUsage() {

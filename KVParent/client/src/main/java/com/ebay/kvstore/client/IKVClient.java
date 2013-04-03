@@ -1,20 +1,33 @@
 package com.ebay.kvstore.client;
 
+import com.ebay.kvstore.exception.KVException;
+import com.ebay.kvstore.structure.DataServerStruct;
+import com.ebay.kvstore.structure.RegionTable;
+
 public interface IKVClient {
 
-	public boolean delete(byte[] key);
+	public void delete(byte[] key) throws KVException;
 
-	public byte[] get(byte[] key);
+	public byte[] get(byte[] key) throws KVException;
 
-	public IClientHandler getClientHandler();
+	public void set(byte[] key, byte[] value) throws KVException;
+
+	public IKVClientHandler getClientHandler();
 
 	public ClientOption getClientOption();
 
-	public int getCounter(byte[] key);
+	public int getCounter(byte[] key) throws KVException;
 
-	public void incr(byte[] key, int intial, int incremental);
+	public int incr(byte[] key, int intial, int incremental) throws KVException;
 
-	public void setHandler(IClientHandler handler);
+	public void setHandler(IKVClientHandler handler);
 
-	public void stat();
+	public DataServerStruct[] stat() throws KVException;
+
+	public void close();
+
+	public void updateRegionTable() throws KVException;
+
+	public void setRegionTable(RegionTable table);
+
 }

@@ -1,5 +1,7 @@
 package com.ebay.kvstore.client;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,11 +18,12 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.Address;
-import com.ebay.kvstore.client.sync.RegionTableResponseHandler;
-import com.ebay.kvstore.protocol.IProtocolType;
+import com.ebay.kvstore.client.async.AsyncClientContext;
+import com.ebay.kvstore.exception.InvalidKeyException;
+import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
+import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.RegionTable;
 
 public abstract class BaseClient implements IKVClient {
@@ -40,18 +43,32 @@ public abstract class BaseClient implements IKVClient {
 	public BaseClient(ClientOption option) {
 		this.option = option;
 		this.connections = new HashMap<>();
-		this.ioHandler = new ClientIoHandler();
+		this.ioHandler = new ClientIoHandler(this);
 		this.dispatcher = new ProtocolDispatcher();
-
-		this.dispatcher.registerHandler(IProtocolType.Region_Table_Resp,
-				new RegionTableResponseHandler());
 	}
 
 	public ClientOption getClientOption() {
 		return option;
 	}
 
-	// TODO
+	@Override
+	public void setRegionTable(RegionTable table) {
+		this.table = table;
+	}
+
+	public void close() {
+		Collection<IoSession> sessions = connections.values();
+		for (IoSession session : sessions) {
+			session.close(true);
+		}
+		sessions.clear();
+		table.clear();
+	}
+
+	protected IoSession getMasterConnection() {
+		return getConnection(option.getMasterAddr());
+	}
+
 	protected IoSession getConnection(Address addr) {
 		IoSession session = connections.get(addr);
 		if (session == null) {
@@ -71,12 +88,34 @@ public abstract class BaseClient implements IKVClient {
 		return session;
 	}
 
-	// TODO
-	protected void updateRegionTable() {
+	protected void removeConnection(Address addr) {
+		connections.remove(addr);
+	}
 
+	protected IoSession getConnection(byte[] key) throws KVException {
+		if (table == null) {
+			updateRegionTable();
+		}
+		Address addr = table.getKeyAddr(key);
+		if (addr == null) {
+			// fail to get key for region.
+			updateRegionTable();
+			addr = table.getKeyAddr(key);
+		}
+		if (addr == null) {
+			throw new InvalidKeyException("Fail to get region for key:" + Arrays.toString(key));
+		}
+		IoSession session = getConnection(addr);
+		return session;
 	}
 
 	protected class ClientIoHandler implements IoHandler {
+
+		private IKVClient client = null;
+
+		public ClientIoHandler(IKVClient client) {
+			this.client = client;
+		}
 
 		@Override
 		public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
@@ -88,7 +127,7 @@ public abstract class BaseClient implements IKVClient {
 			logger.info("Message received from " + session.getRemoteAddress().toString() + " "
 					+ message);
 			try {
-				IContext context = new ClientContext();
+				IContext context = new AsyncClientContext(client, session);
 				dispatcher.handle(message, context);
 			} catch (Exception e) {
 				logger.error("Error occured when processing message from "
@@ -103,7 +142,7 @@ public abstract class BaseClient implements IKVClient {
 
 		@Override
 		public void sessionClosed(IoSession session) throws Exception {
-
+			removeConnection(Address.parse(session.getRemoteAddress()));
 		}
 
 		@Override

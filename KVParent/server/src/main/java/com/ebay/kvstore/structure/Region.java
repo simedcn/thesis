@@ -18,7 +18,7 @@ public class Region implements Serializable, Comparable<Region>, KeyComparable {
 	private byte[] end;
 	private RegionStat stat;
 	// whether the region has been changed after last stat.
-	private boolean dirty = true;
+	private transient boolean dirty = true;
 
 	public Region(int regionId, byte[] start, byte[] end) {
 		super();
@@ -43,18 +43,17 @@ public class Region implements Serializable, Comparable<Region>, KeyComparable {
 
 	@Override
 	public int compareTo(Region r) {
+		if (this == r) {
+			return 0;
+		}
 		int e1 = KeyValueUtil.compare(start, r.getEnd());
 		int e2 = KeyValueUtil.compare(end, r.getStart());
 		if (e1 > 0) {
 			return 1;
 		} else if (e2 < 0) {
 			return -1;
-		} else if (e1 == 0 && e2 == 0) {
-			return 0;
 		} else {
-			// The two regions are overlapped, should not happen
-			throw new IllegalArgumentException("The two regions are overlapped:" + this.toString()
-					+ " " + r.toString());
+			return 0;
 		}
 	}
 

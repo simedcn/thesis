@@ -3,24 +3,25 @@ package com.ebay.kvstore.server.data;
 import java.io.IOException;
 
 import org.apache.mina.core.future.ConnectFuture;
+import org.apache.mina.core.service.IoConnector;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
-import org.apache.mina.filter.executor.ExecutorFilter;
-import org.apache.mina.filter.logging.LoggingFilter;
-import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.Address;
+import com.ebay.kvstore.MinaUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
+import com.ebay.kvstore.server.data.handler.DataServerJoinResponseHandler;
+import com.ebay.kvstore.server.data.handler.LoadRegionRequestHandler;
+import com.ebay.kvstore.server.data.handler.SplitRegionRequestHandler;
+import com.ebay.kvstore.server.data.handler.UnloadRegionRequestHandler;
 import com.ebay.kvstore.server.data.storage.IStoreEngine;
+import com.ebay.kvstore.structure.Address;
 
 public class DataClient {
 	private Address masterAddr;
@@ -44,7 +45,7 @@ public class DataClient {
 		dispatcher.registerHandler(IProtocolType.Unload_Region_Req,
 				new UnloadRegionRequestHandler());
 		dispatcher.registerHandler(IProtocolType.Split_Region_Req, new SplitRegionRequestHandler());
-		dispatcher.registerHandler(IProtocolType.DataServer_Join_Response,
+		dispatcher.registerHandler(IProtocolType.DataServer_Join_Resp,
 				new DataServerJoinResponseHandler());
 
 		dispatcher.registerHandler(IProtocolType.Heart_Beart_Resp, null);
@@ -62,12 +63,8 @@ public class DataClient {
 
 	public IoSession connect() throws IOException {
 		if (session == null) {
-			NioSocketConnector connector = new NioSocketConnector();
+			IoConnector connector = MinaUtil.getDefaultConnector();
 			connector.setConnectTimeoutMillis(timeout);
-			connector.getFilterChain().addLast("codec",
-					new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
-			connector.getFilterChain().addLast("logger", new LoggingFilter());
-			connector.getFilterChain().addLast("exceutor", new ExecutorFilter());
 			connector.setHandler(new DataClientHandler());
 			connector.getSessionConfig().setUseReadOperation(true);
 			ConnectFuture future = connector.connect(masterAddr.toInetSocketAddress());

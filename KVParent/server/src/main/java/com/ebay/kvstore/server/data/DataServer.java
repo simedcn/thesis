@@ -1,17 +1,12 @@
 package com.ebay.kvstore.server.data;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
-import org.apache.mina.filter.logging.LoggingFilter;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -20,21 +15,25 @@ import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.IServer;
+import com.ebay.kvstore.MinaUtil;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.conf.InvalidConfException;
 import com.ebay.kvstore.conf.ServerConstants;
 import com.ebay.kvstore.protocol.IProtocol;
 import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.kvstore.protocol.request.DataServerJoinRequest;
+import com.ebay.kvstore.server.data.handler.DeleteRequestHandler;
+import com.ebay.kvstore.server.data.handler.GetRequestHandler;
+import com.ebay.kvstore.server.data.handler.IncrRequestHandler;
+import com.ebay.kvstore.server.data.handler.SetRequestHandler;
 import com.ebay.kvstore.server.data.storage.IStoreEngine;
 import com.ebay.kvstore.server.data.storage.StoreEngineFactory;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 
 public class DataServer implements IServer, IConfigurationKey, Watcher {
@@ -48,12 +47,11 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 			server.start();
 		} catch (Exception e) {
 			logger.error("Fail to start master server", e);
-			server.shutdown();
+			server.stop();
 		}
 	}
 
 	private Address dsAddr;
-
 	private Address hdfsAddr;
 	private Address zkAddr;
 	private IoAcceptor acceptor;
@@ -107,7 +105,16 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	@Override
-	public void shutdown() {
+	public void start() throws Exception {
+		initHDFS();
+		initZookeeper();
+		initServer();
+		initStoreEngine();
+		initConnection();
+	}
+
+	@Override
+	public void stop() {
 		if (acceptor != null) {
 			acceptor.unbind();
 			acceptor.dispose();
@@ -129,18 +136,6 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 		}
 	}
 
-	@Override
-	public void start() throws Exception {
-		initHDFS();
-		initZookeeper();
-		initServer();
-		initStoreEngine();
-		initConnection();
-
-		// IoSession session = client.connect();
-		// session.write(new SimpleRequest("hello", "master"));
-	}
-
 	private void initConnection() throws KeeperException, InterruptedException {
 		try {
 			if (heartBeater != null) {
@@ -160,7 +155,7 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 		IoSession session = null;
 		DataServerStruct struct = new DataServerStruct(dsAddr, weight);
 		struct.addRegions(engine.getRegions());
-		IProtocol resquest = new DataServerJoinRequest(struct);
+		IProtocol request = new DataServerJoinRequest(struct);
 		for (int i = 1; i <= retry; i++) {
 			try {
 				logger.info("Try to connect to master server, for " + i + " times");
@@ -174,7 +169,7 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 				String masterAddr = new String(data);
 				client = new DataClient(Address.parse(masterAddr), conf, engine);
 				session = client.connect();
-				session.write(resquest);
+				session.write(request);
 				synchronized (engine) {
 					engine.wait();
 				}
@@ -193,6 +188,7 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 		if (success) {
 			zooKeeper.getData(ServerConstants.ZooKeeper_Master_Addr, true, null);
 			heartBeater = new HeartBeater(conf, engine, session);
+			// heartBeater.start();
 		} else {
 			logger.error("Fail to connect master server within " + retry
 					+ " times. Data server will shutdown.");
@@ -205,12 +201,7 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	private void initServer() throws IOException {
-		acceptor = new NioSocketAcceptor();
-		// filter chain
-		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
-		acceptor.getFilterChain().addLast("codec",
-				new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
-		// filter handler
+		acceptor = MinaUtil.getDefaultAcceptor();
 		acceptor.setHandler(new DataServerHandler());
 		// config
 		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
@@ -219,17 +210,7 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	private void initStoreEngine() throws IOException {
-		String type = conf.get(IConfigurationKey.Storage_Policy);
-		switch (type) {
-		case "persistent":
-			engine = StoreEngineFactory.getInstance().getPersistentStore(conf);
-			break;
-		case "memory":
-			engine = StoreEngineFactory.getInstance().getMemoryStore(conf);
-		default:
-			throw new InvalidConfException(IConfigurationKey.Storage_Policy, "persistent|memory",
-					type);
-		}
+		engine = StoreEngineFactory.createStoreEngine(conf);
 	}
 
 	private void initZookeeper() throws Exception {
@@ -241,7 +222,6 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 
 		@Override
 		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
-			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
 
 		}
 
@@ -266,7 +246,6 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 
 		@Override
 		public void sessionClosed(IoSession session) throws Exception {
-			System.out.println("Session closed " + session.getRemoteAddress().toString());
 		}
 
 		@Override

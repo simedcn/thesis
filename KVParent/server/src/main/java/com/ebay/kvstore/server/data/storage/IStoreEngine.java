@@ -3,6 +3,7 @@ package com.ebay.kvstore.server.data.storage;
 import java.io.IOException;
 import java.util.List;
 
+import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 
@@ -23,8 +24,7 @@ public interface IStoreEngine {
 	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException,
 			IOException;
 
-	// TODO
-	public void loadRegion(Region region) throws IOException;
+	public boolean loadRegion(Region region) throws IOException;
 
 	public void registerListener(IStoreListener listener);
 

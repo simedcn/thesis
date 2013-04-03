@@ -11,11 +11,11 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
 
@@ -33,14 +33,16 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 	public void init() {
 		try {
 			conf2 = ConfigurationLoader.load();
+			conf.set(IConfigurationKey.Storage_Policy, "memory");
+			conf2.set(IConfigurationKey.Storage_Policy, "memory");
 			conf.set(IConfigurationKey.DataServer_Cache_Max, 128);
 			conf2.set(IConfigurationKey.DataServer_Addr, new Address("192.1.1.1", 30000));
 			conf2.set(IConfigurationKey.DataServer_Cache_Max, 4096);
 
 			region = new Region(0, new byte[] { 0 }, new byte[] { 1, 1, 1, 1, 1, 1, 1 });
-			engine = StoreEngineFactory.getInstance().getMemoryStore(conf, region);
+			engine = StoreEngineFactory.createStoreEngine(conf);
 			engine.getRegions().add(region);
-			engine2 = StoreEngineFactory.getInstance().getMemoryStore(conf2);
+			engine2 = StoreEngineFactory.createStoreEngine(conf2);
 
 		} catch (IOException e) {
 			e.printStackTrace();

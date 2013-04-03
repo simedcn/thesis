@@ -22,6 +22,18 @@ public interface IConfigurationKey {
 
 	public static final String Master_RedoLog_Max = "master.redolog.max";
 
+	public static final String Master_LoadBalance_Policy = "master.loadbalance.policy";
+
+	public static final String Master_Unassign_CheckInterval = "master.unassign.checkinterval";
+
+	public static final String Master_Unassign_Threshhold = "master.unassign.threshhold";
+
+	public static final String Master_Assign_CheckInterval = "master.assign.checkinterval";
+
+	public static final String Master_Split_CheckInterval = "master.split.checkinterval";
+
+	public static final String Master_Wait_DsJoin_Time = "master.wait.dsjoin.time";
+
 	public static final String DataServer_RegoLog_Max = "dataserver.redolog.max";
 
 	public static final String Master_Client_Timeout = "master.client.timeout";

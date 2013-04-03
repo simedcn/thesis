@@ -19,6 +19,13 @@ public class GetResponse extends BaseResponse {
 		this.value = value;
 	}
 
+	public GetResponse(int retCode, byte[] key, byte[] value, boolean retry) {
+		super(retCode);
+		this.key = key;
+		this.value = value;
+		this.retry = retry;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

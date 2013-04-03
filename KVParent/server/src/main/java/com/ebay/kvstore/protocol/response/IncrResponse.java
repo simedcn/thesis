@@ -24,6 +24,13 @@ public class IncrResponse extends BaseResponse {
 		this.value = value;
 	}
 
+	public IncrResponse(int retCode, byte[] key, int incremental, int value, boolean retry) {
+		super(retCode, retry);
+		this.key = key;
+		this.incremental = incremental;
+		this.value = value;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

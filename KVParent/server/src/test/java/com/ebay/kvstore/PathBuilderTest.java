@@ -6,8 +6,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.Address;
 import com.ebay.kvstore.PathBuilder;
+import com.ebay.kvstore.structure.Address;
 
 public class PathBuilderTest {
 

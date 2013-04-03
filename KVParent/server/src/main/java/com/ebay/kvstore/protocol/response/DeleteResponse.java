@@ -18,6 +18,11 @@ public class DeleteResponse extends BaseResponse {
 		this.key = key;
 	}
 
+	public DeleteResponse(int retCode, byte[] key, boolean retry) {
+		super(retCode, retry);
+		this.key = key;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

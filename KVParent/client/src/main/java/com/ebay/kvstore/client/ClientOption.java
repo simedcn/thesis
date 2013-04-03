@@ -1,6 +1,6 @@
 package com.ebay.kvstore.client;
 
-import com.ebay.kvstore.Address;
+import com.ebay.kvstore.structure.Address;
 
 public class ClientOption {
 	private boolean sync = true;

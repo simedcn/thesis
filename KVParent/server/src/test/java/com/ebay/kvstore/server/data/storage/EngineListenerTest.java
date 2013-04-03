@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.helper.TaskManager;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
@@ -25,7 +26,8 @@ public class EngineListenerTest extends BaseFileTest {
 	public void before() {
 		region = new Region(0, new byte[] { 0 }, new byte[] { 1, 1, 1, 1, 1, 1, 1 });
 		try {
-			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
+			conf.set(IConfigurationKey.Storage_Policy, "persistent");
+			engine = StoreEngineFactory.createStoreEngine(conf);
 			engine.registerListener(new StoreLogListener());
 		} catch (IOException e) {
 			e.printStackTrace();

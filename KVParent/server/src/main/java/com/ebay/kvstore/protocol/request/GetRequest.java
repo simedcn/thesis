@@ -14,7 +14,11 @@ public class GetRequest extends ClientRequest {
 	protected byte[] key;
 
 	public GetRequest(byte[] key) {
-		super();
+		this.key = key;
+	}
+
+	public GetRequest(byte[] key, boolean retry) {
+		super(retry);
 		this.key = key;
 	}
 

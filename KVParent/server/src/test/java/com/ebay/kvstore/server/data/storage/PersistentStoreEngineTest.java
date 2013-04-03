@@ -1,8 +1,8 @@
 package com.ebay.kvstore.server.data.storage;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
 import org.junit.After;
@@ -24,6 +24,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 	@Before
 	public void setUp() throws Exception {
 		conf.set(IConfigurationKey.DataServer_Cache_Max, 128);
+		conf.set(IConfigurationKey.Storage_Policy, "persistent");
 	}
 
 	@After
@@ -35,7 +36,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 	public void testOperation() {
 		try {
 			region = new Region(0, new byte[] { 0 }, null);
-			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
+			engine = StoreEngineFactory.createStoreEngine(conf);
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
@@ -67,7 +68,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 	public void testLoad() {
 		try {
 			region = new Region(1, new byte[] { 0 }, null);
-			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
+			engine = StoreEngineFactory.createStoreEngine(conf);
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
@@ -94,7 +95,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 	public void testSplit() {
 		try {
 			region = new Region(2, new byte[] { 0 }, null);
-			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
+			engine = StoreEngineFactory.createStoreEngine(conf);
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
@@ -119,7 +120,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 	public void testStat() {
 		try {
 			region = new Region(4, new byte[] { 0 }, null);
-			engine = StoreEngineFactory.getInstance().getPersistentStore(conf, region);
+			engine = StoreEngineFactory.createStoreEngine(conf);
 			engine.registerListener(new StoreStatListener());
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });

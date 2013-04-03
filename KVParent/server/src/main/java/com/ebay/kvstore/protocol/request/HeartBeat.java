@@ -30,4 +30,9 @@ public class HeartBeat extends ServerRequest {
 		this.struct = struct;
 	}
 
+	@Override
+	public String toString() {
+		return "HeartBeat [struct=" + struct + "]";
+	}
+
 }

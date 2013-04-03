@@ -14,7 +14,7 @@ public interface IProtocolType {
 	public static final int Split_Region_Resp = 7;
 
 	public static final int DataServer_Join_Request = 8;
-	public static final int DataServer_Join_Response = 9;
+	public static final int DataServer_Join_Resp = 9;
 
 	public static final int Set_Req = 10001;
 	public static final int Set_Resp = 10002;

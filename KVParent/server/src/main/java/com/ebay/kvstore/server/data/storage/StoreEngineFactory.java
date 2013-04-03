@@ -3,29 +3,26 @@ package com.ebay.kvstore.server.data.storage;
 import java.io.IOException;
 
 import com.ebay.kvstore.conf.IConfiguration;
+import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.conf.InvalidConfException;
 import com.ebay.kvstore.structure.Region;
 
 public class StoreEngineFactory {
-
-	private static StoreEngineFactory instance;
-
-	public static StoreEngineFactory getInstance() {
-		if (instance == null) {
-			instance = new StoreEngineFactory();
-		}
-		return instance;
-	}
-
-	private StoreEngineFactory() {
-
-	}
-
-	public IStoreEngine getMemoryStore(IConfiguration conf, Region... regions) throws IOException {
-		return new StoreEngineProxy(new MemoryStoreEngine(conf, regions));
-	}
-
-	public IStoreEngine getPersistentStore(IConfiguration conf, Region... regions)
+	public static IStoreEngine createStoreEngine(IConfiguration conf, Region... regions)
 			throws IOException {
-		return new StoreEngineProxy(new PersistentStoreEngine(conf, regions));
+		String type = conf.get(IConfigurationKey.Storage_Policy);
+		IStoreEngine engine = null;
+		switch (type) {
+		case "persistent":
+			engine = new StoreEngineProxy(new PersistentStoreEngine(conf, regions));
+			break;
+		case "memory":
+			engine = new StoreEngineProxy(new MemoryStoreEngine(conf, regions));
+			break;
+		default:
+			throw new InvalidConfException(IConfigurationKey.Storage_Policy, "persistent|memory",
+					type);
+		}
+		return engine;
 	}
 }
