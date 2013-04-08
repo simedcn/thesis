@@ -3,6 +3,7 @@ package com.ebay.kvstore.structure;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -15,7 +16,7 @@ import com.ebay.kvstore.RegionUtil;
  * @author luochen
  * 
  */
-public class RegionTable implements Serializable {
+public class RegionTable implements Serializable, Iterable<Region> {
 
 	/**
 	 * 
@@ -33,6 +34,7 @@ public class RegionTable implements Serializable {
 	public void addRegion(Region region, Address addr) {
 		map.put(region, addr);
 		regions.add(region);
+		sorted = false;
 	}
 
 	public void clear() {
@@ -59,6 +61,15 @@ public class RegionTable implements Serializable {
 
 	public Address getRegionAddr(Region region) {
 		return map.get(region);
+	}
+
+	public int getSize() {
+		return map.size();
+	}
+
+	@Override
+	public Iterator<Region> iterator() {
+		return regions.iterator();
 	}
 
 }

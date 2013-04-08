@@ -19,7 +19,7 @@ public class RegionSplitTask extends LoadBalanceTask {
 
 	public RegionSplitTask(IConfiguration conf, IMasterEngine engine) {
 		super(conf, engine);
-		this.interval = conf.getInt(IConfigurationKey.Master_Split_CheckInterval);
+		this.interval = conf.getInt(IConfigurationKey.Master_Split_Check_Interval);
 		this.regionIds = new HashMap<>();
 	}
 
@@ -36,14 +36,17 @@ public class RegionSplitTask extends LoadBalanceTask {
 		synchronized (engine) {
 			Collection<DataServerStruct> dataServers = engine.getAllDataServers();
 			Map<Region, Address> targets = balancer.splitRegion(dataServers);
-			for (Entry<Region, Address> e : targets.entrySet()) {
-				Integer nid = regionIds.get(e.getKey().getRegionId());
-				if (nid == null) {
-					nid = engine.nextRegionId();
-					regionIds.put(e.getKey().getRegionId(), nid);
+			if (targets != null) {
+				for (Entry<Region, Address> e : targets.entrySet()) {
+					Integer nid = regionIds.get(e.getKey().getRegionId());
+					if (nid == null) {
+						nid = engine.nextRegionId();
+						regionIds.put(e.getKey().getRegionId(), nid);
+					}
+					sendRequest(e.getValue(), new SplitRegionRequest(e.getKey().getRegionId(), nid));
 				}
-				sendRequest(e.getValue(), new SplitRegionRequest(e.getKey().getRegionId(), nid));
 			}
+
 		}
 	}
 

@@ -38,8 +38,8 @@ public class RegionLoader extends BaseHelper {
 		this.region = region;
 		this.regionId = region.getRegionId();
 		this.fs = DFSManager.getDFS();
-		this.blockSize = conf.getInt(IConfigurationKey.Region_Block_Size);
-		this.indexBlockNum = conf.getInt(IConfigurationKey.Region_Index_Block_Num);
+		this.blockSize = conf.getInt(IConfigurationKey.Dataserver_Region_Block_Size);
+		this.indexBlockNum = conf.getInt(IConfigurationKey.Dataserver_Region_Index_Block_Num);
 	}
 
 	public boolean load() {

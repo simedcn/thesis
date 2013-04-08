@@ -23,10 +23,10 @@ public class UnloadRegionRequestHandler extends DataServerHandler<UnloadRegionRe
 			if (region != null) {
 				response = new UnloadRegionResponse(ProtocolCode.Success, regionId, region);
 			} else {
-				response = new UnloadRegionResponse(ProtocolCode.InvalidRegion, regionId, null);
+				response = new UnloadRegionResponse(ProtocolCode.Invalid_Region, regionId, null);
 			}
 		} catch (Exception e) {
-			response = new UnloadRegionResponse(ProtocolCode.IOError, regionId, null);
+			response = new UnloadRegionResponse(ProtocolCode.Dataserver_Io_Error, regionId, null);
 		}
 		session.write(response);
 	}

@@ -18,7 +18,7 @@ public interface IKVClient {
 
 	public int getCounter(byte[] key) throws KVException;
 
-	public int incr(byte[] key, int intial, int incremental) throws KVException;
+	public int incr(byte[] key, int incremental, int initValue) throws KVException;
 
 	public void setHandler(IKVClientHandler handler);
 

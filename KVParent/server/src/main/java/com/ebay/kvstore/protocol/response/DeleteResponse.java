@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import com.ebay.kvstore.protocol.IProtocolType;
 
-public class DeleteResponse extends BaseResponse {
+public class DeleteResponse extends ClientResponse {
 
 	/**
 	 * 

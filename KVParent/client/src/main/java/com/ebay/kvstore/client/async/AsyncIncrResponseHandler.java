@@ -21,7 +21,7 @@ public class AsyncIncrResponseHandler extends AsyncClientHandler<IncrResponse> {
 		boolean retry = protocol.isRetry();
 		IncrResult result = null;
 		try {
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				client.updateRegionTable();
 				session.write(new IncrRequest(protocol.getKey(), protocol.getIncremental(),
 						protocol.getValue(), false));

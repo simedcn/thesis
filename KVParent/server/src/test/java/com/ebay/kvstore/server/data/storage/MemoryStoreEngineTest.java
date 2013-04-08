@@ -35,9 +35,9 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			conf2 = ConfigurationLoader.load();
 			conf.set(IConfigurationKey.Storage_Policy, "memory");
 			conf2.set(IConfigurationKey.Storage_Policy, "memory");
-			conf.set(IConfigurationKey.DataServer_Cache_Max, 128);
-			conf2.set(IConfigurationKey.DataServer_Addr, new Address("192.1.1.1", 30000));
-			conf2.set(IConfigurationKey.DataServer_Cache_Max, 4096);
+			conf.set(IConfigurationKey.Dataserver_Cache_Max, 128);
+			conf2.set(IConfigurationKey.Dataserver_Addr, new Address("192.1.1.1", 30000));
+			conf2.set(IConfigurationKey.Dataserver_Cache_Max, 4096);
 
 			region = new Region(0, new byte[] { 0 }, new byte[] { 1, 1, 1, 1, 1, 1, 1 });
 			engine = StoreEngineFactory.createStoreEngine(conf);

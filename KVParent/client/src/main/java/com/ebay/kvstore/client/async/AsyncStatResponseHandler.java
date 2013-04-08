@@ -21,7 +21,7 @@ public class AsyncStatResponseHandler extends AsyncClientHandler<StatResponse> {
 		boolean retry = protocol.isRetry();
 		StatResult result = null;
 		try {
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				client.updateRegionTable();
 				session.write(new StatRequest(false));
 				return;

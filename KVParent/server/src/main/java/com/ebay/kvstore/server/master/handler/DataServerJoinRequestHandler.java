@@ -22,7 +22,7 @@ public class DataServerJoinRequestHandler extends MasterHandler<DataServerJoinRe
 		IProtocol response = null;
 		if (engine.containsDataServer(addr)) {
 			// should refuse the join
-			response = new DataServerJoinResponse(ProtocolCode.DataServer_Exists);
+			response = new DataServerJoinResponse(ProtocolCode.Duplicate_Dataserver_Error);
 			session.write(response);
 		} else {
 			response = new DataServerJoinResponse(ProtocolCode.Success);

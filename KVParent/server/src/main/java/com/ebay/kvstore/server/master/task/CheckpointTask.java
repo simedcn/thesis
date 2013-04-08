@@ -12,9 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ebay.kvstore.PathBuilder;
+import com.ebay.kvstore.ServerConstants;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.conf.ServerConstants;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.master.helper.IMasterEngine;
 import com.ebay.kvstore.structure.DataServerStruct;
@@ -32,7 +32,8 @@ public class CheckpointTask extends BaseMasterTask {
 
 	public CheckpointTask(IConfiguration conf, IMasterEngine engine) {
 		super(conf, engine);
-		this.checkpointInterval = (long) (conf.getDouble(IConfigurationKey.Checkpoint_Interval) * ServerConstants.Day);
+		this.checkpointInterval = conf.getDouble(IConfigurationKey.Master_Checkpoint_Interval)
+				.longValue();
 		this.interval = (int) (checkpointInterval / 10);
 	}
 

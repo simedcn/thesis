@@ -10,66 +10,66 @@ public interface IConfigurationKey {
 
 	public static final String Master_Addr = "master.addr";
 
-	public static final String Slave_Addr = "slave.addr";
+	public static final String Dataserver_Addr = "dataserver.addr";
 
-	public static final String DataServer_Addr = "dataserver.addr";
-
-	public static final String HDFS_Addr = "hdfs.addr";
+	public static final String Hdfs_Addr = "hdfs.addr";
 
 	public static final String ZooKeeper_Addr = "zookeeper.addr";
 
 	public static final String Storage_Policy = "storage.policy";
 
-	public static final String Master_RedoLog_Max = "master.redolog.max";
+	public static final String Master_Loadbalance_Policy = "master.loadbalance.policy";
 
-	public static final String Master_LoadBalance_Policy = "master.loadbalance.policy";
-
-	public static final String Master_Unassign_CheckInterval = "master.unassign.checkinterval";
+	public static final String Master_Unassign_Check_Interval = "master.unassign.check.interval";
 
 	public static final String Master_Unassign_Threshhold = "master.unassign.threshhold";
 
-	public static final String Master_Assign_CheckInterval = "master.assign.checkinterval";
+	public static final String Master_Assign_Check_Interval = "master.assign.check.interval";
 
-	public static final String Master_Split_CheckInterval = "master.split.checkinterval";
+	public static final String Master_Split_Check_Interval = "master.split.check.interval";
 
-	public static final String Master_Wait_DsJoin_Time = "master.wait.dsjoin.time";
+	public static final String Master_Wait_Dsjoin_Time = "master.wait.dsjoin.time";
 
-	public static final String DataServer_RegoLog_Max = "dataserver.redolog.max";
+	//session timeout needs to be investigate
+	public static final String Master_Client_Session_Timeout = "master.client.session.timeout";
 
-	public static final String Master_Client_Timeout = "master.client.timeout";
+	public static final String DataServer_Client_Session_Timeout = "dataserver.client.session.timeout";
 
-	public static final String DataServer_Master_Timeout = "dataserver.master.timeout";
+	public static final String Dataserver_Master_Connect_Timeout = "dataserver.master.connect.timeout";
 
-	public static final String HeartBeat_Interval = "heartbeat.interval";
+	public static final String Dataserver_Master_Session_Timeout = "dataserver.master.session.timeout";
 
-	public static final String DataServer_Capacity = "dataserver.capacity";
+	public static final String Heartbeat_Interval = "heartbeat.interval";
 
-	public static final String Region_Max = "region.max";
+	public static final String Dataserver_Region_Max = "dataserver.region.max";
 
-	public static final String Region_Block_Size = "region.block.size";
+	public static final String Dataserver_Region_Block_Size = "dataserver.region.block.size";
 
-	public static final String Region_Index_Block_Num = "region.index.block.num";
+	public static final String Dataserver_Region_Index_Block_Num = "dataserver.region.index.block.num";
+	
+	public static final String DataServer_Region_Reserve_Days = "dataserver.region.reserve.days";
 
-	public static final String DataServer_Connection_Max = "dataserver.connection.max";
+	public static final String Dataserver_Connection_Max = "dataserver.connection.max";
 
-	public static final String DataServer_Cache_Max = "dataserver.cache.max";
+	public static final String Dataserver_Cache_Max = "dataserver.cache.max";
 
-	public static final String DataServer_Buffer_Max = "dataserver.buffer.max";
+	public static final String Dataserver_Buffer_Max = "dataserver.buffer.max";
 
 	// ////////new added
-	public static final String DataServer_Cache_Replacement_Policy = "dataserver.cache.replacement.policy";
+	public static final String Dataserver_Cache_Replacement_Policy = "dataserver.cache.replacement.policy";
 
-	public static final String GC_Check_Interval = "gc.check.interval";
+	public static final String Master_Gc_Check_Interval = "master.gc.check.interval";
 
-	public static final String Checkpoint_Reserve_Days = "checkpoint.reserve.days";
+	public static final String Master_Checkpoint_Reserve_Days = "master.checkpoint.reserve.days";
 
-	public static final String Checkpoint_Interval = "checkpoint.interval";
+	public static final String Master_Checkpoint_Interval = "master.checkpoint.interval";
 
-	public static final String ZooKeeper_Session_Timeout = "zookeeper.session.timeout";
+	public static final String Zookeeper_Session_Timeout = "zookeeper.session.timeout";
 
-	public static final String DataServer_Reconnect_Interval = "dataserver.reconnect.interval";
+	public static final String Dataserver_Reconnect_Interval = "dataserver.reconnect.interval";
 
-	public static final String DataServer_Reconnect_Retry = "dataserver.reconnect.retry";
+	public static final String Dataserver_Reconnect_Retry_Count = "dataserver.reconnect.retry.count";
 
-	public static final String DataServer_Weight = "dataserver.weight";
+	public static final String Dataserver_Weight = "dataserver.weight";
+
 }

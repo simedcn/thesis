@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import com.ebay.kvstore.protocol.IProtocolType;
 
-public class SetResponse extends BaseResponse {
+public class SetResponse extends ClientResponse {
 
 	/**
 	 * 

@@ -43,7 +43,7 @@ public class UnloadOperation implements IOperation {
 
 	@Override
 	public void writeToExternal(ILoggerOutputStream out) throws IOException {
-		out.writeInt(getType());
+		out.write(getType());
 		out.writeInt(regionId);
 		out.writeUTF(addr.toString());
 	}

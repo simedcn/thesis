@@ -33,13 +33,13 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 
 	public BaseStoreEngine(IConfiguration conf, Region... regions) {
 		this.conf = conf;
-		cacheLimit = conf.getInt(IConfigurationKey.DataServer_Cache_Max);
+		cacheLimit = conf.getInt(IConfigurationKey.Dataserver_Cache_Max);
 		this.regions = new ArrayList<>();
 		listeners = new HashSet<>();
-		this.addr = Address.parse(conf.get(IConfigurationKey.DataServer_Addr));
+		this.addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Addr));
 		// TODO:add configuration for
 		cache = KeyValueCache.forCache(cacheLimit,
-				conf.get(IConfigurationKey.DataServer_Cache_Replacement_Policy));
+				conf.get(IConfigurationKey.Dataserver_Cache_Replacement_Policy));
 		Collections.addAll(this.regions, regions);
 		Collections.sort(this.regions);
 	}

@@ -36,12 +36,15 @@
 				<artifactId>zookeeper</artifactId>
 				<version>3.4.5</version>
 			</dependency>
-
-
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>4.11</version>
+			</dependency>
+			<dependency>
+				<groupId>jline</groupId>
+				<artifactId>jline</artifactId>
+				<version>0.9.94</version>
 			</dependency>
 			<dependency>
 				<groupId>com.ebay.chluo.hdfs</groupId>
@@ -50,6 +53,7 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
 	<modules>
 		<module>server</module>
 		<module>client</module>

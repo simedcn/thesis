@@ -2,6 +2,7 @@ package com.ebay.kvstore.server.master.balancer;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -27,7 +28,7 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 			}
 		}
 		if (contains) {
-			return loadTargets;
+			return Collections.unmodifiableMap(loadTargets);
 		}
 		RegionMetric regionMetric = calcRegionMetric(regions, dataServers);
 		RegionWrapper[] regionWrappers = calcRegionWrappers(regions, dataServers, regionMetric);
@@ -44,7 +45,7 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 				index++;
 			}
 			if (index == regionWrappers.length) {
-				return loadTargets;
+				break;
 			}
 		}
 		int dsIndex = 0;
@@ -55,7 +56,7 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 				loadTargets.put(regionWrappers[index].region, wrapper.ds.getAddr());
 			}
 		}
-		return loadTargets;
+		return Collections.unmodifiableMap(loadTargets);
 	}
 
 	@Override
@@ -72,7 +73,7 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 					Region region = it.next();
 					wrapper.capacity = wrapper.capacity - calcRegionFactor(region, regionMetric)
 							/ wrapper.factor;
-					if (!unloadTargets.containsKey(region)) {
+					if (!isBusy(region)) {
 						unloadTargets.put(region, wrapper.ds.getAddr());
 					}
 				}
@@ -81,12 +82,12 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 			}
 		}
 
-		return unloadTargets;
+		return Collections.unmodifiableMap(unloadTargets);
 	}
 
 	private double calcDataServerFactor(DataServerStruct dataServer, DataServerMetric metric) {
-		double memoryFreeDif = dataServer.getInfo().getMemoryFree() / metric.memoryFreeAverage;
-		double memoryTotalDif = dataServer.getInfo().getMemoryTotal() / metric.memoryAverage;
+		double memoryFreeDif = (double)dataServer.getInfo().getMemoryFree() / metric.memoryFreeAverage;
+		double memoryTotalDif = (double)dataServer.getInfo().getMemoryTotal() / metric.memoryAverage;
 		double cpuDif = 10;
 		if (dataServer.getInfo().getCpuUsage() > 0) {
 			cpuDif = metric.cpuUsageAverage / dataServer.getInfo().getCpuUsage();
@@ -131,9 +132,9 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 	}
 
 	private double calcRegionFactor(Region region, RegionMetric metric) {
-		double sizeDif = region.getStat().size / metric.sizeAverage;
-		double readCountDif = region.getStat().readCount / metric.readCountAverage;
-		double writeCountDif = region.getStat().writeCount / metric.writeCountAverage;
+		double sizeDif = (double)region.getStat().size / metric.sizeAverage;
+		double readCountDif = (double)region.getStat().readCount / metric.readCountAverage;
+		double writeCountDif = (double)region.getStat().writeCount / metric.writeCountAverage;
 		return (2 * sizeDif + readCountDif + writeCountDif) / 4;
 	}
 
@@ -215,6 +216,15 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 		public long readCountAverage;
 
 		public RegionMetric(long sizeAverage, long writeCountAverage, long readCountAverage) {
+			if (sizeAverage < 1) {
+				sizeAverage = 1;
+			}
+			if (writeCountAverage < 1) {
+				writeCountAverage = 1;
+			}
+			if (readCountAverage < 1) {
+				readCountAverage = 1;
+			}
 			this.sizeAverage = sizeAverage;
 			this.writeCountAverage = writeCountAverage;
 			this.readCountAverage = readCountAverage;

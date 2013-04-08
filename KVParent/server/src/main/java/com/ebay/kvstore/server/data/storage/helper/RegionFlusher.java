@@ -47,7 +47,7 @@ public class RegionFlusher extends BaseHelper {
 		KVFileIterator fileIt = null;
 		Phase state = Phase.Begin;
 		String baseDir = storage.getBaseDir();
-		int blockSize = conf.getInt(IConfigurationKey.Region_Block_Size);
+		int blockSize = conf.getInt(IConfigurationKey.Dataserver_Region_Block_Size);
 		String dataFile = storage.getDataFile();
 		KeyValueCache buffer = storage.getBuffer();
 		try {

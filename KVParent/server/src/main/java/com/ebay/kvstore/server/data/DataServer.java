@@ -17,10 +17,10 @@ import org.slf4j.LoggerFactory;
 
 import com.ebay.kvstore.IServer;
 import com.ebay.kvstore.MinaUtil;
+import com.ebay.kvstore.ServerConstants;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.conf.ServerConstants;
 import com.ebay.kvstore.protocol.IProtocol;
 import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
@@ -64,19 +64,19 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 	private IStoreEngine engine;
 	private int reconnectInteval;
 	private int reconnectRetry;
-
 	private int weight;
+	private int clientSessionTimeout;// in s
 
 	public DataServer(IConfiguration conf) throws IOException {
 		this.conf = conf;
-		dsAddr = Address.parse(conf.get(DataServer_Addr));
+		dsAddr = Address.parse(conf.get(Dataserver_Addr));
 		zkAddr = Address.parse(conf.get(ZooKeeper_Addr));
-		hdfsAddr = Address.parse(conf.get(HDFS_Addr));
-		zkSessionTimeout = conf.getInt(ZooKeeper_Session_Timeout);
-		reconnectInteval = conf.getInt(IConfigurationKey.DataServer_Reconnect_Interval);
-		reconnectRetry = conf.getInt(IConfigurationKey.DataServer_Reconnect_Retry);
-		weight = conf.getInt(IConfigurationKey.DataServer_Weight);
-
+		hdfsAddr = Address.parse(conf.get(Hdfs_Addr));
+		zkSessionTimeout = conf.getInt(Zookeeper_Session_Timeout);
+		reconnectInteval = conf.getInt(IConfigurationKey.Dataserver_Reconnect_Interval);
+		reconnectRetry = conf.getInt(IConfigurationKey.Dataserver_Reconnect_Retry_Count);
+		weight = conf.getInt(IConfigurationKey.Dataserver_Weight);
+		clientSessionTimeout = conf.getInt(IConfigurationKey.DataServer_Client_Session_Timeout);
 		dispatcher = new ProtocolDispatcher();
 		dispatcher.registerHandler(IProtocolType.Set_Req, new SetRequestHandler());
 		dispatcher.registerHandler(IProtocolType.Get_Req, new GetRequestHandler());
@@ -163,7 +163,6 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 				if (zooKeeper.exists(ServerConstants.ZooKeeper_Master_Addr, false) == null
 						|| (data = zooKeeper.getData(ServerConstants.ZooKeeper_Master_Addr, false,
 								null)) == null) {
-					Thread.sleep(reconnectInteval);
 					continue;
 				}
 				String masterAddr = new String(data);
@@ -183,12 +182,14 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 				}
 			} catch (Exception e) {
 				logger.info("Fail to connect to master server", e);
+			}finally{
+				Thread.sleep(reconnectInteval);
 			}
 		}
 		if (success) {
 			zooKeeper.getData(ServerConstants.ZooKeeper_Master_Addr, true, null);
 			heartBeater = new HeartBeater(conf, engine, session);
-			// heartBeater.start();
+			heartBeater.start();
 		} else {
 			logger.error("Fail to connect master server within " + retry
 					+ " times. Data server will shutdown.");
@@ -261,6 +262,10 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 
 		@Override
 		public void sessionOpened(IoSession session) throws Exception {
+			int timeout = session.getConfig().getBothIdleTime();
+			if (timeout <= 0 || timeout > clientSessionTimeout) {
+				session.getConfig().setBothIdleTime(clientSessionTimeout);
+			}
 		}
 	}
 }

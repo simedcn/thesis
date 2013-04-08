@@ -1,15 +1,50 @@
 package com.ebay.kvstore.conf;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-public class KVConfiguration implements IConfiguration {
+import com.ebay.kvstore.ServerConstants;
+
+public class KVConfiguration implements IConfiguration, IConfigurationKey {
 
 	protected Properties properties;
+	protected static Map<String, Integer> units;
+
+	static {
+		units = new HashMap<>();
+		initUnits();
+	}
+
+	private static void initUnits() {
+		units.put(Master_Gc_Check_Interval, ServerConstants.Second);
+		units.put(Master_Checkpoint_Reserve_Days, ServerConstants.Day);
+		units.put(Master_Checkpoint_Interval, ServerConstants.Day);
+		units.put(Master_Unassign_Check_Interval, ServerConstants.Second);
+		units.put(Master_Assign_Check_Interval, ServerConstants.Second);
+		units.put(Master_Split_Check_Interval, ServerConstants.Second);
+		units.put(Master_Wait_Dsjoin_Time, ServerConstants.Second);
+		units.put(Dataserver_Region_Max, ServerConstants.MB);
+		units.put(Dataserver_Region_Block_Size, ServerConstants.KB);
+		units.put(Dataserver_Cache_Max, ServerConstants.KB);
+		units.put(Dataserver_Buffer_Max, ServerConstants.KB);
+		units.put(DataServer_Region_Reserve_Days, ServerConstants.Day);
+		units.put(Heartbeat_Interval, ServerConstants.Second);
+	}
 
 	KVConfiguration(Properties p) {
 		this.properties = p;
+	}
+
+	public int getUnit(String key) {
+		Integer unit = units.get(key);
+		if (unit != null) {
+			return unit;
+		} else {
+			return 1;
+		}
 	}
 
 	@Override
@@ -30,10 +65,15 @@ public class KVConfiguration implements IConfiguration {
 	@Override
 	public Double getDouble(String key, Double defaultValue) {
 		String value = properties.getProperty(key);
+		int unit = getUnit(key);
 		if (value == null) {
-			return defaultValue;
+			if (defaultValue != null) {
+				return defaultValue * unit;
+			} else {
+				return null;
+			}
 		} else {
-			return Double.valueOf(value);
+			return Double.valueOf(value) * unit;
 		}
 	}
 
@@ -45,10 +85,15 @@ public class KVConfiguration implements IConfiguration {
 	@Override
 	public Integer getInt(String key, Integer defaultValue) {
 		String value = properties.getProperty(key);
+		int unit = getUnit(key);
 		if (value == null) {
-			return defaultValue;
+			if (defaultValue != null) {
+				return defaultValue * unit;
+			} else {
+				return null;
+			}
 		} else {
-			return Integer.valueOf(value);
+			return Integer.valueOf(value) * unit;
 		}
 	}
 
@@ -60,10 +105,15 @@ public class KVConfiguration implements IConfiguration {
 	@Override
 	public Long getLong(String key, Long defaultValue) {
 		String value = properties.getProperty(key);
+		int unit = getUnit(key);
 		if (value == null) {
-			return defaultValue;
+			if (defaultValue != null) {
+				return defaultValue * unit;
+			} else {
+				return null;
+			}
 		} else {
-			return Long.valueOf(value);
+			return Long.valueOf(value) * unit;
 		}
 	}
 

@@ -10,6 +10,8 @@ public interface IConfiguration extends Iterable<Entry<Object, Object>> {
 
 	public Double getDouble(String key);
 
+	public int getUnit(String key);
+
 	public Double getDouble(String key, Double defaultValue);
 
 	public Integer getInt(String key);

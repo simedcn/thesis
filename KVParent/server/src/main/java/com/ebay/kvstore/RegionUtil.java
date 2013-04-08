@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
-import com.ebay.kvstore.server.data.logger.FileDataLoggerIterator;
+import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
 import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.structure.Value;
 
@@ -17,7 +17,7 @@ public class RegionUtil {
 
 	public static void loadLogger(String file, KeyValueCache buffer) {
 		try {
-			FileDataLoggerIterator it = new FileDataLoggerIterator(file);
+			DataFileLoggerIterator it = new DataFileLoggerIterator(file);
 			while (it.hasNext()) {
 				IMutation mutation = it.next();
 				switch (mutation.getType()) {

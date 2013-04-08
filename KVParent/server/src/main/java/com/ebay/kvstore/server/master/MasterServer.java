@@ -20,10 +20,10 @@ import org.slf4j.LoggerFactory;
 
 import com.ebay.kvstore.IServer;
 import com.ebay.kvstore.MinaUtil;
+import com.ebay.kvstore.ServerConstants;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.conf.ServerConstants;
 import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
@@ -33,10 +33,12 @@ import com.ebay.kvstore.server.master.handler.HeartBeatHandler;
 import com.ebay.kvstore.server.master.handler.LoadRegionResponseHandler;
 import com.ebay.kvstore.server.master.handler.RegionTableRequestHandler;
 import com.ebay.kvstore.server.master.handler.SplitRegionResponseHandler;
+import com.ebay.kvstore.server.master.handler.StatRequestHandler;
 import com.ebay.kvstore.server.master.handler.UnloadRegionResponseHandler;
 import com.ebay.kvstore.server.master.helper.IMasterEngine;
 import com.ebay.kvstore.server.master.helper.MasterEngine;
 import com.ebay.kvstore.server.master.task.CheckpointTask;
+import com.ebay.kvstore.server.master.task.GarbageCollectionTask;
 import com.ebay.kvstore.server.master.task.RegionAssignTask;
 import com.ebay.kvstore.server.master.task.RegionSplitTask;
 import com.ebay.kvstore.server.master.task.RegionUnassignTask;
@@ -70,16 +72,19 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 
 	private ProtocolDispatcher dispatcher;
 
+	private int clientSessionTimeout;
+
 	public MasterServer(IConfiguration conf) throws IOException {
 		this.conf = conf;
 		masterAddr = Address.parse(conf.get(Master_Addr));
 		zkAddr = Address.parse(conf.get(ZooKeeper_Addr));
-		hdfsAddr = Address.parse(conf.get(HDFS_Addr));
-		zkSessionTimeout = conf.getInt(ZooKeeper_Session_Timeout);
-
+		hdfsAddr = Address.parse(conf.get(Hdfs_Addr));
+		zkSessionTimeout = conf.getInt(Zookeeper_Session_Timeout);
+		clientSessionTimeout = conf.getInt(Master_Client_Session_Timeout);
 		dispatcher = new ProtocolDispatcher();
 		dispatcher.registerHandler(IProtocolType.Heart_Beart_Req, new HeartBeatHandler());
 		dispatcher.registerHandler(IProtocolType.Region_Table_Req, new RegionTableRequestHandler());
+		dispatcher.registerHandler(IProtocolType.Stat_Req, new StatRequestHandler());
 
 		dispatcher.registerHandler(IProtocolType.Load_Region_Resp, new LoadRegionResponseHandler());
 		dispatcher.registerHandler(IProtocolType.Unload_Region_Resp,
@@ -138,7 +143,8 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 
 	private void initEngine() throws Exception {
 		engine = new MasterEngine(conf, zooKeeper);
-		engine.registerTask(new CheckpointTask(conf, engine), true);
+		engine.registerTask(new CheckpointTask(conf, engine), false);
+		engine.registerTask(new GarbageCollectionTask(conf, engine), false);
 		engine.registerTask(new RegionAssignTask(conf, engine), true);
 		engine.registerTask(new RegionSplitTask(conf, engine), true);
 		engine.registerTask(new RegionUnassignTask(conf, engine), true);
@@ -234,7 +240,6 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 
 		@Override
 		public void sessionCreated(IoSession session) throws Exception {
-			System.out.println("Session created " + session.getRemoteAddress().toString());
 		}
 
 		@Override
@@ -244,8 +249,10 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 
 		@Override
 		public void sessionOpened(IoSession session) throws Exception {
-			System.out.println("Session opened " + session.getRemoteAddress().toString());
-
+			int timeout = session.getConfig().getBothIdleTime();
+			if (timeout <= 0 || timeout > clientSessionTimeout) {
+				session.getConfig().setBothIdleTime(clientSessionTimeout);
+			}
 		}
 	}
 }

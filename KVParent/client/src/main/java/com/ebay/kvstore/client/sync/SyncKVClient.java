@@ -55,7 +55,7 @@ public class SyncKVClient extends BaseClient {
 			read.await();
 			IResponse response = (IResponse) read.getMessage();
 			int ret = response.getRetCode();
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				updateRegionTable();
 				delete(key, false);
 				return;
@@ -82,7 +82,7 @@ public class SyncKVClient extends BaseClient {
 			read.await();
 			IResponse response = (IResponse) read.getMessage();
 			int ret = response.getRetCode();
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				updateRegionTable();
 				return get(key, false);
 			} else if (ret != ProtocolCode.Success) {
@@ -123,7 +123,7 @@ public class SyncKVClient extends BaseClient {
 			read.await();
 			IResponse response = (IResponse) read.getMessage();
 			int ret = response.getRetCode();
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				updateRegionTable();
 				return incr(key, incremental, initValue, false);
 			} else if (ret != ProtocolCode.Success) {
@@ -155,7 +155,7 @@ public class SyncKVClient extends BaseClient {
 			read.await();
 			IResponse response = (IResponse) read.getMessage();
 			int ret = response.getRetCode();
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				updateRegionTable();
 				return stat(false);
 			} else if (ret != ProtocolCode.Success) {
@@ -184,7 +184,7 @@ public class SyncKVClient extends BaseClient {
 			read.await();
 			IResponse response = (IResponse) read.getMessage();
 			int ret = response.getRetCode();
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				updateRegionTable();
 				set(key, value, false);
 				return;

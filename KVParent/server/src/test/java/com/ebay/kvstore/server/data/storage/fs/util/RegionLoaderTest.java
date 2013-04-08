@@ -23,8 +23,8 @@ public class RegionLoaderTest extends BaseFileStorageTest {
 
 	@Before
 	public void setUp() throws Exception {
-		conf.set(IConfigurationKey.Region_Block_Size, 64);
-		addr = Address.parse(conf.get(IConfigurationKey.DataServer_Addr));
+		conf.set(IConfigurationKey.Dataserver_Region_Block_Size, 64);
+		addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Addr));
 		region = new Region(0, new byte[] { 1 }, new byte[] { (byte) 0xff });
 		storage = new RegionFileStorage(conf, region, true);
 

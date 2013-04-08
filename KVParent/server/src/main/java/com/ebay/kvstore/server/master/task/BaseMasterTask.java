@@ -28,7 +28,7 @@ public abstract class BaseMasterTask implements IMasterTask {
 	public BaseMasterTask(IConfiguration conf, IMasterEngine engine) {
 		this.conf = conf;
 		this.engine = engine;
-		this.wait = this.conf.getInt(IConfigurationKey.Master_Wait_DsJoin_Time);
+		this.wait = this.conf.getInt(IConfigurationKey.Master_Wait_Dsjoin_Time);
 		this.interval = 10000;
 	}
 

@@ -3,7 +3,9 @@ package com.ebay.kvstore.client;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.service.IoConnector;
@@ -40,6 +42,8 @@ public abstract class BaseClient implements IKVClient {
 
 	protected ProtocolDispatcher dispatcher;
 
+	protected Address activeMaster;
+
 	public BaseClient(ClientOption option) {
 		this.option = option;
 		this.connections = new HashMap<>();
@@ -62,11 +66,38 @@ public abstract class BaseClient implements IKVClient {
 			session.close(true);
 		}
 		sessions.clear();
-		table.clear();
+
 	}
 
-	protected IoSession getMasterConnection() {
-		return getConnection(option.getMasterAddr());
+	protected IoSession getMasterConnection() throws KVException {
+		IoSession connection = null;
+		if (activeMaster != null) {
+			try {
+				connection = getConnection(activeMaster);
+			} catch (RuntimeException e) {
+				logger.error("Fail to connect to master " + activeMaster, e);
+			}
+		}
+		if (connection == null) {
+			Collection<Address> masters = option.getMasterAddrs();
+			for (Address master : masters) {
+				try {
+					connection = getConnection(master);
+					if (connection != null) {
+						activeMaster = master;
+						return connection;
+					}
+				} catch (RuntimeException e) {
+					logger.error("Fail to connect to master " + activeMaster + ", try next");
+				}
+			}
+		}
+		if (connection != null) {
+			return connection;
+		} else {
+			throw new KVException(
+					"No active master found in cluster, please check the configuration.");
+		}
 	}
 
 	protected IoSession getConnection(Address addr) {
@@ -79,7 +110,8 @@ public abstract class BaseClient implements IKVClient {
 			connector.getFilterChain().addLast("logger", new LoggingFilter());
 			connector.getFilterChain().addLast("exceutor", new ExecutorFilter());
 			connector.setHandler(ioHandler);
-			connector.getSessionConfig().setUseReadOperation(true);
+			connector.getSessionConfig().setBothIdleTime(option.getSessionTimeout());
+			connector.getSessionConfig().setUseReadOperation(option.isSync());
 			ConnectFuture future = connector.connect(addr.toInetSocketAddress());
 			future.awaitUninterruptibly();
 			session = future.getSession();
@@ -88,8 +120,15 @@ public abstract class BaseClient implements IKVClient {
 		return session;
 	}
 
-	protected void removeConnection(Address addr) {
-		connections.remove(addr);
+	protected void removeConnection(IoSession session) {
+		Iterator<Entry<Address, IoSession>> it = connections.entrySet().iterator();
+		while (it.hasNext()) {
+			Entry<Address, IoSession> e = it.next();
+			if (e.getValue().equals(session)) {
+				it.remove();
+				return;
+			}
+		}
 	}
 
 	protected IoSession getConnection(byte[] key) throws KVException {
@@ -142,7 +181,7 @@ public abstract class BaseClient implements IKVClient {
 
 		@Override
 		public void sessionClosed(IoSession session) throws Exception {
-			removeConnection(Address.parse(session.getRemoteAddress()));
+			removeConnection(session);
 		}
 
 		@Override

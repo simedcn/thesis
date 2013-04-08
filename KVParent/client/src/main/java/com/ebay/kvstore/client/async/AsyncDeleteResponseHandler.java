@@ -21,7 +21,7 @@ public class AsyncDeleteResponseHandler extends AsyncClientHandler<DeleteRespons
 		int ret = protocol.getRetCode();
 		DeleteResult result = null;
 		try {
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				client.updateRegionTable();
 				session.write(new DeleteRequest(protocol.getKey(), false));
 				return;

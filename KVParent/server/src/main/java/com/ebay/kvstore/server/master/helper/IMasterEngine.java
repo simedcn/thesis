@@ -25,11 +25,6 @@ public interface IMasterEngine {
 
 	public void addDataServer(DataServerStruct struct, IoSession session);
 
-	/**
-	 * check all regions whether they exceeds the region limit size
-	 */
-	public void checkSplitRegion();
-
 	public boolean containsDataClient(Address addr);
 
 	public boolean containsDataServer(Address addr);
@@ -93,5 +88,7 @@ public interface IMasterEngine {
 	public void unregisterListener(IMasterEngineListener listener);
 
 	public void unregisterTask(IMasterTask task);
+
+	public boolean containsRegion(int regionId);
 
 }

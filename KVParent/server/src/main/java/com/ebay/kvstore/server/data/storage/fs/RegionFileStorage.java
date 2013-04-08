@@ -21,8 +21,8 @@ import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.DeleteMutation;
-import com.ebay.kvstore.server.data.logger.FileDataLogger;
-import com.ebay.kvstore.server.data.logger.FileDataLoggerIterator;
+import com.ebay.kvstore.server.data.logger.DataFileLogger;
+import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
 import com.ebay.kvstore.server.data.logger.IDataLogger;
 import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
@@ -92,10 +92,10 @@ public class RegionFileStorage implements IRegionStorage {
 		fs = DFSManager.getDFS();
 		this.conf = conf;
 		this.region = region;
-		this.bufferLimit = conf.getInt(IConfigurationKey.DataServer_Buffer_Max);
-		this.blockSize = conf.getInt(IConfigurationKey.Region_Block_Size);
-		this.indexBlockNum = conf.getInt(IConfigurationKey.Region_Index_Block_Num);
-		this.addr = Address.parse(conf.get(IConfigurationKey.DataServer_Addr));
+		this.bufferLimit = conf.getInt(IConfigurationKey.Dataserver_Buffer_Max);
+		this.blockSize = conf.getInt(IConfigurationKey.Dataserver_Region_Block_Size);
+		this.indexBlockNum = conf.getInt(IConfigurationKey.Dataserver_Region_Index_Block_Num);
+		this.addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Addr));
 		this.buffer = KeyValueCache.forBuffer();
 		if (region != null) {
 			this.baseDir = PathBuilder.getRegionDir(region.getRegionId());
@@ -103,7 +103,7 @@ public class RegionFileStorage implements IRegionStorage {
 		if (logger) {
 			String file = PathBuilder.getRegionLogPath(region.getRegionId(),
 					System.currentTimeMillis());
-			this.redoLogger = FileDataLogger.forCreate(file);
+			this.redoLogger = DataFileLogger.forCreate(file);
 		}
 		this.dataFile = dataFile;
 		if (indices == null && dataFile != null) {
@@ -223,7 +223,7 @@ public class RegionFileStorage implements IRegionStorage {
 		if (redoLogger != null) {
 			redoLogger.close();
 		}
-		redoLogger = FileDataLogger.forCreate(file);
+		redoLogger = DataFileLogger.forCreate(file);
 	}
 
 	@Override
@@ -272,7 +272,7 @@ public class RegionFileStorage implements IRegionStorage {
 		if (redoLogger != null) {
 			redoLogger.close();
 		}
-		redoLogger = FileDataLogger.forAppend(file);
+		redoLogger = DataFileLogger.forAppend(file);
 	}
 
 	public void setRegion(Region region) {
@@ -339,7 +339,7 @@ public class RegionFileStorage implements IRegionStorage {
 
 	protected void loadLogger(String file) {
 		try {
-			FileDataLoggerIterator it = new FileDataLoggerIterator(file);
+			DataFileLoggerIterator it = new DataFileLoggerIterator(file);
 			while (it.hasNext()) {
 				IMutation mutation = it.next();
 				switch (mutation.getType()) {

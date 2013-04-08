@@ -19,7 +19,7 @@ public class CacheReplacerFactory {
 		case ICacheReplacer.RANDOM:
 			return new RandomCacheReplacer();
 		default:
-			throw new InvalidConfException(IConfigurationKey.DataServer_Cache_Replacement_Policy,
+			throw new InvalidConfException(IConfigurationKey.Dataserver_Cache_Replacement_Policy,
 					"fifo|lru|random)", policy);
 		}
 	}

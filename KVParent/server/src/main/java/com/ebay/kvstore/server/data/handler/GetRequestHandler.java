@@ -30,9 +30,9 @@ public class GetRequestHandler extends DataServerHandler<GetRequest> {
 			}
 			response = new GetResponse(ProtocolCode.Success, key, value, retry);
 		} catch (InvalidKeyException e) {
-			response = new GetResponse(ProtocolCode.InvalidKey, key, null, retry);
+			response = new GetResponse(ProtocolCode.Invalid_Key, key, null, retry);
 		} catch (IOException e) {
-			response = new GetResponse(ProtocolCode.IOError, key, null, retry);
+			response = new GetResponse(ProtocolCode.Dataserver_Io_Error, key, null, retry);
 		}
 		session.write(response);
 	}

@@ -10,15 +10,15 @@ public class RegionStat implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public int keyNum;
 	public long size;
-	public int readCount;
-	public int writeCount;
+	public long readCount;
+	public long writeCount;
 	public boolean dirty;
 
 	public RegionStat() {
 		this(0, 0, 0, 0);
 	}
 
-	public RegionStat(int keyNum, int size, int readCount, int writeCount) {
+	public RegionStat(int keyNum, long size, long readCount, long writeCount) {
 		super();
 		this.keyNum = keyNum;
 		this.size = size;

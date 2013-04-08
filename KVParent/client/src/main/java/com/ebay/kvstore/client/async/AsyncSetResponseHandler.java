@@ -22,7 +22,7 @@ public class AsyncSetResponseHandler extends AsyncClientHandler<SetResponse> {
 		boolean retry = protocol.isRetry();
 		SetResult result = null;
 		try {
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				client.updateRegionTable();
 				session.write(new SetRequest(protocol.getKey(), protocol.getValue(), retry));
 				return;

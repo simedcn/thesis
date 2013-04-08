@@ -24,9 +24,9 @@ public class LoadRegionRequestHandler extends DataServerHandler<LoadRegionReques
 			engine.loadRegion(region);
 			response = new LoadRegionResponse(ProtocolCode.Success, region);
 		} catch (IOException e) {
-			response = new LoadRegionResponse(ProtocolCode.IOError, region);
+			response = new LoadRegionResponse(ProtocolCode.Dataserver_Io_Error, region);
 		} catch (RuntimeException e) {
-			response = new LoadRegionResponse(ProtocolCode.IOError, region);
+			response = new LoadRegionResponse(ProtocolCode.Dataserver_Io_Error, region);
 		}
 		session.write(response);
 	}

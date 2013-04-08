@@ -26,7 +26,8 @@ import com.ebay.kvstore.structure.Address;
 public class DataClient {
 	private Address masterAddr;
 
-	private int timeout;
+	private int connectTimeout;// in ms
+	private int sessionTimeout;// in s
 	private IoSession session;
 	private ProtocolDispatcher dispatcher;
 	private IConfiguration conf;
@@ -39,7 +40,8 @@ public class DataClient {
 		} else {
 			this.masterAddr = Address.parse(this.conf.get(IConfigurationKey.Master_Addr));
 		}
-		this.timeout = conf.getInt(IConfigurationKey.DataServer_Master_Timeout);
+		this.connectTimeout = conf.getInt(IConfigurationKey.Dataserver_Master_Connect_Timeout);
+		this.sessionTimeout = conf.getInt(IConfigurationKey.Dataserver_Master_Session_Timeout);
 		this.dispatcher = new ProtocolDispatcher();
 		dispatcher.registerHandler(IProtocolType.Load_Region_Req, new LoadRegionRequestHandler());
 		dispatcher.registerHandler(IProtocolType.Unload_Region_Req,
@@ -64,9 +66,10 @@ public class DataClient {
 	public IoSession connect() throws IOException {
 		if (session == null) {
 			IoConnector connector = MinaUtil.getDefaultConnector();
-			connector.setConnectTimeoutMillis(timeout);
+			connector.setConnectTimeoutMillis(connectTimeout);
 			connector.setHandler(new DataClientHandler());
 			connector.getSessionConfig().setUseReadOperation(true);
+			connector.getSessionConfig().setBothIdleTime(sessionTimeout);
 			ConnectFuture future = connector.connect(masterAddr.toInetSocketAddress());
 			future.awaitUninterruptibly();
 			session = future.getSession();

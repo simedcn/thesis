@@ -24,21 +24,22 @@ import org.slf4j.LoggerFactory;
 import com.ebay.kvstore.FSUtil;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.PathBuilder;
+import com.ebay.kvstore.ServerConstants;
 import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.ServerConstants;
 import com.ebay.kvstore.exception.InvalidDataServerException;
 import com.ebay.kvstore.exception.InvalidRegionException;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.request.UnloadRegionRequest;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
-import com.ebay.kvstore.server.master.logger.FileOperationLogger;
-import com.ebay.kvstore.server.master.logger.FileOperationLoggerIterator;
 import com.ebay.kvstore.server.master.logger.IOperation;
 import com.ebay.kvstore.server.master.logger.IOperationLogger;
+import com.ebay.kvstore.server.master.logger.LoadOperation;
+import com.ebay.kvstore.server.master.logger.OperationFileLogger;
+import com.ebay.kvstore.server.master.logger.OperationFileLoggerIterator;
 import com.ebay.kvstore.server.master.logger.SplitOperation;
+import com.ebay.kvstore.server.master.logger.UnloadOperation;
 import com.ebay.kvstore.server.master.task.IMasterTask;
 import com.ebay.kvstore.server.master.task.MasterTaskManager;
-import com.ebay.kvstore.server.master.task.RegionAssignTask;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;
@@ -71,8 +72,6 @@ public class MasterEngine implements IMasterEngine {
 
 	private IConfiguration conf;
 
-	private RegionAssignTask assigner;
-
 	private MasterEngineListenerManager listenerManager;
 
 	private MasterTaskManager taskManager;
@@ -95,12 +94,6 @@ public class MasterEngine implements IMasterEngine {
 	}
 
 	@Override
-	public void checkSplitRegion() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public boolean containsDataClient(Address addr) {
 		return dsClientMapping.containsValue(addr);
 	}
@@ -112,6 +105,17 @@ public class MasterEngine implements IMasterEngine {
 		while (it.hasNext()) {
 			struct = it.next();
 			if (struct.getAddr().equals(addr)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean containsRegion(int regionId) {
+		Region dummyRegion = new Region(regionId, null, null);
+		for (DataServerStruct server : dataServers.keySet()) {
+			if (server.containsRegion(dummyRegion)) {
 				return true;
 			}
 		}
@@ -220,6 +224,8 @@ public class MasterEngine implements IMasterEngine {
 		struct.addRegion(region);
 		unassignedRegions.remove(region.getRegionId());
 		listenerManager.onRegionLoad(struct, region);
+
+		opLogger.write(new LoadOperation(region.getRegionId(), struct.getAddr()));
 	}
 
 	@Override
@@ -284,12 +290,10 @@ public class MasterEngine implements IMasterEngine {
 			if (opLogger != null) {
 				opLogger.close();
 			}
-
-			opLogger = FileOperationLogger.forCreate(path);
+			opLogger = OperationFileLogger.forCreate(path);
 		} catch (IOException e) {
 			logger.error("Fail to create new logger " + path, e);
 		}
-
 	}
 
 	@Override
@@ -298,6 +302,9 @@ public class MasterEngine implements IMasterEngine {
 		struct.addRegion(oldRegion);
 		struct.addRegion(newRegion);
 		listenerManager.onRegionSplit(oldRegion, newRegion);
+
+		opLogger.write(new SplitOperation(oldRegion.getRegionId(), newRegion.getRegionId(), struct
+				.getAddr(), oldRegion.getEnd()));
 	}
 
 	@Override
@@ -314,16 +321,19 @@ public class MasterEngine implements IMasterEngine {
 		String logDir = PathBuilder.getMasterLogDir();
 		String[] checkPoints = FSUtil.getMasterCheckpointFiles(checkPointDir);
 		String[] logs = FSUtil.getMasterLogFiles(logDir);
-		for (String checkpoint : checkPoints) {
+		for (int i = checkPoints.length - 1; i >= 0; i--) {
+			String checkpoint = checkPoints[i];
 			try {
 				tryLoad(checkPointDir, checkpoint, logs);
+				logger.info("Load master state from checkpoint file:{}", checkPointDir + checkpoint);
+				break;
 			} catch (Exception e) {
 				logger.error("Fail to recover master server from " + checkpoint, e);
 			}
 		}
 		long time = System.currentTimeMillis();
 		String log = PathBuilder.getMasterLogPath(time);
-		opLogger = FileOperationLogger.forCreate(log);
+		opLogger = OperationFileLogger.forCreate(log);
 		// put the default region if there is no region added
 		if (unassignedRegions.size() == 0) {
 			Region region = new Region(nextRegionId(), new byte[] { 0 }, null);
@@ -372,6 +382,8 @@ public class MasterEngine implements IMasterEngine {
 		struct.removeRegion(region);
 		unassignedRegions.put(region.getRegionId(), region);
 		listenerManager.onRegionUnload(struct, region);
+
+		opLogger.write(new UnloadOperation(region.getRegionId(), struct.getAddr()));
 	}
 
 	@Override
@@ -389,7 +401,7 @@ public class MasterEngine implements IMasterEngine {
 
 	protected void loadLogger(String log) throws IOException {
 		// TODO Auto-generated method stub
-		Iterator<IOperation> it = new FileOperationLoggerIterator(log);
+		Iterator<IOperation> it = new OperationFileLoggerIterator(log);
 		while (it.hasNext()) {
 			IOperation op = it.next();
 			switch (op.getType()) {
@@ -438,8 +450,6 @@ public class MasterEngine implements IMasterEngine {
 	protected synchronized void reset() {
 		dataServers.clear();
 		unassignedRegions.clear();
-		listenerManager.unregisterAll();
-		taskManager.unregisterAll();
 	}
 
 	protected void tryLoad(String dir, String checkpoint, String[] logs)

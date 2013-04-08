@@ -62,7 +62,7 @@ public class SplitOperation implements IOperation {
 
 	@Override
 	public void writeToExternal(ILoggerOutputStream out) throws IOException {
-		out.writeInt(getType());
+		out.write(getType());
 		out.writeInt(regionId);
 		out.writeInt(newRegionId);
 		out.writeInt(oldKeyEnd.length);

@@ -105,6 +105,19 @@ public class FSUtil {
 		return regionLogPattern.matcher(name).matches();
 	}
 
+	public static List<String> listFiles(String dir) throws IOException {
+		FileSystem fs = DFSManager.getDFS();
+		FileStatus[] fileStatusArray = fs.listStatus(new Path(dir));
+		List<String> list = new ArrayList<>();
+		if (fileStatusArray != null) {
+			for (FileStatus status : fileStatusArray) {
+				String filename = status.getPath().getName();
+				list.add(filename);
+			}
+		}
+		return list;
+	}
+
 	private static String[] scanDirFiles(String dir, Predictor p) throws IOException {
 		FileSystem fs = DFSManager.getDFS();
 		FileStatus[] fileStatusArray = fs.listStatus(new Path(dir));

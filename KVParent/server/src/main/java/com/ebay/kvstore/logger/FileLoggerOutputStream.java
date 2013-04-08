@@ -14,7 +14,7 @@ public class FileLoggerOutputStream implements ILoggerOutputStream {
 	@Override
 	public void close() throws IOException {
 		// End of File
-		out.write(-1);
+		//out.write(-1);
 		out.close();
 	}
 

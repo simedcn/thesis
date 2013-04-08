@@ -19,7 +19,7 @@ public class RegionUnassignTask extends LoadBalanceTask {
 
 	public RegionUnassignTask(IConfiguration conf, IMasterEngine engine) {
 		super(conf, engine);
-		this.interval = conf.getInt(IConfigurationKey.Master_Unassign_CheckInterval);
+		this.interval = conf.getInt(IConfigurationKey.Master_Unassign_Check_Interval);
 		this.targets = new HashMap<>();
 	}
 
@@ -28,8 +28,10 @@ public class RegionUnassignTask extends LoadBalanceTask {
 		synchronized (engine) {
 			Collection<DataServerStruct> dataServers = engine.getAllDataServers();
 			Map<Region, Address> targets = balancer.unassignRegion(dataServers);
-			for (Entry<Region, Address> e : targets.entrySet()) {
-				sendRequest(e.getValue(), new UnloadRegionRequest(e.getKey().getRegionId()));
+			if (targets != null) {
+				for (Entry<Region, Address> e : targets.entrySet()) {
+					sendRequest(e.getValue(), new UnloadRegionRequest(e.getKey().getRegionId()));
+				}
 			}
 		}
 	}

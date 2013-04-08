@@ -40,9 +40,9 @@ public class HeartBeater {
 		this.conf = conf;
 		this.engine = engine;
 		this.session = session;
-		this.addr = Address.parse(this.conf.get(IConfigurationKey.DataServer_Addr));
-		this.weight = this.conf.getInt(IConfigurationKey.DataServer_Weight);
-		this.interval = this.conf.getInt(IConfigurationKey.HeartBeat_Interval);
+		this.addr = Address.parse(this.conf.get(IConfigurationKey.Dataserver_Addr));
+		this.weight = this.conf.getInt(IConfigurationKey.Dataserver_Weight);
+		this.interval = this.conf.getInt(IConfigurationKey.Heartbeat_Interval);
 	}
 
 	public void start() {

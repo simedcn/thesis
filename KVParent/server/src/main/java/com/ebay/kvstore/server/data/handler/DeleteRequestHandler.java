@@ -23,7 +23,7 @@ public class DeleteRequestHandler extends DataServerHandler<DeleteRequest> {
 			engine.delete(protocol.getKey());
 			response = new DeleteResponse(ProtocolCode.Success, key, retry);
 		} catch (InvalidKeyException e) {
-			response = new DeleteResponse(ProtocolCode.InvalidKey, key, retry);
+			response = new DeleteResponse(ProtocolCode.Invalid_Key, key, retry);
 		}
 		session.write(response);
 	}

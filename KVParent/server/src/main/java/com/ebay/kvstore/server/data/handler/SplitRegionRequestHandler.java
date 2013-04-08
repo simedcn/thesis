@@ -26,9 +26,9 @@ public class SplitRegionRequestHandler extends DataServerHandler<SplitRegionRequ
 				IProtocol response = null;
 				if (!success) {
 					if (oldRegion == null) {
-						response = new SplitRegionResponse(ProtocolCode.InvalidRegion, null, null);
+						response = new SplitRegionResponse(ProtocolCode.Invalid_Region, null, null);
 					} else {
-						response = new SplitRegionResponse(ProtocolCode.IOError, null, null);
+						response = new SplitRegionResponse(ProtocolCode.Dataserver_Io_Error, null, null);
 					}
 				} else {
 					response = new SplitRegionResponse(ProtocolCode.Success, oldRegion, newRegion);

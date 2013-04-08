@@ -79,7 +79,7 @@ public class AsyncKVClient extends BaseClient {
 		this.handler = handler;
 	}
 
-	public DataServerStruct[] stat() {
+	public DataServerStruct[] stat() throws KVException {
 		IoSession session = getMasterConnection();
 		IProtocol request = new StatRequest(true);
 		session.write(request);

@@ -27,7 +27,7 @@ public class RegionAssignTask extends LoadBalanceTask {
 
 	public RegionAssignTask(IConfiguration conf, IMasterEngine engine) {
 		super(conf, engine);
-		this.interval = this.conf.getInt(IConfigurationKey.Master_Assign_CheckInterval);
+		this.interval = this.conf.getInt(IConfigurationKey.Master_Assign_Check_Interval);
 	}
 
 	@Override
@@ -40,9 +40,12 @@ public class RegionAssignTask extends LoadBalanceTask {
 			Collection<DataServerStruct> dataServers = engine.getAllDataServers();
 			Collection<Region> regions = unassigned.values();
 			Map<Region, Address> targets = balancer.assignRegion(regions, dataServers);
-			for (Entry<Region, Address> e : targets.entrySet()) {
-				sendRequest(e.getValue(), new LoadRegionRequest(e.getKey()));
+			if(targets!=null){
+				for (Entry<Region, Address> e : targets.entrySet()) {
+					sendRequest(e.getValue(), new LoadRegionRequest(e.getKey()));
+				}
 			}
+			
 		}
 	}
 

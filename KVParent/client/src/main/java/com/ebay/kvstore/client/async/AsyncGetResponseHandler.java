@@ -21,7 +21,7 @@ public class AsyncGetResponseHandler extends AsyncClientHandler<GetResponse> {
 		boolean retry = protocol.isRetry();
 		GetResult result = null;
 		try {
-			if (ret == ProtocolCode.InvalidKey && retry) {
+			if (ret == ProtocolCode.Invalid_Key && retry) {
 				client.updateRegionTable();
 				session.write(new GetRequest(protocol.getKey(), retry));
 				return;

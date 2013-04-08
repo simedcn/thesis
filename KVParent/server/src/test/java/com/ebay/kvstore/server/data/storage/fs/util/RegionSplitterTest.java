@@ -21,7 +21,7 @@ public class RegionSplitterTest extends BaseFileStorageTest {
 
 	@Before
 	public void setUp() throws IOException {
-		conf.set(IConfigurationKey.Region_Block_Size, 64);
+		conf.set(IConfigurationKey.Dataserver_Region_Block_Size, 64);
 		region = new Region(0, new byte[] { 1 }, new byte[] { (byte) 0xff });
 		storage = new RegionFileStorage(conf, region, true);
 	}

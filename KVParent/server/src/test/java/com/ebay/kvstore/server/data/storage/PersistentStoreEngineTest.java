@@ -23,7 +23,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 
 	@Before
 	public void setUp() throws Exception {
-		conf.set(IConfigurationKey.DataServer_Cache_Max, 128);
+		conf.set(IConfigurationKey.Dataserver_Cache_Max, 128);
 		conf.set(IConfigurationKey.Storage_Policy, "persistent");
 	}
 

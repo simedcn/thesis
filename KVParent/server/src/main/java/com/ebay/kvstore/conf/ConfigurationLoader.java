@@ -7,6 +7,8 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ebay.kvstore.ServerConstants;
+
 public class ConfigurationLoader {
 	private static Logger logger = LoggerFactory.getLogger(ConfigurationLoader.class);
 

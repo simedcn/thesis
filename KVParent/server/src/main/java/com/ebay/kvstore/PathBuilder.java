@@ -1,7 +1,5 @@
 package com.ebay.kvstore;
 
-import com.ebay.kvstore.conf.ServerConstants;
-
 /**
  * Used for build file/dir path for specific elements
  * 
@@ -38,6 +36,10 @@ public class PathBuilder implements ServerConstants {
 		sb.append(time);
 		sb.append(Log_Suffix);
 		return sb.toString();
+	}
+
+	public static String getDataServerDir() {
+		return ServerConstants.DFS_Data_Dir;
 	}
 
 	public static String getRegionDir(int regionId) {

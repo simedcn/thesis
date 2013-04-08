@@ -30,10 +30,13 @@ public class IncrRequestHandler extends DataServerHandler<IncrRequest> {
 			byte[] value = KeyValueUtil.getValue(kv);
 			response = new IncrResponse(ProtocolCode.Success, key, incremental,
 					KeyValueUtil.bytesToInt(value), retry);
-		} catch (InvalidKeyException e) {
-			response = new IncrResponse(ProtocolCode.InvalidKey, key, incremental, initValue, retry);
+		} catch(UnsupportedOperationException e){
+			response = new IncrResponse(ProtocolCode.Invalid_Counter, key, incremental, initValue, retry);
+		}
+		catch (InvalidKeyException e) {
+			response = new IncrResponse(ProtocolCode.Invalid_Key, key, incremental, initValue, retry);
 		} catch (IOException e) {
-			response = new IncrResponse(ProtocolCode.IOError, key, incremental, initValue, retry);
+			response = new IncrResponse(ProtocolCode.Dataserver_Io_Error, key, incremental, initValue, retry);
 		}
 		session.write(response);
 	}

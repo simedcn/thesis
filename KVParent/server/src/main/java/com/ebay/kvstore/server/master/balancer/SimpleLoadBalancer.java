@@ -2,6 +2,7 @@ package com.ebay.kvstore.server.master.balancer;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
@@ -39,7 +40,7 @@ public class SimpleLoadBalancer extends BaseLoadBalancer {
 				}
 			}
 			if (regionLeft <= 0) {
-				return loadTargets;
+				break;
 			}
 		}
 		int i = 0;
@@ -49,7 +50,7 @@ public class SimpleLoadBalancer extends BaseLoadBalancer {
 				loadTargets.put(region, structs[i++ % structs.length].getAddr());
 			}
 		}
-		return loadTargets;
+		return Collections.unmodifiableMap(loadTargets);
 	}
 
 	@Override
@@ -72,7 +73,7 @@ public class SimpleLoadBalancer extends BaseLoadBalancer {
 				Iterator<Region> it = structs[i].getRegions().iterator();
 				for (int j = 0; j < balance; j++) {
 					Region region = it.next();
-					if (!unloadTargets.containsKey(region)) {
+					if (!isBusy(region)) {
 						unloadTargets.put(region, structs[i].getAddr());
 					}
 				}
@@ -80,7 +81,7 @@ public class SimpleLoadBalancer extends BaseLoadBalancer {
 				break;
 			}
 		}
-		return unloadTargets;
+		return Collections.unmodifiableMap(unloadTargets);
 	}
 
 	private class DataServerComparator implements Comparator<DataServerStruct> {

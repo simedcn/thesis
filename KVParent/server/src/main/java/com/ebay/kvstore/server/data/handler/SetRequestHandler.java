@@ -24,7 +24,7 @@ public class SetRequestHandler extends DataServerHandler<SetRequest> {
 			engine.set(key, value);
 			response = new SetResponse(ProtocolCode.Success, key, value, retry);
 		} catch (InvalidKeyException e) {
-			response = new SetResponse(ProtocolCode.InvalidKey, key, value, retry);
+			response = new SetResponse(ProtocolCode.Invalid_Key, key, value, retry);
 		}
 		session.write(response);
 	}

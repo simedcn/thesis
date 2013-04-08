@@ -19,8 +19,8 @@ import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
-import com.ebay.kvstore.server.data.logger.FileDataLogger;
-import com.ebay.kvstore.server.data.logger.FileDataLoggerIterator;
+import com.ebay.kvstore.server.data.logger.DataFileLogger;
+import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
 import com.ebay.kvstore.server.data.logger.IDataLogger;
 import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
@@ -41,7 +41,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		long time = System.currentTimeMillis();
 		for (Region r : regions) {
 			String file = PathBuilder.getRegionLogPath(r.getRegionId(), time);
-			IDataLogger logger = FileDataLogger.forCreate(file);
+			IDataLogger logger = DataFileLogger.forCreate(file);
 			loggers.put(r, logger);
 		}
 	}
@@ -113,7 +113,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			cache.addAll(buffer);
 			String logFile = PathBuilder.getRegionLogPath(region.getRegionId(),
 					System.currentTimeMillis());
-			IDataLogger logger = FileDataLogger.forCreate(logFile);
+			IDataLogger logger = DataFileLogger.forCreate(logFile);
 			addRegion(region);
 			loggers.put(region, logger);
 			return true;
@@ -179,12 +179,12 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			String oldLogPath = PathBuilder.getRegionLogPath(regionId, time);
 			String newLogPath = PathBuilder.getRegionLogPath(newRegionId, time);
 			try {
-				oldLogger = FileDataLogger.forCreate(oldLogPath);
-				IDataLogger newLogger = FileDataLogger.forCreate(newLogPath);
+				oldLogger = DataFileLogger.forCreate(oldLogPath);
+				IDataLogger newLogger = DataFileLogger.forCreate(newLogPath);
 				loggers.put(oldRegion, oldLogger);
 				loggers.put(newRegion, newLogger);
 				addRegion(newRegion);
-				FileDataLoggerIterator lit = new FileDataLoggerIterator(logFile);
+				DataFileLoggerIterator lit = new DataFileLoggerIterator(logFile);
 				while (lit.hasNext()) {
 					IMutation mutation = lit.next();
 					if (oldRegion.compareTo(mutation.getKey()) == 0) {

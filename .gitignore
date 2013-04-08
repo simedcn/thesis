@@ -2,7 +2,5 @@
 *.jar
 *.war
 *.ear
-**/bin/**
-**/target/**
-
-
+bin/
+target/

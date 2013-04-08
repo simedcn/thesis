@@ -5,7 +5,7 @@ import java.util.Arrays;
 import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.structure.DataServerStruct;
 
-public class StatResponse extends BaseResponse {
+public class StatResponse extends ClientResponse {
 
 	/**
 	 * 

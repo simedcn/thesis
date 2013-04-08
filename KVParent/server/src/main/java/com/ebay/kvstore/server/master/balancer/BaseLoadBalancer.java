@@ -1,6 +1,7 @@
 package com.ebay.kvstore.server.master.balancer;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -31,7 +32,7 @@ public abstract class BaseLoadBalancer implements ILoadBalancer {
 		this.unloadTargets = new HashMap<>();
 		this.splitTargets = new HashMap<>();
 		this.conf = conf;
-		this.regionMax = conf.getLong(IConfigurationKey.Region_Max);
+		this.regionMax = conf.getLong(IConfigurationKey.Dataserver_Region_Max);
 		this.threshhold = conf.getInt(IConfigurationKey.Master_Unassign_Threshhold);
 	}
 
@@ -65,12 +66,13 @@ public abstract class BaseLoadBalancer implements ILoadBalancer {
 			Collection<Region> regions = struct.getRegions();
 			Address addr = struct.getAddr();
 			for (Region region : regions) {
-				if (region.getStat().size > regionMax) {
+				if (region.getStat().size > regionMax && !isBusy(region)) {
 					splitTargets.put(region, addr);
 				}
 			}
 		}
-		return splitTargets;
+
+		return Collections.unmodifiableMap(splitTargets);
 	}
 
 	private void removeAddress(Map<Region, Address> targets, Address addr) {
@@ -81,5 +83,10 @@ public abstract class BaseLoadBalancer implements ILoadBalancer {
 				it.remove();
 			}
 		}
+	}
+
+	protected boolean isBusy(Region region) {
+		return loadTargets.containsKey(region) || unloadTargets.containsKey(region)
+				|| splitTargets.containsKey(region);
 	}
 }
