@@ -3,19 +3,22 @@ package com.ebay.kvstore.protocol.encoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
 import com.ebay.kvstore.protocol.IProtocol;
+import com.ebay.kvstore.protocol.IProtocolEncoder;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class EncoderManager implements ProtocolEncoder {
 
-	private Map<Integer, ProtocolEncoder> encoders;
+	private Map<Integer, IProtocolEncoder> encoders;
 
-	private ProtocolEncoder defaultEncoder;
+	private IProtocolEncoder defaultEncoder;
 
-	public EncoderManager(ProtocolEncoder defaultEncoder) {
+	public EncoderManager(IProtocolEncoder defaultEncoder) {
 		encoders = new HashMap<>();
 		this.defaultEncoder = defaultEncoder;
 	}
@@ -28,26 +31,37 @@ public class EncoderManager implements ProtocolEncoder {
 		}
 		IProtocol protocol = (IProtocol) message;
 		int type = protocol.getType();
-		ProtocolEncoder encoder = encoders.get(type);
+		IProtocolEncoder encoder = encoders.get(type);
 		if (encoder == null) {
 			encoder = defaultEncoder;
 		}
-		encoder.encode(session, message, out);
+		IoBuffer buffer = IoBuffer.allocate(64);
+		buffer.setAutoExpand(true);
+		// leave space for message length
+		buffer.skip(4);
+		encoder.encode(session, protocol, buffer);
+		// fill the length header
+		int oldPos = buffer.position();
+		buffer.position(0);
+		buffer.putInt(oldPos - 4);
+		buffer.position(oldPos);
+		buffer.flip();
+		out.write(buffer);
 	}
 
-	public void addEncoder(int type, ProtocolEncoder encoder) {
+	public void addEncoder(int type, IProtocolEncoder encoder) {
 		encoders.put(type, encoder);
 	}
 
-	public ProtocolEncoder removeEncoder(int type) {
+	public IProtocolEncoder removeEncoder(int type) {
 		return encoders.remove(type);
 	}
 
-	public ProtocolEncoder getDefaultEncoder() {
+	public IProtocolEncoder getDefaultEncoder() {
 		return defaultEncoder;
 	}
 
-	public void setDefaultEncoder(ProtocolEncoder defaultEncoder) {
+	public void setDefaultEncoder(IProtocolEncoder defaultEncoder) {
 		this.defaultEncoder = defaultEncoder;
 	}
 

@@ -32,17 +32,20 @@ public class AsyncKVClient extends BaseClient {
 				.registerHandler(IProtocolType.Delete_Resp, new AsyncDeleteResponseHandler());
 		this.dispatcher.registerHandler(IProtocolType.Incr_Resp, new AsyncIncrResponseHandler());
 		this.dispatcher.registerHandler(IProtocolType.Stat_Resp, new AsyncStatResponseHandler());
-		this.dispatcher.registerHandler(IProtocolType.Region_Table_Resp, new AsyncRegionTableResponseHandler());
+		this.dispatcher.registerHandler(IProtocolType.Region_Table_Resp,
+				new AsyncRegionTableResponseHandler());
 
 	}
 
 	public void delete(byte[] key) throws KVException {
+		checkKey(key);
 		IoSession session = getConnection(key);
 		IProtocol request = new DeleteRequest(key);
 		session.write(request);
 	}
 
 	public byte[] get(byte[] key) throws KVException {
+		checkKey(key);
 		IoSession session = getConnection(key);
 		IProtocol request = new GetRequest(key);
 		session.write(request);
@@ -51,6 +54,10 @@ public class AsyncKVClient extends BaseClient {
 
 	@Override
 	public void set(byte[] key, byte[] value) throws KVException {
+		checkKey(key);
+		if (value == null) {
+			throw new NullPointerException("null value is not allowed");
+		}
 		IoSession session = getConnection(key);
 		IProtocol request = new SetRequest(key, value);
 		session.write(request);
@@ -62,6 +69,7 @@ public class AsyncKVClient extends BaseClient {
 	}
 
 	public int getCounter(byte[] key) throws KVException {
+		checkKey(key);
 		IoSession session = getConnection(key);
 		IProtocol request = new GetRequest(key);
 		session.write(request);
@@ -69,6 +77,7 @@ public class AsyncKVClient extends BaseClient {
 	}
 
 	public int incr(byte[] key, int incremental, int initValue) throws KVException {
+		checkKey(key);
 		IoSession session = getConnection(key);
 		IProtocol request = new IncrRequest(key, incremental, initValue);
 		session.write(request);

@@ -4,3 +4,4 @@
 *.ear
 bin/
 target/
+obj/

@@ -103,8 +103,4 @@ public class DataServerStruct implements Serializable {
 	public void setWeight(int weight) {
 		this.weight = weight;
 	}
-
-	public void updateSystemInfo() {
-		this.info.update();
-	}
 }

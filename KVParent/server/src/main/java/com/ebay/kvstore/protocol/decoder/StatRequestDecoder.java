@@ -2,15 +2,14 @@ package com.ebay.kvstore.protocol.decoder;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
-import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
-import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
-public class StatRequestDecoder extends ProtocolDecoderAdapter {
+import com.ebay.kvstore.protocol.IProtocolDecoder;
+import com.ebay.kvstore.protocol.request.StatRequest;
 
+public class StatRequestDecoder implements IProtocolDecoder<StatRequest> {
 	@Override
-	public void decode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws Exception {
-		// TODO Auto-generated method stub
-
+	public StatRequest decode(IoSession session, IoBuffer in) {
+		return new StatRequest(false);
 	}
 
 }

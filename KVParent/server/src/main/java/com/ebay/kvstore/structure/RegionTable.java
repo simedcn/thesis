@@ -3,10 +3,10 @@ package com.ebay.kvstore.structure;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Map;
 
 import com.ebay.kvstore.RegionUtil;
 
@@ -22,12 +22,12 @@ public class RegionTable implements Serializable, Iterable<Region> {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private SortedMap<Region, Address> map;
+	private Map<Region, Address> map;
 	private List<Region> regions;
 	private boolean sorted = false;
 
 	public RegionTable() {
-		map = new TreeMap<>();
+		map = new HashMap<>();
 		regions = new ArrayList<>();
 	}
 

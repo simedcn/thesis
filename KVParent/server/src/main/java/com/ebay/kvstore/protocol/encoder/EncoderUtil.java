@@ -31,7 +31,7 @@ public class EncoderUtil {
 		buffer.putInt(region.getStart().length);
 		buffer.put(region.getStart());
 		if (region.getEnd() == null) {
-			buffer.putInt(-1);
+			buffer.putInt(0);
 		} else {
 			buffer.putInt(region.getEnd().length);
 			buffer.put(region.getEnd());

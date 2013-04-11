@@ -25,6 +25,13 @@ public class SystemInfo implements Serializable {
 		cpuUsage = osmb.getSystemCpuLoad();
 	}
 
+	public SystemInfo(long memoryTotal, long memoryFree, double cpuUsage) {
+		super();
+		this.memoryTotal = memoryTotal;
+		this.memoryFree = memoryFree;
+		this.cpuUsage = cpuUsage;
+	}
+
 	public double getCpuUsage() {
 		return cpuUsage;
 	}
@@ -41,13 +48,6 @@ public class SystemInfo implements Serializable {
 	public String toString() {
 		return "SystemInfo [memoryTotal=" + memoryTotal + ", memoryFree=" + memoryFree
 				+ ", cpuUsage=" + cpuUsage + "]";
-	}
-
-	public void update() {
-		OperatingSystemMXBean osmb = (OperatingSystemMXBean) ManagementFactory
-				.getOperatingSystemMXBean();
-		memoryFree = osmb.getFreePhysicalMemorySize();
-		cpuUsage = osmb.getSystemCpuLoad();
 	}
 
 }

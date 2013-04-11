@@ -4,13 +4,15 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
-import org.apache.mina.filter.codec.serialization.ObjectSerializationDecoder;
 
 import com.ebay.kvstore.protocol.decoder.DecoderManager;
+import com.ebay.kvstore.protocol.decoder.DefaultProtocolDecoder;
 import com.ebay.kvstore.protocol.decoder.DeleteRequestDecoder;
 import com.ebay.kvstore.protocol.decoder.DeleteResponseDecoder;
 import com.ebay.kvstore.protocol.decoder.GetRequestDecoder;
 import com.ebay.kvstore.protocol.decoder.GetResponseDecoder;
+import com.ebay.kvstore.protocol.decoder.IncrRequestDecoder;
+import com.ebay.kvstore.protocol.decoder.IncrResponseDecoder;
 import com.ebay.kvstore.protocol.decoder.RegionTableRequestDecoder;
 import com.ebay.kvstore.protocol.decoder.RegionTableResponseDecoder;
 import com.ebay.kvstore.protocol.decoder.SetRequestDecoder;
@@ -23,6 +25,8 @@ import com.ebay.kvstore.protocol.encoder.DeleteResponseEncoder;
 import com.ebay.kvstore.protocol.encoder.EncoderManager;
 import com.ebay.kvstore.protocol.encoder.GetRequestEncoder;
 import com.ebay.kvstore.protocol.encoder.GetResponseEncoder;
+import com.ebay.kvstore.protocol.encoder.IncrRequestEncoder;
+import com.ebay.kvstore.protocol.encoder.IncrResponseEncoder;
 import com.ebay.kvstore.protocol.encoder.RegionTableRequestEncoder;
 import com.ebay.kvstore.protocol.encoder.RegionTableResponseEncoder;
 import com.ebay.kvstore.protocol.encoder.SetRequestEncoder;
@@ -44,11 +48,13 @@ public class KVProtocolCodecFactory implements ProtocolCodecFactory {
 		encoder.addEncoder(IProtocolType.Delete_Resp, new DeleteResponseEncoder());
 		encoder.addEncoder(IProtocolType.Stat_Req, new StatRequestEncoder());
 		encoder.addEncoder(IProtocolType.Stat_Resp, new StatResponseEncoder());
+		encoder.addEncoder(IProtocolType.Incr_Req, new IncrRequestEncoder());
+		encoder.addEncoder(IProtocolType.Incr_Resp, new IncrResponseEncoder());
 		encoder.addEncoder(IProtocolType.Region_Table_Req, new RegionTableRequestEncoder());
 		encoder.addEncoder(IProtocolType.Region_Table_Resp, new RegionTableResponseEncoder());
 
-		decoder = new DecoderManager(new ObjectSerializationDecoder(Thread.currentThread()
-				.getContextClassLoader()));
+		ClassLoader loader = Thread.currentThread().getContextClassLoader();
+		decoder = new DecoderManager(new DefaultProtocolDecoder(loader));
 		decoder.addDecoder(IProtocolType.Get_Req, new GetRequestDecoder());
 		decoder.addDecoder(IProtocolType.Get_Resp, new GetResponseDecoder());
 		decoder.addDecoder(IProtocolType.Set_Req, new SetRequestDecoder());
@@ -57,9 +63,10 @@ public class KVProtocolCodecFactory implements ProtocolCodecFactory {
 		decoder.addDecoder(IProtocolType.Delete_Resp, new DeleteResponseDecoder());
 		decoder.addDecoder(IProtocolType.Stat_Req, new StatRequestDecoder());
 		decoder.addDecoder(IProtocolType.Stat_Resp, new StatResponseDecoder());
+		decoder.addDecoder(IProtocolType.Incr_Req, new IncrRequestDecoder());
+		decoder.addDecoder(IProtocolType.Incr_Resp, new IncrResponseDecoder());
 		decoder.addDecoder(IProtocolType.Region_Table_Req, new RegionTableRequestDecoder());
 		decoder.addDecoder(IProtocolType.Region_Table_Resp, new RegionTableResponseDecoder());
-
 	}
 
 	@Override

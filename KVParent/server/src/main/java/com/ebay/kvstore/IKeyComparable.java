@@ -6,6 +6,6 @@ package com.ebay.kvstore;
  * @author luochen
  * 
  */
-public interface KeyComparable {
+public interface IKeyComparable {
 	public int compareTo(byte[] key);
 }

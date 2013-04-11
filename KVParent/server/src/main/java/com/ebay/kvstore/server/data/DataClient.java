@@ -90,7 +90,6 @@ public class DataClient {
 
 		@Override
 		public void exceptionCaught(IoSession session, Throwable error) throws Exception {
-			logger.error("Error occured with " + session.getRemoteAddress().toString(), error);
 
 		}
 
@@ -109,32 +108,25 @@ public class DataClient {
 
 		@Override
 		public void messageSent(IoSession session, Object message) throws Exception {
-			// TODO Auto-generated method stub
 
 		}
 
 		@Override
 		public void sessionClosed(IoSession session) throws Exception {
-			// TODO Auto-generated method stub
-			System.out.println("Session closed " + session.getRemoteAddress().toString());
 		}
 
 		@Override
 		public void sessionCreated(IoSession session) throws Exception {
-			// TODO Auto-generated method stub
 			System.out.println("Session created " + session.getRemoteAddress().toString());
 		}
 
 		@Override
 		public void sessionIdle(IoSession session, IdleStatus arg1) throws Exception {
-			// TODO Auto-generated method stub
-			System.out.println("Session idle " + session.getRemoteAddress().toString());
 
 		}
 
 		@Override
 		public void sessionOpened(IoSession session) throws Exception {
-			// TODO Auto-generated method stub
 			System.out.println("Session opened " + session.getRemoteAddress().toString());
 		}
 	}

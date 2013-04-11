@@ -13,7 +13,6 @@ import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
@@ -23,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.ebay.kvstore.client.async.AsyncClientContext;
 import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.exception.KVException;
+import com.ebay.kvstore.protocol.KVProtocolCodecFactory;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.kvstore.structure.Address;
@@ -69,6 +69,12 @@ public abstract class BaseClient implements IKVClient {
 
 	}
 
+	protected void checkKey(byte[] key) {
+		if (key == null) {
+			throw new NullPointerException("null key is not allowed");
+		}
+	}
+
 	protected IoSession getMasterConnection() throws KVException {
 		IoSession connection = null;
 		if (activeMaster != null) {
@@ -106,7 +112,7 @@ public abstract class BaseClient implements IKVClient {
 			IoConnector connector = new NioSocketConnector();
 			connector.setConnectTimeoutMillis(option.getConnectionTimeout());
 			connector.getFilterChain().addLast("codec",
-					new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
+					new ProtocolCodecFilter(new KVProtocolCodecFactory()));
 			connector.getFilterChain().addLast("logger", new LoggingFilter());
 			connector.getFilterChain().addLast("exceutor", new ExecutorFilter());
 			connector.setHandler(ioHandler);
@@ -144,7 +150,15 @@ public abstract class BaseClient implements IKVClient {
 		if (addr == null) {
 			throw new InvalidKeyException("Fail to get region for key:" + Arrays.toString(key));
 		}
-		IoSession session = getConnection(addr);
+		IoSession session = null;
+		try {
+			session = getConnection(addr);
+		} catch (Exception e) {
+			logger.error("Fail to get connection to" + addr, e);
+			updateRegionTable();
+			addr = table.getKeyAddr(key);
+			session = getConnection(addr);
+		}
 		return session;
 	}
 

@@ -22,7 +22,6 @@ public class SystemInfoTest {
 			SystemInfo info = new SystemInfo();
 			System.out.println(info);
 			Thread.sleep(1000);
-			info.update();
 			System.out.println(info);
 		} catch (InterruptedException e) {
 			e.printStackTrace();

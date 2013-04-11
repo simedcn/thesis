@@ -45,6 +45,71 @@ public class SyncKVClient extends BaseClient {
 		this.dispatcher.registerHandler(IProtocolType.Region_Table_Resp, handler);
 	}
 
+	public synchronized void delete(byte[] key) throws KVException {
+		checkKey(key);
+		delete(key, true);
+	}
+
+	public synchronized byte[] get(byte[] key) throws KVException {
+		checkKey(key);
+		return get(key, true);
+	}
+
+	public IKVClientHandler getClientHandler() {
+		throw new UnsupportedOperationException("Should not get IClientHandler for SyncKVClient");
+	}
+
+	public synchronized int getCounter(byte[] key) throws KVException {
+		byte[] value = get(key);
+		if (value == null || value.length != 4) {
+			throw new KVException("The key:" + Arrays.toString(key) + " is not a valid counter");
+		}
+		return KeyValueUtil.bytesToInt(value);
+	}
+
+	public synchronized int incr(byte[] key, int incremental, int initValue) throws KVException {
+		checkKey(key);
+		return incr(key, incremental, initValue, true);
+	}
+
+	@Override
+	public synchronized void set(byte[] key, byte[] value) throws KVException {
+		checkKey(key);
+		if (value == null) {
+			throw new NullPointerException("null value is not allowed");
+		}
+		set(key, value, true);
+	}
+
+	public synchronized void setHandler(IKVClientHandler handler) {
+		throw new UnsupportedOperationException("Should not set IClientHandler for SyncKVClient");
+	}
+
+	// TODO stat
+	public synchronized DataServerStruct[] stat() throws KVException {
+		return stat(true);
+	}
+
+	@Override
+	public synchronized void updateRegionTable() throws KVException {
+		IoSession session = getMasterConnection();
+		IProtocol protocol = new RegionTableRequest();
+		try {
+			session.write(protocol).await();
+			ReadFuture read = session.read();
+			read.await();
+			RegionTableResponse response = (RegionTableResponse) read.getMessage();
+			int ret = response.getRetCode();
+			if (ret != ProtocolCode.Success) {
+				throw new KVException(ProtocolCode.getMessage(ret));
+			}
+			this.table = response.getTable();
+		} catch (InterruptedException e) {
+			logger.error("Wait method has been interrupted", e);
+			throw new RuntimeException(e);
+		}
+	}
+
 	private synchronized void delete(byte[] key, boolean retry) throws KVException {
 		IoSession session = getConnection(key);
 		IProtocol request = new DeleteRequest(key);
@@ -66,10 +131,6 @@ public class SyncKVClient extends BaseClient {
 			logger.error("Wait method has been interrupted", e);
 			throw new RuntimeException(e);
 		}
-	}
-
-	public synchronized void delete(byte[] key) throws KVException {
-		delete(key, true);
 	}
 
 	private synchronized byte[] get(byte[] key, boolean retry) throws KVException {
@@ -94,22 +155,6 @@ public class SyncKVClient extends BaseClient {
 			logger.error("Wait method has been interrupted", e);
 			throw new RuntimeException(e);
 		}
-	}
-
-	public synchronized byte[] get(byte[] key) throws KVException {
-		return get(key, true);
-	}
-
-	public IKVClientHandler getClientHandler() {
-		throw new UnsupportedOperationException("Should not get IClientHandler for SyncKVClient");
-	}
-
-	public synchronized int getCounter(byte[] key) throws KVException {
-		byte[] value = get(key);
-		if (value == null || value.length != 4) {
-			throw new KVException("The key:" + Arrays.toString(key) + " is not a valid counter");
-		}
-		return KeyValueUtil.bytesToInt(value);
 	}
 
 	private synchronized int incr(byte[] key, int incremental, int initValue, boolean retry)
@@ -137,12 +182,29 @@ public class SyncKVClient extends BaseClient {
 		}
 	}
 
-	public synchronized int incr(byte[] key, int incremental, int initValue) throws KVException {
-		return incr(key, incremental, initValue, true);
-	}
+	private synchronized void set(byte[] key, byte[] value, boolean retry) throws KVException {
+		IoSession session = getConnection(key);
+		IProtocol request = new SetRequest(key, value);
+		ReadFuture read = null;
+		try {
+			session.write(request).await();
+			read = session.read();
+			read.await();
+			IResponse response = (IResponse) read.getMessage();
+			int ret = response.getRetCode();
+			if (ret == ProtocolCode.Invalid_Key && retry) {
+				updateRegionTable();
+				set(key, value, false);
+				return;
+			} else if (ret != ProtocolCode.Success) {
+				throw new KVException(ProtocolCode.getMessage(ret));
+			} else {
 
-	public synchronized void setHandler(IKVClientHandler handler) {
-		throw new UnsupportedOperationException("Should not set IClientHandler for SyncKVClient");
+			}
+		} catch (InterruptedException e) {
+			logger.error("Wait method has been interrupted", e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	private synchronized DataServerStruct[] stat(boolean retry) throws KVException {
@@ -169,67 +231,11 @@ public class SyncKVClient extends BaseClient {
 		}
 	}
 
-	@Override
-	public synchronized void set(byte[] key, byte[] value) throws KVException {
-		set(key, value, true);
-	}
-
-	private synchronized void set(byte[] key, byte[] value, boolean retry) throws KVException {
-		IoSession session = getConnection(key);
-		IProtocol request = new SetRequest(key, value);
-		ReadFuture read = null;
-		try {
-			session.write(request).await();
-			read = session.read();
-			read.await();
-			IResponse response = (IResponse) read.getMessage();
-			int ret = response.getRetCode();
-			if (ret == ProtocolCode.Invalid_Key && retry) {
-				updateRegionTable();
-				set(key, value, false);
-				return;
-			} else if (ret != ProtocolCode.Success) {
-				throw new KVException(ProtocolCode.getMessage(ret));
-			} else {
-
-			}
-		} catch (InterruptedException e) {
-			logger.error("Wait method has been interrupted", e);
-			throw new RuntimeException(e);
-		}
-	}
-
-	// TODO stat
-	public synchronized DataServerStruct[] stat() throws KVException {
-		return stat(true);
-	}
-
 	private class DummyHandler implements IProtocolHandler<IContext, IProtocol> {
 
 		@Override
 		public void handle(IContext context, IProtocol protocol) {
 
-		}
-
-	}
-
-	@Override
-	public synchronized void updateRegionTable() throws KVException {
-		IoSession session = getMasterConnection();
-		IProtocol protocol = new RegionTableRequest();
-		try {
-			session.write(protocol).await();
-			ReadFuture read = session.read();
-			read.await();
-			RegionTableResponse response = (RegionTableResponse) read.getMessage();
-			int ret = response.getRetCode();
-			if (ret != ProtocolCode.Success) {
-				throw new KVException(ProtocolCode.getMessage(ret));
-			}
-			this.table = response.getTable();
-		} catch (InterruptedException e) {
-			logger.error("Wait method has been interrupted", e);
-			throw new RuntimeException(e);
 		}
 
 	}

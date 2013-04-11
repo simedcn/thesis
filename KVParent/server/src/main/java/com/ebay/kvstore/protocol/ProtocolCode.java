@@ -49,15 +49,15 @@ public class ProtocolCode {
 	}
 
 	private static void loadMessage(String path) {
-		messages = new HashMap<>();
-		messages.put(Success, "success");
-		messages.put(Invalid_Key, "the given key is not hosted in the data server");
-		messages.put(Dataserver_Io_Error, "fail to fetch data, data server internal error occurs");
-		messages.put(Invalid_Region, "the given region is not hosted in the data server");
-		messages.put(Master_Error, "error occured in master server");
-		messages.put(Duplicate_Dataserver_Error,
-				"the data server with same address already exists in cluster");
-		messages.put(Invalid_Counter, "the given key does not corespond to a counter");
+			messages = new HashMap<>();
+			messages.put(Success, "success");
+			messages.put(Invalid_Key, "the given key is not hosted in the data server");
+			messages.put(Dataserver_Io_Error, "fail to fetch data, data server internal error occurs");
+			messages.put(Invalid_Region, "the given region is not hosted in the data server");
+			messages.put(Master_Error, "error occured in master server");
+			messages.put(Duplicate_Dataserver_Error,
+					"the data server with same address already exists in cluster");
+			messages.put(Invalid_Counter, "the given key does not corespond to a counter");
 		try {
 			IConfiguration conf = ConfigurationLoader.load(path);
 			if (conf != null) {

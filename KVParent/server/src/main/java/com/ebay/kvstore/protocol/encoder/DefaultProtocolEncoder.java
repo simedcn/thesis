@@ -2,23 +2,16 @@ package com.ebay.kvstore.protocol.encoder;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
-import org.apache.mina.filter.codec.ProtocolEncoderOutput;
-import org.apache.mina.filter.codec.serialization.ObjectSerializationEncoder;
 
 import com.ebay.kvstore.protocol.IProtocol;
+import com.ebay.kvstore.protocol.IProtocolEncoder;
 
-public class DefaultProtocolEncoder extends ObjectSerializationEncoder {
+public class DefaultProtocolEncoder implements IProtocolEncoder<IProtocol> {
 
 	@Override
-	public void encode(IoSession session, Object message, ProtocolEncoderOutput out)
-			throws Exception {
-		IProtocol protocol = (IProtocol) message;
-		IoBuffer buf = IoBuffer.allocate(64);
-		buf.setAutoExpand(true);
-		buf.putInt(protocol.getType());
-		buf.putObject(protocol);
-		buf.flip();
-		out.write(buf);
+	public void encode(IoSession session, IProtocol protocol, IoBuffer buffer) {
+		buffer.putInt(protocol.getType());
+		buffer.putObject(protocol);
 	}
 
 }

@@ -35,7 +35,7 @@ public class RegionUtil {
 		}
 	}
 
-	public static <T extends KeyComparable> T search(List<T> list, byte[] key) {
+	public static <T extends IKeyComparable> T search(List<T> list, byte[] key) {
 		int low = 0;
 		int high = list.size() - 1;
 		while (low <= high) {
