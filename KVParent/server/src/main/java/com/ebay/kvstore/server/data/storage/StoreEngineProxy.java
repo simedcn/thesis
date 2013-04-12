@@ -1,7 +1,6 @@
 package com.ebay.kvstore.server.data.storage;
 
 import java.io.IOException;
-import java.util.List;
 
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.exception.InvalidKeyException;
@@ -28,6 +27,11 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
+	public void addRegion(Region region, boolean create) throws IOException {
+		engine.addRegion(region, create);
+	}
+
+	@Override
 	public KeyValue get(byte[] key) throws InvalidKeyException, IOException {
 		KeyValue kv = engine.get(key);
 		if (kv != null) {
@@ -47,8 +51,8 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
-	public List<Region> getRegions() {
-		return engine.getRegions();
+	public Region[] getAllRegions() {
+		return engine.getAllRegions();
 	}
 
 	@Override
@@ -65,7 +69,7 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
-	public void registerListener(IStoreListener listener) {
+	public void registerListener(IStoreEngineListener listener) {
 		engine.registerListener(listener);
 	}
 
@@ -86,6 +90,12 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
+	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
+			IRegionMergeCallback callback) {
+		engine.mergeRegion(regionId1, regionId2, newRegionId, callback);
+	}
+
+	@Override
 	public void stat() {
 		engine.stat();
 	}
@@ -96,7 +106,7 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
-	public void unregisterListener(IStoreListener listener) {
+	public void unregisterListener(IStoreEngineListener listener) {
 		engine.unregisterListener(listener);
 	}
 

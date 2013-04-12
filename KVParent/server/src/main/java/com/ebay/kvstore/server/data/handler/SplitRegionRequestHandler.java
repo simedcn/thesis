@@ -15,23 +15,25 @@ public class SplitRegionRequestHandler extends DataServerHandler<SplitRegionRequ
 
 	@Override
 	public void handle(DataServerContext context, SplitRegionRequest protocol) {
-		// TODO Auto-generated method stub
 		IStoreEngine engine = context.getEngine();
 		final IoSession session = context.getSession();
-		int regionId = protocol.getRegionId();
-		int newId = protocol.getNewId();
+		final int regionId = protocol.getRegionId();
+		final int newId = protocol.getNewId();
 		engine.splitRegion(regionId, newId, new IRegionSplitCallback() {
 			@Override
 			public void callback(boolean success, Region oldRegion, Region newRegion) {
 				IProtocol response = null;
 				if (!success) {
 					if (oldRegion == null) {
-						response = new SplitRegionResponse(ProtocolCode.Invalid_Region, null, null);
+						response = new SplitRegionResponse(ProtocolCode.Invalid_Region, null, null,
+								regionId, newId);
 					} else {
-						response = new SplitRegionResponse(ProtocolCode.Dataserver_Io_Error, null, null);
+						response = new SplitRegionResponse(ProtocolCode.Dataserver_Io_Error, null,
+								null, regionId, newId);
 					}
 				} else {
-					response = new SplitRegionResponse(ProtocolCode.Success, oldRegion, newRegion);
+					response = new SplitRegionResponse(ProtocolCode.Success, oldRegion, newRegion,
+							regionId, newId);
 				}
 				session.write(response);
 			}

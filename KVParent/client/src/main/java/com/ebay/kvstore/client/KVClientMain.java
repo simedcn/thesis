@@ -14,7 +14,7 @@ import java.util.NoSuchElementException;
 import jline.Completor;
 import jline.ConsoleReader;
 
-import com.ebay.kvstore.ServerConstants;
+import com.ebay.kvstore.IKVConstants;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
@@ -254,10 +254,10 @@ public class KVClientMain {
 			indent(out, 1);
 			out.println("Info:");
 			indent(out, 2);
-			out.println("Memory Free:" + server.getInfo().getMemoryFree() / ServerConstants.MB
+			out.println("Memory Free:" + server.getInfo().getMemoryFree() / IKVConstants.MB
 					+ "MB");
 			indent(out, 2);
-			out.println("Memory Total:" + server.getInfo().getMemoryTotal() / ServerConstants.MB
+			out.println("Memory Total:" + server.getInfo().getMemoryTotal() / IKVConstants.MB
 					+ "MB");
 			indent(out, 2);
 			out.println("Cpu Usage:" + server.getInfo().getCpuUsage() * 100 + "%");
@@ -292,10 +292,10 @@ public class KVClientMain {
 	}
 
 	private String formatRegionSize(long size) {
-		if (size > ServerConstants.MB) {
-			return new BigDecimal((double) size / ServerConstants.MB).setScale(2) + "MB";
-		} else if (size > ServerConstants.KB) {
-			return new BigDecimal((double) size / ServerConstants.KB).setScale(2) + "KB";
+		if (size > IKVConstants.MB) {
+			return new BigDecimal((double) size / IKVConstants.MB).setScale(2) + "MB";
+		} else if (size > IKVConstants.KB) {
+			return new BigDecimal((double) size / IKVConstants.KB).setScale(2) + "KB";
 		} else {
 			return size + "B";
 		}

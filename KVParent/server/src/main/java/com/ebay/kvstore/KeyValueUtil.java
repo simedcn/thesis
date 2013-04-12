@@ -108,6 +108,9 @@ public class KeyValueUtil {
 	}
 
 	public static byte[] nextKey(byte[] key) {
+		if (key == null) {
+			return null;
+		}
 		int index = key.length - 1;
 		byte[] nextKey = null;
 		while (key[index] == 0xff) {

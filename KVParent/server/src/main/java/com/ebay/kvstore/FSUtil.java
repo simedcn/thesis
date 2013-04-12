@@ -9,10 +9,14 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 
 public class FSUtil {
+	private static Logger logger = LoggerFactory.getLogger(FSUtil.class);
+
 	private static Pattern regionFilePattern = Pattern.compile("^[0-9]+\\-[0-9]+\\.data$");
 
 	private static Pattern regionLogPattern = Pattern.compile("^[0-9]+\\-[0-9]+\\.log$");
@@ -29,7 +33,7 @@ public class FSUtil {
 				return status.getLen();
 			}
 		} catch (IOException e) {
-			RegionUtil.logger.error("Fail to get FileStatus for " + file, e);
+			logger.error("Fail to get FileStatus for " + file, e);
 			return 0;
 		}
 

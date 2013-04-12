@@ -71,7 +71,7 @@ public class SimpleLoadBalancerTest extends BaseLoadBalancerTest {
 
 	@Test
 	public void testUnassignRegion() {
-		Map<Region, Address> result = loadBalancer.unassignRegion(dataServers);
+		Map<Integer, Address> result = loadBalancer.unassignRegion(dataServers);
 		assertTrue(result.values().contains(addr2));
 	}
 
@@ -81,7 +81,7 @@ public class SimpleLoadBalancerTest extends BaseLoadBalancerTest {
 		Region region = new Region(regionId, nextKeyRange(), nextKeyRange());
 		region.getStat().size = 101 * 1024 * 1024;
 		dataServers.get(2).addRegion(region);
-		Map<Region, Address> result = loadBalancer.splitRegion(dataServers);
+		Map<Integer, Address> result = loadBalancer.splitRegion(dataServers);
 		assertEquals(1, result.size());
 		assertTrue(result.containsKey(region));
 	}

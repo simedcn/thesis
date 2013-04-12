@@ -18,9 +18,8 @@ import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.IServer;
+import com.ebay.kvstore.IKVConstants;
 import com.ebay.kvstore.MinaUtil;
-import com.ebay.kvstore.ServerConstants;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
@@ -28,23 +27,25 @@ import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.MasterEngine;
 import com.ebay.kvstore.server.master.handler.DataServerJoinRequestHandler;
 import com.ebay.kvstore.server.master.handler.HeartBeatHandler;
 import com.ebay.kvstore.server.master.handler.LoadRegionResponseHandler;
+import com.ebay.kvstore.server.master.handler.MergeRegionResponseHandler;
 import com.ebay.kvstore.server.master.handler.RegionTableRequestHandler;
 import com.ebay.kvstore.server.master.handler.SplitRegionResponseHandler;
 import com.ebay.kvstore.server.master.handler.StatRequestHandler;
 import com.ebay.kvstore.server.master.handler.UnloadRegionResponseHandler;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
-import com.ebay.kvstore.server.master.helper.MasterEngine;
 import com.ebay.kvstore.server.master.task.CheckpointTask;
 import com.ebay.kvstore.server.master.task.GarbageCollectionTask;
 import com.ebay.kvstore.server.master.task.RegionAssignTask;
+import com.ebay.kvstore.server.master.task.RegionMergeTask;
 import com.ebay.kvstore.server.master.task.RegionSplitTask;
 import com.ebay.kvstore.server.master.task.RegionUnassignTask;
 import com.ebay.kvstore.structure.Address;
 
-public class MasterServer implements IServer, IConfigurationKey, Watcher {
+public class MasterServer implements IConfigurationKey, Watcher {
 	private static Logger logger = LoggerFactory.getLogger(MasterServer.class);
 
 	public static void main(String[] args) {
@@ -85,7 +86,6 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 		dispatcher.registerHandler(IProtocolType.Heart_Beart_Req, new HeartBeatHandler());
 		dispatcher.registerHandler(IProtocolType.Region_Table_Req, new RegionTableRequestHandler());
 		dispatcher.registerHandler(IProtocolType.Stat_Req, new StatRequestHandler());
-
 		dispatcher.registerHandler(IProtocolType.Load_Region_Resp, new LoadRegionResponseHandler());
 		dispatcher.registerHandler(IProtocolType.Unload_Region_Resp,
 				new UnloadRegionResponseHandler());
@@ -93,6 +93,8 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 				new SplitRegionResponseHandler());
 		dispatcher.registerHandler(IProtocolType.DataServer_Join_Request,
 				new DataServerJoinRequestHandler());
+		dispatcher.registerHandler(IProtocolType.Merge_Region_Resp,
+				new MergeRegionResponseHandler());
 	}
 
 	@Override
@@ -113,7 +115,6 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 		}
 	}
 
-	@Override
 	public synchronized void start() throws Exception {
 		initZookeeper();
 		if (active) {
@@ -125,7 +126,6 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 		}
 	}
 
-	@Override
 	public synchronized void stop() {
 		if (acceptor != null) {
 			acceptor.unbind();
@@ -148,6 +148,7 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 		engine.registerTask(new RegionAssignTask(conf, engine), true);
 		engine.registerTask(new RegionSplitTask(conf, engine), true);
 		engine.registerTask(new RegionUnassignTask(conf, engine), true);
+		engine.registerTask(new RegionMergeTask(conf, engine), true);
 		engine.start();
 	}
 
@@ -167,16 +168,16 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 	private void initZookeeper() throws Exception {
 		zooKeeper = new ZooKeeper(zkAddr.toString(), zkSessionTimeout, this);
 		// create the path recursively...
-		if (zooKeeper.exists(ServerConstants.ZooKeeper_Master_Dir, false) == null) {
-			zooKeeper.create(ServerConstants.ZooKeeper_Base, null, Ids.OPEN_ACL_UNSAFE,
+		if (zooKeeper.exists(IKVConstants.ZooKeeper_Master_Dir, false) == null) {
+			zooKeeper.create(IKVConstants.ZooKeeper_Base, null, Ids.OPEN_ACL_UNSAFE,
 					CreateMode.PERSISTENT);
-			zooKeeper.create(ServerConstants.ZooKeeper_Master_Dir, null, Ids.OPEN_ACL_UNSAFE,
+			zooKeeper.create(IKVConstants.ZooKeeper_Master_Dir, null, Ids.OPEN_ACL_UNSAFE,
 					CreateMode.PERSISTENT);
 		}
 
 		// leader election
-		znode = zooKeeper.create(ServerConstants.ZooKeeper_Master_Dir_Path, null,
-				Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+		znode = zooKeeper.create(IKVConstants.ZooKeeper_Master_Dir_Path, null, Ids.OPEN_ACL_UNSAFE,
+				CreateMode.EPHEMERAL_SEQUENTIAL);
 		logger.info("{} node created in ZooKeeper", znode);
 		int index = znode.lastIndexOf('/');
 		znode = znode.substring(index + 1);
@@ -184,15 +185,15 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	private void leaderElection() throws KeeperException, InterruptedException {
-		List<String> masters = zooKeeper.getChildren(ServerConstants.ZooKeeper_Master_Dir, false);
+		List<String> masters = zooKeeper.getChildren(IKVConstants.ZooKeeper_Master_Dir, false);
 		Collections.sort(masters);
 		for (int i = 0; i < masters.size(); i++) {
 			if (masters.get(i).equals(znode)) {
 				if (i == 0) {
 					active = true;// become leader
 				} else {
-					zooKeeper.exists(
-							ServerConstants.ZooKeeper_Master_Dir_Path + masters.get(i - 1), true);
+					zooKeeper.exists(IKVConstants.ZooKeeper_Master_Dir_Path + masters.get(i - 1),
+							true);
 				}
 				break;
 			}
@@ -200,7 +201,7 @@ public class MasterServer implements IServer, IConfigurationKey, Watcher {
 	}
 
 	private void run() throws Exception {
-		zooKeeper.create(ServerConstants.ZooKeeper_Master_Addr, (masterAddr.toString()).getBytes(),
+		zooKeeper.create(IKVConstants.ZooKeeper_Master_Addr, (masterAddr.toString()).getBytes(),
 				Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
 		initHdfs();
 		initEngine();

@@ -1,4 +1,4 @@
-package com.ebay.kvstore.server.master.helper;
+package com.ebay.kvstore.server.master.engine;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -42,7 +42,7 @@ public class MasterEngineListenerManager implements IMasterEngineListener {
 	}
 
 	@Override
-	public void onRegionSplit(Region oldRegion, Region newRegion) {
+	public void onRegionSplit(int oldRegion, int newRegion) {
 		for (IMasterEngineListener listener : listeners) {
 			try {
 				listener.onRegionSplit(oldRegion, newRegion);
@@ -53,7 +53,7 @@ public class MasterEngineListenerManager implements IMasterEngineListener {
 	}
 
 	@Override
-	public void onRegionUnload(DataServerStruct struct, Region region) {
+	public void onRegionUnload(DataServerStruct struct, int region) {
 		for (IMasterEngineListener listener : listeners) {
 			try {
 				listener.onRegionUnload(struct, region);
@@ -73,6 +73,17 @@ public class MasterEngineListenerManager implements IMasterEngineListener {
 
 	public void unregisterListener(IMasterEngineListener listener) {
 		listeners.add(listener);
+	}
+
+	@Override
+	public void onRegionMerge(DataServerStruct struct, int regionId1, int regionId2) {
+		for (IMasterEngineListener listener : listeners) {
+			try {
+				listener.onRegionMerge(struct, regionId1, regionId2);
+			} catch (Exception e) {
+				logger.error("Error occured when calling onRegionUnload on listener", e);
+			}
+		}
 	}
 
 }

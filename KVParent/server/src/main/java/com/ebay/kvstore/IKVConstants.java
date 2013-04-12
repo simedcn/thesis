@@ -1,6 +1,6 @@
 package com.ebay.kvstore;
 
-public interface ServerConstants {
+public interface IKVConstants {
 	public static final String Proj_Name = "kvstore";
 
 	public static final String ZooKeeper_Base = '/' + Proj_Name;

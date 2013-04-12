@@ -11,6 +11,7 @@ import com.ebay.kvstore.protocol.request.HeartBeat;
 import com.ebay.kvstore.server.data.storage.IStoreEngine;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
+import com.ebay.kvstore.structure.Region;
 
 /**
  * Used for sending heat beat periodically.
@@ -61,7 +62,8 @@ public class HeartBeater {
 	private void heatbeat() {
 		engine.stat();
 		DataServerStruct struct = new DataServerStruct(addr, weight);
-		struct.addRegions(engine.getRegions());
+		Region[] regions = engine.getAllRegions();
+		struct.addRegion(regions);
 		IProtocol heatbeat = new HeartBeat(struct);
 		session.write(heatbeat);
 	}

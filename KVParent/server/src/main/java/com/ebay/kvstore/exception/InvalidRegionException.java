@@ -9,6 +9,5 @@ public class InvalidRegionException extends KVException {
 
 	public InvalidRegionException(String msg) {
 		super(msg);
-		// TODO Auto-generated constructor stub
 	}
 }

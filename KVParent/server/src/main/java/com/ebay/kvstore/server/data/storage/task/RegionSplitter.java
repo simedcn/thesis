@@ -1,4 +1,4 @@
-package com.ebay.kvstore.server.data.storage.helper;
+package com.ebay.kvstore.server.data.storage.task;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -25,7 +25,7 @@ import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
 
-public class RegionSplitter extends BaseHelper {
+public class RegionSplitter extends BaseRegionTask {
 
 	private static Logger logger = LoggerFactory.getLogger(RegionSplitter.class);
 
@@ -40,14 +40,14 @@ public class RegionSplitter extends BaseHelper {
 	public void run() {
 		int blockSize = conf.getInt(IConfigurationKey.Dataserver_Region_Block_Size);
 		String dataFile = storage.getDataFile();
-		String baseDir = storage.getBaseDir();
+		String baseDir = storage.getRegionDir();
 		long time = System.currentTimeMillis();
 		String oldTempFile = baseDir + time;
 		String newTempFile = baseDir + time + "-new";
 		KeyValueCache cache = storage.getBuffer();
 		KVFileIterator fileIt = null;
 		Iterator<Entry<byte[], Value>> cacheIt = null;
-		Phase phase = Phase.Begin;
+		RegionTaskPhase phase = RegionTaskPhase.Begin;
 		FileSystem fs = DFSManager.getDFS();
 		IBlockOutputStream oldTempOut = null;
 		IBlockOutputStream newTempOut = null;
@@ -123,17 +123,16 @@ public class RegionSplitter extends BaseHelper {
 						}
 						flushCache(cacheIt, newTempOut, null);
 					}
-					storage.resetBuffer();
+					storage.clearBuffer();
 				}
 				oldTempOut.close();
 				newTempOut.close();
 
-				// has finished the split operation.
 				byte[] newKeyStart = KeyValueUtil.nextKey(oldKeyEnd);
 				Region oldRegion = storage.getRegion();
 				Region newRegion = listener.onSplitEnd(true, newKeyStart, oldRegion.getEnd());
 				oldRegion.setEnd(oldKeyEnd);
-				phase = Phase.End;
+				phase = RegionTaskPhase.End;
 				String oldRegionFile = PathBuilder.getRegionFilePath(oldRegion.getRegionId(), time);
 				String newRegionFile = PathBuilder.getRegionFilePath(newRegion.getRegionId(), time);
 				String newRegionDir = PathBuilder.getRegionDir(newRegion.getRegionId());
@@ -159,15 +158,15 @@ public class RegionSplitter extends BaseHelper {
 			listener.onSplitCommit(true, storage, newStorage);
 		} catch (Exception ex) {
 			logger.error(
-					"Error occured when splitting region:" + storage.getRegion().getRegionId(), e);
-			if (phase == Phase.Begin) {
+					"Error occured when splitting region:" + storage.getRegion().getRegionId(), ex);
+			if (phase == RegionTaskPhase.Begin) {
 				listener.onSplitEnd(false, null, null);
-			} else if (phase == Phase.End) {
+			} else if (phase == RegionTaskPhase.End) {
 				listener.onSplitCommit(false, null, null);
 			}
 		} finally {
 			try {
-				TaskManager.lock = false;
+				RegionTaskManager.lock = false;
 				if (newTempOut != null) {
 					newTempOut.close();
 				} else if (oldTempOut != null) {
@@ -214,7 +213,7 @@ public class RegionSplitter extends BaseHelper {
 				kvToWrite = new KeyValue(e.getKey(), e.getValue());
 				e = null;
 			}
-			if (kvToWrite != null) {
+			if (kvToWrite != null && !kvToWrite.getValue().isDeleted()) {
 				lastKey = kvToWrite.getKey();
 				KeyValueUtil.writeToExternal(out, kvToWrite);
 				currentSize += KeyValueUtil.getKeyValueLen(kvToWrite);

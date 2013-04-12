@@ -41,12 +41,13 @@ public class OperationFileLoggerIterator implements Iterator<IOperation> {
 			case IOperation.Split:
 				operation = new SplitOperation();
 				break;
+			case IOperation.Merge:
+				operation = new MergeOperation();
 			default:
 				in.close();
 				return false;
 			}
 		} catch (EOFException eof) {
-			logger.info("EOF of" + path);
 			try {
 				in.close();
 			} catch (IOException e1) {

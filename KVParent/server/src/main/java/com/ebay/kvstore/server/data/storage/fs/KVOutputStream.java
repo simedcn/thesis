@@ -63,41 +63,9 @@ public class KVOutputStream extends FilterOutputStream implements IBlockOutputSt
 	}
 
 	@Override
-	public void writeBoolean(boolean v) throws IOException {
-
-	}
-
-	@Override
 	public void writeByte(int v) throws IOException {
 		checkBlock(1);
 		super.write(v);
-	}
-
-	@Override
-	public void writeBytes(String s) throws IOException {
-
-	}
-
-	@Override
-	public void writeChar(int v) throws IOException {
-
-	}
-
-	// The following methods are not needed by our current implementation
-
-	@Override
-	public void writeChars(String s) throws IOException {
-
-	}
-
-	@Override
-	public void writeDouble(double v) throws IOException {
-
-	}
-
-	@Override
-	public void writeFloat(float v) throws IOException {
-
 	}
 
 	@Override
@@ -108,21 +76,6 @@ public class KVOutputStream extends FilterOutputStream implements IBlockOutputSt
 		out.write((v >>> 8) & 0xFF);
 		out.write((v >>> 0) & 0xFF);
 		updateBlock(4);
-	}
-
-	@Override
-	public void writeLong(long v) throws IOException {
-
-	}
-
-	@Override
-	public void writeShort(int v) throws IOException {
-
-	}
-
-	@Override
-	public void writeUTF(String s) throws IOException {
-
 	}
 
 	/**
@@ -155,5 +108,4 @@ public class KVOutputStream extends FilterOutputStream implements IBlockOutputSt
 		currentBlock = pos / blockSize;
 		blockPos = pos % blockSize;
 	}
-
 }

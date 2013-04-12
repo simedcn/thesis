@@ -7,7 +7,7 @@ import com.ebay.kvstore.protocol.ProtocolCode;
 import com.ebay.kvstore.protocol.request.DataServerJoinRequest;
 import com.ebay.kvstore.protocol.response.DataServerJoinResponse;
 import com.ebay.kvstore.server.master.MasterContext;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 

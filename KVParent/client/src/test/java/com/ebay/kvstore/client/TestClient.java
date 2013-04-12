@@ -1,7 +1,10 @@
 package com.ebay.kvstore.client;
 
+import java.lang.reflect.Constructor;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.future.ReadFuture;
@@ -30,7 +33,6 @@ public class TestClient {
 			ConnectFuture future = connector.connect(new InetSocketAddress(1000));
 			future.awaitUninterruptibly();
 			IoSession session = future.getSession();
-
 			while (true) {
 				session.write("I'm client");
 				ReadFuture read = session.read();

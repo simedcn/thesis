@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.server.data.storage.helper.TaskManager;
+import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
 
@@ -37,6 +37,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 		try {
 			region = new Region(0, new byte[] { 0 }, null);
 			engine = StoreEngineFactory.createStoreEngine(conf);
+			engine.addRegion(region, true);
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
@@ -69,6 +70,7 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 		try {
 			region = new Region(1, new byte[] { 0 }, null);
 			engine = StoreEngineFactory.createStoreEngine(conf);
+			engine.addRegion(region, true);
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
@@ -96,14 +98,15 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 		try {
 			region = new Region(2, new byte[] { 0 }, null);
 			engine = StoreEngineFactory.createStoreEngine(conf);
+			engine.addRegion(region, true);
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
-			while (TaskManager.isRunning()) {
+			while (RegionTaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
 			engine.splitRegion(2, 3, null);
-			while (TaskManager.isRunning()) {
+			while (RegionTaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
 			for (byte i = 0; i < 100; i++) {
@@ -121,17 +124,18 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 		try {
 			region = new Region(4, new byte[] { 0 }, null);
 			engine = StoreEngineFactory.createStoreEngine(conf);
+			engine.addRegion(region, true);
 			engine.registerListener(new StoreStatListener());
 			for (byte i = 0; i < 100; i++) {
 				engine.set(new byte[] { i }, new byte[] { i });
 			}
 			engine.get(new byte[] { 0 });
 			engine.incr(new byte[] { 100 }, 10, 0);
-			while (TaskManager.isRunning()) {
+			while (RegionTaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
 			engine.stat();
-			RegionStat stat = engine.getRegions().get(0).getStat();
+			RegionStat stat = engine.getAllRegions()[0].getStat();
 			assertEquals(101, stat.writeCount);
 			assertEquals(1, stat.readCount);
 			assertFalse(stat.dirty);
@@ -146,11 +150,11 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 			engine.loadRegion(region);
 			engine.stat();
 			System.out.println(stat);
-			while (TaskManager.isRunning()) {
+			while (RegionTaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
 			engine.splitRegion(4, 5, null);
-			while (TaskManager.isRunning()) {
+			while (RegionTaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
 			engine.stat();
@@ -161,4 +165,43 @@ public class PersistentStoreEngineTest extends BaseFileTest {
 		}
 	}
 
+	@Test
+	public void testMerge() {
+		try {
+			Region region1 = new Region(5, new byte[] { 0 }, new byte[] { 49 });
+			Region region2 = new Region(6, new byte[] { 50 }, null);
+			engine = StoreEngineFactory.createStoreEngine(conf);
+			engine.addRegion(region1, true);
+			engine.addRegion(region2, true);
+			for (byte i = 0; i < 100; i++) {
+				engine.set(new byte[] { i }, new byte[] { i });
+			}
+			while (RegionTaskManager.isRunning()) {
+				Thread.sleep(100);
+			}
+			engine.mergeRegion(5, 6, 7, new IRegionMergeCallback() {
+				@Override
+				public void callback(boolean success, int region1, int region2, Region region) {
+					try {
+						assertEquals(true, success);
+						assertEquals(1, engine.getAllRegions().length);
+						for (byte i = 0; i < 100; i++) {
+							assertArrayEquals(new byte[] { i }, engine.get(new byte[] { i })
+									.getValue().getValue());
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+				}
+			});
+			while (RegionTaskManager.isRunning()) {
+				Thread.sleep(100);
+			}
+			Thread.sleep(1000);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
 }

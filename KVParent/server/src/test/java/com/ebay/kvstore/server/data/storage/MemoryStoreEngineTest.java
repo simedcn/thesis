@@ -35,13 +35,13 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			conf2 = ConfigurationLoader.load();
 			conf.set(IConfigurationKey.Storage_Policy, "memory");
 			conf2.set(IConfigurationKey.Storage_Policy, "memory");
-			conf.set(IConfigurationKey.Dataserver_Cache_Max, 128);
+			conf.set(IConfigurationKey.Dataserver_Cache_Max, 4096);
 			conf2.set(IConfigurationKey.Dataserver_Addr, new Address("192.1.1.1", 30000));
 			conf2.set(IConfigurationKey.Dataserver_Cache_Max, 4096);
 
 			region = new Region(0, new byte[] { 0 }, new byte[] { 1, 1, 1, 1, 1, 1, 1 });
 			engine = StoreEngineFactory.createStoreEngine(conf);
-			engine.getRegions().add(region);
+			engine.addRegion(region, true);
 			engine2 = StoreEngineFactory.createStoreEngine(conf2);
 
 		} catch (IOException e) {
@@ -74,7 +74,7 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 		try {
 			for (int i = 0; i < 100000; i++) {
 				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
-				assertTrue(engine.getMemoryUsed() < 128);
+				assertTrue(engine.getMemoryUsed() < 4096);
 			}
 		} catch (Exception e) {
 		}
@@ -103,9 +103,43 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
 			}
 			engine.splitRegion(0, 1, null);
-			assertEquals(2, engine.getRegions().size());
+			assertEquals(2, engine.getAllRegions().length);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testMerge() {
+		try {
+			engine.unloadRegion(0);
+			Region region = new Region(0, new byte[] { 0 }, new byte[] { 50 });
+			Region region2 = new Region(1, new byte[] { 51 }, null);
+			engine.addRegion(region, true);
+			engine.addRegion(region2, true);
+			for (byte i = 0; i < 100; i++) {
+				engine.set(new byte[] { i }, new byte[] { i });
+			}
+			engine.mergeRegion(0, 1, 2, new IRegionMergeCallback() {
+				@Override
+				public void callback(boolean success, int region1, int region2, Region region) {
+					assertTrue(success);
+					engine.unloadRegion(2);
+
+					try {
+						engine.loadRegion(region);
+						for (byte i = 0; i < 100; i++) {
+							assertArrayEquals(new byte[] { i }, engine.get(new byte[] { i })
+									.getValue().getValue());
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+				}
+			});
+		} catch (Exception e) {
+
 		}
 	}
 
@@ -120,7 +154,7 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			engine.get(new byte[] { 0 });
 			engine.incr(new byte[] { 11 }, 10, 0);
 			engine.stat();
-			stat = engine.getRegions().get(0).getStat();
+			stat = engine.getAllRegions()[0].getStat();
 			assertEquals(11, stat.writeCount);
 			assertEquals(1, stat.readCount);
 			assertEquals(11, stat.keyNum);

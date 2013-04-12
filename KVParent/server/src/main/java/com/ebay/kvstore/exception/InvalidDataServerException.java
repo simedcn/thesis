@@ -9,7 +9,6 @@ public class InvalidDataServerException extends KVException {
 
 	public InvalidDataServerException(String msg) {
 		super(msg);
-		// TODO Auto-generated constructor stub
 	}
 
 }

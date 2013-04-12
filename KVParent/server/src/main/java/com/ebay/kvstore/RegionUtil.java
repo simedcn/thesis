@@ -1,6 +1,5 @@
 package com.ebay.kvstore;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.util.List;
 
@@ -10,10 +9,12 @@ import org.slf4j.LoggerFactory;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
 import com.ebay.kvstore.server.data.logger.IMutation;
+import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
 
 public class RegionUtil {
-	static Logger logger = LoggerFactory.getLogger(RegionUtil.class);
+	private static Logger logger = LoggerFactory.getLogger(RegionUtil.class);
 
 	public static void loadLogger(String file, KeyValueCache buffer) {
 		try {
@@ -29,7 +30,6 @@ public class RegionUtil {
 					break;
 				}
 			}
-		} catch (EOFException e) {
 		} catch (IOException e) {
 			logger.error("Error occured when loading the log file:" + file, e);
 		}
@@ -50,5 +50,26 @@ public class RegionUtil {
 				return list.get(mid); // key found
 		}
 		return null; // key not found
+	}
+
+	public static Region mergeRegion(Region region1, Region region2, int id) {
+		byte[] start, end;
+		if (region1.compareTo(region2) < 0) {
+			start = region1.getStart();
+			end = region2.getEnd();
+		} else {
+			start = region2.getStart();
+			end = region1.getEnd();
+		}
+		RegionStat stat1 = region1.getStat();
+		RegionStat stat2 = region2.getStat();
+		RegionStat stat = (RegionStat) stat1.clone();
+		stat.keyNum += stat2.keyNum;
+		stat.readCount += stat2.readCount;
+		stat.writeCount += stat2.writeCount;
+		stat.size += stat2.size;
+		Region region = new Region(id, start, end);
+		region.setStat(stat);
+		return region;
 	}
 }

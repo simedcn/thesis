@@ -7,7 +7,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.ServerConstants;
+import com.ebay.kvstore.IKVConstants;
 
 public class ConfigurationLoader {
 	private static Logger logger = LoggerFactory.getLogger(ConfigurationLoader.class);
@@ -20,12 +20,12 @@ public class ConfigurationLoader {
 	 * @throws IOException
 	 */
 	public static IConfiguration load() throws IOException {
-		IConfiguration defaultConf = load(ServerConstants.Default_Conf_Path);
+		IConfiguration defaultConf = load(IKVConstants.Default_Conf_Path);
 		IConfiguration conf = null;
 		try {
-			conf = load(ServerConstants.Conf_Path);
+			conf = load(IKVConstants.Conf_Path);
 		} catch (Exception e) {
-			logger.warn("Fail to load property file:" + ServerConstants.Conf_Path, e);
+			logger.warn("Fail to load property file:" + IKVConstants.Conf_Path, e);
 		}
 		if (conf != null) {
 			defaultConf.merge(conf);

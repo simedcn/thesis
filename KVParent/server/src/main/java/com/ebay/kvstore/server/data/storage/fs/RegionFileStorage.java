@@ -26,8 +26,8 @@ import com.ebay.kvstore.server.data.logger.DeleteMutation;
 import com.ebay.kvstore.server.data.logger.IDataLogger;
 import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
-import com.ebay.kvstore.server.data.storage.helper.IRegionFlushListener;
-import com.ebay.kvstore.server.data.storage.helper.TaskManager;
+import com.ebay.kvstore.server.data.storage.task.IRegionFlushListener;
+import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
@@ -142,17 +142,16 @@ public class RegionFileStorage implements IRegionStorage {
 		}
 	}
 
-	@Override
-	public void flush() {
+	private void flush() {
 		logger.info("Try to flush region storage, region id:" + region.getRegionId()
 				+ " current buffer size is:" + buffer.getUsed() + " buffer limit is:" + bufferLimit);
-		if (!TaskManager.isRunning()) {
-			TaskManager.flush(this, conf, new RegionFlushListener(dataFile));
+		if (!RegionTaskManager.isRunning()) {
+			RegionTaskManager.flush(this, conf, new RegionFlushListener(dataFile));
 		}
 	}
 
 	@Override
-	public String getBaseDir() {
+	public String getRegionDir() {
 		if (region == null) {
 			throw new UnsupportedOperationException(
 					"BaseDir has not been initialized properly, as region is null");
@@ -227,7 +226,7 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
-	public void reset() {
+	public void clear() {
 		region = null;
 		if (buffer != null) {
 			buffer.reset();
@@ -241,7 +240,7 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
-	public void resetBuffer() {
+	public void clearBuffer() {
 		this.buffer.reset();
 	}
 
@@ -377,12 +376,12 @@ public class RegionFileStorage implements IRegionStorage {
 		@Override
 		public void onFlushBegin() {
 			flushingLock.lock();
-			logger.info("Region flush begin");
+			logger.info("Region {} flush begin", region);
 			newLoggerFile = baseDir + System.currentTimeMillis();
 			try {
 				newLogger(newLoggerFile);
 			} catch (IOException e) {
-				logger.error("Fail to create new logger", newLoggerFile);
+				logger.error("Fail to create new logger", e);
 			}
 			oldBuffer = buffer;
 			buffer = KeyValueCache.forBuffer();
@@ -390,10 +389,9 @@ public class RegionFileStorage implements IRegionStorage {
 
 		@Override
 		public void onFlushCommit(boolean success, String file) {
-			logger.info("Region flush commit "
-					+ (success ? "success." + "new data file:" + file : "failed"));
 			try {
 				if (success) {
+					logger.info("Region {} flush success, new data file:{}", region, file);
 					dataFile = file;
 					indices = tmpIndices;
 					dataFileKeyNum = newKeyNum;
@@ -407,6 +405,7 @@ public class RegionFileStorage implements IRegionStorage {
 						logger.error("fail to create new log file" + log, e);
 					}
 				} else {
+					logger.error("Region {} flush failed.", region);
 					restore();
 				}
 			} finally {
@@ -417,7 +416,6 @@ public class RegionFileStorage implements IRegionStorage {
 
 		@Override
 		public void onFlushEnd(boolean success, String file) {
-			logger.info("Region flush end");
 			if (success) {
 				try {
 					tmpIndices = new ArrayList<>();
@@ -428,6 +426,7 @@ public class RegionFileStorage implements IRegionStorage {
 					throw new RuntimeException(e);
 				}
 			} else {
+				logger.error("Region {} flush failed", region);
 				flushingLock.unlock();
 				restore();
 			}

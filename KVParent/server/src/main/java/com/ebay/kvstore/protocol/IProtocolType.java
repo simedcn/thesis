@@ -16,6 +16,9 @@ public interface IProtocolType {
 	public static final int DataServer_Join_Request = 8;
 	public static final int DataServer_Join_Resp = 9;
 
+	public static final int Merge_Reigon_Req = 10;
+	public static final int Merge_Region_Resp = 11;
+
 	public static final int Set_Req = 10001;
 	public static final int Set_Resp = 10002;
 

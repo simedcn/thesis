@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import com.ebay.kvstore.ServerConstants;
+import com.ebay.kvstore.IKVConstants;
 
 public class KVConfiguration implements IConfiguration, IConfigurationKey {
 
@@ -19,19 +19,20 @@ public class KVConfiguration implements IConfiguration, IConfigurationKey {
 	}
 
 	private static void initUnits() {
-		units.put(Master_Gc_Check_Interval, ServerConstants.Second);
-		units.put(Master_Checkpoint_Reserve_Days, ServerConstants.Day);
-		units.put(Master_Checkpoint_Interval, ServerConstants.Day);
-		units.put(Master_Unassign_Check_Interval, ServerConstants.Second);
-		units.put(Master_Assign_Check_Interval, ServerConstants.Second);
-		units.put(Master_Split_Check_Interval, ServerConstants.Second);
-		units.put(Master_Wait_Dsjoin_Time, ServerConstants.Second);
-		units.put(Dataserver_Region_Max, ServerConstants.MB);
-		units.put(Dataserver_Region_Block_Size, ServerConstants.KB);
-		units.put(Dataserver_Cache_Max, ServerConstants.KB);
-		units.put(Dataserver_Buffer_Max, ServerConstants.KB);
-		units.put(DataServer_Region_Reserve_Days, ServerConstants.Day);
-		units.put(Heartbeat_Interval, ServerConstants.Second);
+		units.put(Master_Gc_Check_Interval, IKVConstants.Second);
+		units.put(Master_Checkpoint_Reserve_Days, IKVConstants.Day);
+		units.put(Master_Checkpoint_Interval, IKVConstants.Day);
+		units.put(Master_Unassign_Check_Interval, IKVConstants.Second);
+		units.put(Master_Assign_Check_Interval, IKVConstants.Second);
+		units.put(Master_Split_Check_Interval, IKVConstants.Second);
+		units.put(Master_Wait_Dsjoin_Time, IKVConstants.Second);
+		units.put(Master_Merge_Check_Interval, IKVConstants.Second);
+		units.put(Dataserver_Region_Max, IKVConstants.MB);
+		units.put(Dataserver_Region_Block_Size, IKVConstants.KB);
+		units.put(Dataserver_Cache_Max, IKVConstants.KB);
+		units.put(Dataserver_Buffer_Max, IKVConstants.KB);
+		units.put(DataServer_Region_Reserve_Days, IKVConstants.Day);
+		units.put(Heartbeat_Interval, IKVConstants.Second);
 	}
 
 	KVConfiguration(Properties p) {

@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
 
-public class StoreLogListener implements IStoreListener {
+public class StoreLogListener implements IStoreEngineListener {
 
 	private static Logger logger = LoggerFactory.getLogger(StoreLogListener.class);
 

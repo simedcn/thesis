@@ -1,4 +1,4 @@
-package com.ebay.kvstore.server.data.storage.helper;
+package com.ebay.kvstore.server.data.storage.task;
 
 import java.lang.reflect.Constructor;
 
@@ -9,24 +9,27 @@ import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.structure.Region;
 
-/**
- * Used for provide locking for flusher. Our system only permit a single
- * flusher/splitter thread run at a single time.
- * 
- * @author luochen
- * 
- */
-public class TaskManager {
-	private static Logger logger = LoggerFactory.getLogger(TaskManager.class);
+public class RegionTaskManager {
+	private static Logger logger = LoggerFactory.getLogger(RegionTaskManager.class);
 
 	static volatile Boolean lock = false;
 
 	public static boolean flush(IRegionStorage storage, IConfiguration conf,
-			IRegionListener listener) {
+			IRegionTaskListener listener) {
 		try {
 			return run(RegionFlusher.class, storage, conf, listener);
 		} catch (Exception e) {
 			logger.error("Fail to start SplitFlusher Thread", e);
+			return false;
+		}
+	}
+
+	public static boolean merge(IConfiguration conf, IRegionStorage storage1,
+			IRegionStorage storage2, IRegionMergeListener listener) {
+		try {
+			return run(RegionMerger.class, conf, storage1, storage2, listener);
+		} catch (Exception e) {
+			logger.error("Fail to start RegionMerger Thread", e);
 			return false;
 		}
 	}
@@ -41,7 +44,7 @@ public class TaskManager {
 	}
 
 	public static boolean split(IRegionStorage storage, IConfiguration conf,
-			IRegionListener listener) {
+			IRegionTaskListener listener) {
 		try {
 			return run(RegionSplitter.class, storage, conf, listener);
 		} catch (Exception e) {
@@ -50,8 +53,8 @@ public class TaskManager {
 		}
 	}
 
-	private synchronized static <T extends BaseHelper> boolean run(Class<T> clazz, Object... params)
-			throws Exception {
+	private synchronized static <T extends BaseRegionTask> boolean run(Class<T> clazz,
+			Object... params) throws Exception {
 		if (lock) {
 			return false;
 		}
@@ -60,7 +63,7 @@ public class TaskManager {
 				return false;
 			}
 			Constructor<T> constructor = ((Constructor<T>[]) clazz.getConstructors())[0];
-			BaseHelper helper = constructor.newInstance(params);
+			BaseRegionTask helper = constructor.newInstance(params);
 			Thread t = new Thread(helper);
 			lock = true;
 			t.start();

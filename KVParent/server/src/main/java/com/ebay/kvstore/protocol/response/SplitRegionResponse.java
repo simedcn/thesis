@@ -14,11 +14,9 @@ public class SplitRegionResponse extends BaseResponse {
 
 	protected Region newRegion;
 
-	public SplitRegionResponse(int retCode, Region oldRegion, Region newRegion) {
-		super(retCode);
-		this.oldRegion = oldRegion;
-		this.newRegion = newRegion;
-	}
+	protected int oldId;
+
+	protected int newId;
 
 	public Region getNewRegion() {
 		return newRegion;
@@ -44,6 +42,30 @@ public class SplitRegionResponse extends BaseResponse {
 	@Override
 	public String toString() {
 		return "SplitRegionResponse [oldegion=" + oldRegion + ", newRegion=" + newRegion + "]";
+	}
+
+	public SplitRegionResponse(int retCode, Region oldRegion, Region newRegion, int oldId, int newId) {
+		super(retCode);
+		this.oldRegion = oldRegion;
+		this.newRegion = newRegion;
+		this.oldId = oldId;
+		this.newId = newId;
+	}
+
+	public int getOldId() {
+		return oldId;
+	}
+
+	public void setOldId(int oldId) {
+		this.oldId = oldId;
+	}
+
+	public int getNewId() {
+		return newId;
+	}
+
+	public void setNewId(int newId) {
+		this.newId = newId;
 	}
 
 }

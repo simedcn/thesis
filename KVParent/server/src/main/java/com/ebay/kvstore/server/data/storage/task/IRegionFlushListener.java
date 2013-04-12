@@ -1,6 +1,7 @@
-package com.ebay.kvstore.server.data.storage.helper;
+package com.ebay.kvstore.server.data.storage.task;
 
-public interface IRegionFlushListener extends IRegionListener {
+public interface IRegionFlushListener extends IRegionTaskListener {
+	
 	public void onFlushBegin();
 
 	public void onFlushCommit(boolean success, String path);

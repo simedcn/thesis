@@ -8,7 +8,7 @@ import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.IProtocol;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.Address;
 
 public abstract class BaseMasterTask implements IMasterTask {

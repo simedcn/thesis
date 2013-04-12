@@ -43,7 +43,6 @@ public class DataFileLoggerIterator implements Iterator<IMutation> {
 				return false;
 			}
 		} catch (EOFException eof) {
-			logger.info("EOF of " + path);
 			try {
 				in.close();
 			} catch (IOException e1) {
@@ -67,8 +66,8 @@ public class DataFileLoggerIterator implements Iterator<IMutation> {
 			return mutation;
 		} catch (IOException e) {
 			logger.error("Error occured when reading the RegionLoggerFile.", e);
-			return null;
 		}
+		return null;
 
 	}
 

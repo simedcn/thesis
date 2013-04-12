@@ -13,8 +13,8 @@ import org.junit.Test;
 import com.ebay.kvstore.BaseTest;
 import com.ebay.kvstore.PathBuilder;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
-import com.ebay.kvstore.server.master.helper.MasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.MasterEngine;
 
 public class GarbageCollectionTaskTest extends BaseTest {
 

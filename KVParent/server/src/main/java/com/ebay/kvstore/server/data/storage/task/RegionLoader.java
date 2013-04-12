@@ -1,4 +1,4 @@
-package com.ebay.kvstore.server.data.storage.helper;
+package com.ebay.kvstore.server.data.storage.task;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ import com.ebay.kvstore.server.data.storage.fs.IndexEntry;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
 import com.ebay.kvstore.structure.Region;
 
-public class RegionLoader extends BaseHelper {
+public class RegionLoader extends BaseRegionTask {
 
 	private static Logger logger = LoggerFactory.getLogger(RegionLoader.class);
 
@@ -43,7 +43,7 @@ public class RegionLoader extends BaseHelper {
 	}
 
 	public boolean load() {
-		Phase phase = Phase.Begin;
+		RegionTaskPhase phase = RegionTaskPhase.Begin;
 		try {
 			String baseDir = PathBuilder.getRegionDir(regionId);
 			String[] dataFiles = FSUtil.getRegionFiles(baseDir);
@@ -89,7 +89,7 @@ public class RegionLoader extends BaseHelper {
 				listener.onLoadEnd(false);
 				return false;
 			}
-			phase = Phase.End;
+			phase = RegionTaskPhase.End;
 			// commit
 			long time = System.currentTimeMillis();
 			String logFile = PathBuilder.getRegionLogPath(region.getRegionId(), time);
@@ -102,26 +102,19 @@ public class RegionLoader extends BaseHelper {
 			storage.newLogger(logFile);
 			storage.setBuffer(buffer);
 			listener.onLoadCommit(success, storage);
-			phase = Phase.Commit;
+			phase = RegionTaskPhase.Commit;
 			return true;
 		} catch (IOException e) {
 			logger.error("Fail to load region:" + regionId, e);
-			if (phase == Phase.Begin) {
+			if (phase == RegionTaskPhase.Begin) {
 				listener.onLoadEnd(false);
-			} else if (phase == Phase.End) {
+			} else if (phase == RegionTaskPhase.End) {
 				listener.onLoadCommit(false, null);
 			}
 			throw new RuntimeException(e);
 		}
 	}
 
-	/**
-	 * TODO Region Loader
-	 * 
-	 * @param addr
-	 * @param regionId
-	 * @throws IOException
-	 */
 	@Override
 	public void run() {
 	}

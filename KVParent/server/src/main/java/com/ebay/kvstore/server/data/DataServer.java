@@ -15,9 +15,8 @@ import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.IServer;
+import com.ebay.kvstore.IKVConstants;
 import com.ebay.kvstore.MinaUtil;
-import com.ebay.kvstore.ServerConstants;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
@@ -36,7 +35,7 @@ import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 
-public class DataServer implements IServer, IConfigurationKey, Watcher {
+public class DataServer implements IConfigurationKey, Watcher {
 	private static Logger logger = LoggerFactory.getLogger(DataServer.class);
 
 	public static void main(String[] args) {
@@ -90,7 +89,7 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 	@Override
 	public void process(WatchedEvent event) {
 		if (event.getPath() != null
-				&& event.getPath().equals(ServerConstants.ZooKeeper_Master_Addr)) {
+				&& event.getPath().equals(IKVConstants.ZooKeeper_Master_Addr)) {
 			if (event.getType().equals(EventType.NodeDeleted)) {
 				// try to connect new master server if the master addr node
 				// is removed
@@ -104,7 +103,6 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 		}
 	}
 
-	@Override
 	public void start() throws Exception {
 		initHDFS();
 		initZookeeper();
@@ -113,7 +111,6 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 		initConnection();
 	}
 
-	@Override
 	public void stop() {
 		if (acceptor != null) {
 			acceptor.unbind();
@@ -154,14 +151,14 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 		boolean success = false;
 		IoSession session = null;
 		DataServerStruct struct = new DataServerStruct(dsAddr, weight);
-		struct.addRegions(engine.getRegions());
+		struct.addRegion(engine.getAllRegions());
 		IProtocol request = new DataServerJoinRequest(struct);
 		for (int i = 1; i <= retry; i++) {
 			try {
 				logger.info("Try to connect to master server, for " + i + " times");
 				byte[] data = null;
-				if (zooKeeper.exists(ServerConstants.ZooKeeper_Master_Addr, false) == null
-						|| (data = zooKeeper.getData(ServerConstants.ZooKeeper_Master_Addr, false,
+				if (zooKeeper.exists(IKVConstants.ZooKeeper_Master_Addr, false) == null
+						|| (data = zooKeeper.getData(IKVConstants.ZooKeeper_Master_Addr, false,
 								null)) == null) {
 					continue;
 				}
@@ -182,12 +179,12 @@ public class DataServer implements IServer, IConfigurationKey, Watcher {
 				}
 			} catch (Exception e) {
 				logger.info("Fail to connect to master server", e);
-			}finally{
+			} finally {
 				Thread.sleep(reconnectInteval);
 			}
 		}
 		if (success) {
-			zooKeeper.getData(ServerConstants.ZooKeeper_Master_Addr, true, null);
+			zooKeeper.getData(IKVConstants.ZooKeeper_Master_Addr, true, null);
 			heartBeater = new HeartBeater(conf, engine, session);
 			heartBeater.start();
 		} else {

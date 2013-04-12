@@ -2,7 +2,7 @@ package com.ebay.kvstore.structure;
 
 import java.io.Serializable;
 
-public class RegionStat implements Serializable {
+public class RegionStat implements Serializable, Cloneable {
 
 	/**
 	 * 
@@ -36,6 +36,14 @@ public class RegionStat implements Serializable {
 	public String toString() {
 		return "RegionStat [keyNum=" + keyNum + ", size=" + size + ", readCount=" + readCount
 				+ ", writeCount=" + writeCount + "]";
+	}
+
+	public RegionStat clone() {
+		try {
+			return (RegionStat) super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
 	}
 
 }

@@ -3,6 +3,7 @@ package com.ebay.kvstore.server.data.cache;
 import static com.ebay.kvstore.KeyValueUtil.getKeyValueLen;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.SortedMap;
@@ -11,7 +12,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.ebay.kvstore.ByteArrayComparator;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Value;
@@ -245,4 +245,13 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 			replacer.reIndex(key);
 		}
 	}
+	private class ByteArrayComparator implements Comparator<byte[]> {
+
+		@Override
+		public int compare(byte[] key1, byte[] key2) {
+			return KeyValueUtil.compare(key1, key2);
+		}
+	}
+
+	
 }

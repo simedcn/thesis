@@ -28,9 +28,11 @@ public interface IConfigurationKey {
 
 	public static final String Master_Split_Check_Interval = "master.split.check.interval";
 
+	public static final String Master_Merge_Check_Interval = "master.merge.check.interval";
+
 	public static final String Master_Wait_Dsjoin_Time = "master.wait.dsjoin.time";
 
-	//session timeout needs to be investigate
+	// session timeout needs to be investigate
 	public static final String Master_Client_Session_Timeout = "master.client.session.timeout";
 
 	public static final String DataServer_Client_Session_Timeout = "dataserver.client.session.timeout";
@@ -46,7 +48,7 @@ public interface IConfigurationKey {
 	public static final String Dataserver_Region_Block_Size = "dataserver.region.block.size";
 
 	public static final String Dataserver_Region_Index_Block_Num = "dataserver.region.index.block.num";
-	
+
 	public static final String DataServer_Region_Reserve_Days = "dataserver.region.reserve.days";
 
 	public static final String Dataserver_Connection_Max = "dataserver.connection.max";

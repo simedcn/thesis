@@ -1,8 +1,8 @@
-package com.ebay.kvstore.server.data.storage.helper;
+package com.ebay.kvstore.server.data.storage.task;
 
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 
-public interface IRegionLoadListener {
+public interface IRegionLoadListener extends IRegionTaskListener {
 
 	public void onLoadBegin();
 

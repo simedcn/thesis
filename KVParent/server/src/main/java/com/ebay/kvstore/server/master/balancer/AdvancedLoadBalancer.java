@@ -60,7 +60,7 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 	}
 
 	@Override
-	public Map<Region, Address> unassignRegion(Collection<DataServerStruct> dataServers) {
+	public Map<Integer, Address> unassignRegion(Collection<DataServerStruct> dataServers) {
 		RegionMetric regionMetric = calcRegionMetric(null, dataServers);
 		DataServerWrapper[] wrappers = calcDataServerWrappers(dataServers, regionMetric);
 		double minCapacity = wrappers[0].capacity;
@@ -74,7 +74,7 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 					wrapper.capacity = wrapper.capacity - calcRegionFactor(region, regionMetric)
 							/ wrapper.factor;
 					if (!isBusy(region)) {
-						unloadTargets.put(region, wrapper.ds.getAddr());
+						unloadTargets.put(region.getRegionId(), wrapper.ds.getAddr());
 					}
 				}
 			} else {
@@ -86,8 +86,10 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 	}
 
 	private double calcDataServerFactor(DataServerStruct dataServer, DataServerMetric metric) {
-		double memoryFreeDif = (double)dataServer.getInfo().getMemoryFree() / metric.memoryFreeAverage;
-		double memoryTotalDif = (double)dataServer.getInfo().getMemoryTotal() / metric.memoryAverage;
+		double memoryFreeDif = (double) dataServer.getInfo().getMemoryFree()
+				/ metric.memoryFreeAverage;
+		double memoryTotalDif = (double) dataServer.getInfo().getMemoryTotal()
+				/ metric.memoryAverage;
 		double cpuDif = 10;
 		if (dataServer.getInfo().getCpuUsage() > 0) {
 			cpuDif = metric.cpuUsageAverage / dataServer.getInfo().getCpuUsage();
@@ -132,9 +134,9 @@ public class AdvancedLoadBalancer extends BaseLoadBalancer {
 	}
 
 	private double calcRegionFactor(Region region, RegionMetric metric) {
-		double sizeDif = (double)region.getStat().size / metric.sizeAverage;
-		double readCountDif = (double)region.getStat().readCount / metric.readCountAverage;
-		double writeCountDif = (double)region.getStat().writeCount / metric.writeCountAverage;
+		double sizeDif = (double) region.getStat().size / metric.sizeAverage;
+		double readCountDif = (double) region.getStat().readCount / metric.readCountAverage;
+		double writeCountDif = (double) region.getStat().writeCount / metric.writeCountAverage;
 		return (2 * sizeDif + readCountDif + writeCountDif) / 4;
 	}
 

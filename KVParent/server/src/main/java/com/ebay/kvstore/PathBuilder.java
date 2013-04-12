@@ -6,7 +6,7 @@ package com.ebay.kvstore;
  * @author luochen
  * 
  */
-public class PathBuilder implements ServerConstants {
+public class PathBuilder implements IKVConstants {
 
 	public static String getMasterCheckPointDir() {
 		StringBuilder sb = new StringBuilder(32);
@@ -39,7 +39,7 @@ public class PathBuilder implements ServerConstants {
 	}
 
 	public static String getDataServerDir() {
-		return ServerConstants.DFS_Data_Dir;
+		return IKVConstants.DFS_Data_Dir;
 	}
 
 	public static String getRegionDir(int regionId) {

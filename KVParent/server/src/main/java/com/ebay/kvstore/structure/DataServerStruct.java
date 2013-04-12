@@ -31,12 +31,12 @@ public class DataServerStruct implements Serializable {
 		this.info = new SystemInfo();
 	}
 
-	public void addRegion(Region region) {
-		regions.add(region);
-	}
-
-	public void addRegions(Collection<Region> regions) {
-		this.regions.addAll(regions);
+	public void addRegion(Region... regions) {
+		if (regions != null) {
+			for (Region region : regions) {
+				this.regions.add(region);
+			}
+		}
 	}
 
 	public boolean containsRegion(Region r) {
@@ -86,6 +86,10 @@ public class DataServerStruct implements Serializable {
 
 	public void removeRegion(Region region) {
 		regions.remove(region);
+	}
+
+	public void removeRegion(int regionId) {
+		regions.remove(new Region(regionId, null, null));
 	}
 
 	public void setAddr(Address addr) {

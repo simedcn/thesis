@@ -21,7 +21,5 @@ public class DataServerJoinResponseHandler extends DataServerHandler<DataServerJ
 			}
 			engine.notifyAll();
 		}
-
 	}
-
 }

@@ -3,7 +3,7 @@ package com.ebay.kvstore.server.data.storage;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
 
-public interface IStoreListener {
+public interface IStoreEngineListener {
 	public void onDelete(Region region, byte[] key);
 
 	public void onGet(Region region, byte[] key, Value value);

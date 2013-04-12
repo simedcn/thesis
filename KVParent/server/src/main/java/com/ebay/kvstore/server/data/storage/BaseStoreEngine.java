@@ -8,6 +8,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
@@ -19,13 +23,15 @@ import com.ebay.kvstore.structure.Value;
 
 public abstract class BaseStoreEngine implements IStoreEngine {
 
+	private static Logger logger = LoggerFactory.getLogger(BaseStoreEngine.class);
+
 	protected KeyValueCache cache;
 
 	protected int cacheLimit;
 
 	protected List<Region> regions;
 
-	protected Set<IStoreListener> listeners;
+	protected Set<IStoreEngineListener> listeners;
 
 	protected IConfiguration conf;
 
@@ -37,7 +43,6 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 		this.regions = new ArrayList<>();
 		listeners = new HashSet<>();
 		this.addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Addr));
-		// TODO:add configuration for
 		cache = KeyValueCache.forCache(cacheLimit,
 				conf.get(IConfigurationKey.Dataserver_Cache_Replacement_Policy));
 		Collections.addAll(this.regions, regions);
@@ -50,18 +55,18 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 	}
 
 	@Override
-	public List<Region> getRegions() {
-		return regions;
+	public Region[] getAllRegions() {
+		return regions.toArray(new Region[regions.size()]);
 	}
 
 	public void onLoad(Region region) {
-		for (IStoreListener listener : listeners) {
+		for (IStoreEngineListener listener : listeners) {
 			listener.onLoad(region);
 		}
 	}
 
 	@Override
-	public void registerListener(IStoreListener listener) {
+	public void registerListener(IStoreEngineListener listener) {
 		listeners.add(listener);
 	}
 
@@ -72,41 +77,62 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 	}
 
 	@Override
-	public void unregisterListener(IStoreListener listener) {
+	public void unregisterListener(IStoreEngineListener listener) {
 		listeners.remove(listener);
 	}
 
 	void onDelete(byte[] key) {
 		Region region = getKeyRegion(key);
-		for (IStoreListener listener : listeners) {
-			listener.onDelete(region, key);
+		for (IStoreEngineListener listener : listeners) {
+			try {
+				listener.onDelete(region, key);
+			} catch (Exception e) {
+				logger.error("", e);
+			}
 		}
 	}
 
 	void onGet(byte[] key, Value value) {
 		Region region = getKeyRegion(key);
-		for (IStoreListener listener : listeners) {
-			listener.onGet(region, key, value);
+		for (IStoreEngineListener listener : listeners) {
+			try {
+				listener.onGet(region, key, value);
+			} catch (Exception e) {
+				logger.error("", e);
+			}
 		}
 	}
 
 	void onIncr(byte[] key, int value) {
 		Region region = getKeyRegion(key);
-		for (IStoreListener listener : listeners) {
-			listener.onIncr(region, key, value);
+		for (IStoreEngineListener listener : listeners) {
+			try {
+				listener.onIncr(region, key, value);
+			} catch (Exception e) {
+				logger.error("", e);
+			}
 		}
 	}
 
 	void onSet(byte[] key, byte[] value) {
 		Region region = getKeyRegion(key);
-		for (IStoreListener listener : listeners) {
+		for (IStoreEngineListener listener : listeners) {
+			try {
+				listener.onSet(region, key, value);
+			} catch (Exception e) {
+				logger.error("", e);
+			}
 			listener.onSet(region, key, value);
 		}
 	}
 
 	void onSplit(Region oldRegion, Region newRegion) {
-		for (IStoreListener listener : listeners) {
-			listener.onSplit(oldRegion, newRegion);
+		for (IStoreEngineListener listener : listeners) {
+			try {
+				listener.onSplit(oldRegion, newRegion);
+			} catch (Exception e) {
+				logger.error("", e);
+			}
 		}
 	}
 
@@ -126,6 +152,22 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 					+ " is not served in this data server!");
 		}
 		return region;
+	}
+
+	protected boolean checkRegionConsistent(Region region1, Region region2) {
+		byte[] key1 = null;
+		byte[] key2 = null;
+		int result = region1.compareTo(region2);
+		if (result < 0) {
+			key1 = region1.getEnd();
+			key2 = region2.getStart();
+		} else if (result > 0) {
+			key1 = region2.getEnd();
+			key2 = region1.getStart();
+		} else {
+			return false;
+		}
+		return Arrays.equals(KeyValueUtil.nextKey(key1), key2);
 	}
 
 	protected Region getKeyRegion(byte[] key) {

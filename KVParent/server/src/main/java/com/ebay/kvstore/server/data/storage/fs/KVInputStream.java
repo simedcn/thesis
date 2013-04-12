@@ -68,32 +68,12 @@ public class KVInputStream extends FilterInputStream implements IBlockInputStrea
 	}
 
 	@Override
-	public boolean readBoolean() throws IOException {
-		return false;
-	}
-
-	@Override
 	public byte readByte() throws IOException {
 		if (blockStream.available() < 1) {
 			readNextBlock();
 		}
 		int ch = blockStream.read();
 		return (byte) (ch);
-	}
-
-	@Override
-	public char readChar() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public double readDouble() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public float readFloat() throws IOException {
-		return 0;
 	}
 
 	@Override
@@ -153,41 +133,6 @@ public class KVInputStream extends FilterInputStream implements IBlockInputStrea
 		if ((ch1 | ch2 | ch3 | ch4) < 0)
 			throw new EOFException();
 		return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
-	}
-
-	@Override
-	public String readLine() throws IOException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public long readLong() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public short readShort() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public int readUnsignedByte() throws IOException {
-		if (blockStream.available() < 1) {
-			readNextBlock();
-		}
-		int ch = blockStream.read();
-		return (byte) (ch);
-	}
-
-	@Override
-	public int readUnsignedShort() throws IOException {
-		return 0;
-	}
-
-	@Override
-	public String readUTF() throws IOException {
-		throw new UnsupportedOperationException();
-
 	}
 
 	/**

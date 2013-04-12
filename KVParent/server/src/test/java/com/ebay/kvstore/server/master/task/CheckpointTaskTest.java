@@ -12,8 +12,8 @@ import org.junit.Test;
 
 import com.ebay.kvstore.BaseTest;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
-import com.ebay.kvstore.server.master.helper.MasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.MasterEngine;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;

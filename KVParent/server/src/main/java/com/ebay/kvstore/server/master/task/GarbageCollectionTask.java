@@ -13,7 +13,7 @@ import com.ebay.kvstore.PathBuilder;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
 
 public class GarbageCollectionTask extends BaseMasterTask {
 	private static Logger logger = LoggerFactory.getLogger(GarbageCollectionTask.class);

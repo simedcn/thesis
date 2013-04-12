@@ -1,4 +1,4 @@
-package com.ebay.kvstore.server.master.helper;
+package com.ebay.kvstore.server.master.engine;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,9 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ebay.kvstore.FSUtil;
+import com.ebay.kvstore.IKVConstants;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.ServerConstants;
+import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.exception.InvalidDataServerException;
 import com.ebay.kvstore.exception.InvalidRegionException;
@@ -34,6 +35,7 @@ import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.master.logger.IOperation;
 import com.ebay.kvstore.server.master.logger.IOperationLogger;
 import com.ebay.kvstore.server.master.logger.LoadOperation;
+import com.ebay.kvstore.server.master.logger.MergeOperation;
 import com.ebay.kvstore.server.master.logger.OperationFileLogger;
 import com.ebay.kvstore.server.master.logger.OperationFileLoggerIterator;
 import com.ebay.kvstore.server.master.logger.SplitOperation;
@@ -120,6 +122,19 @@ public class MasterEngine implements IMasterEngine {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public void mergeRegion(boolean success, DataServerStruct struct, int regionId1, int regionId2,
+			Region region) {
+		if (success) {
+			struct.removeRegion(regionId1);
+			struct.removeRegion(regionId2);
+			struct.addRegion(region);
+			opLogger.write(new MergeOperation(region.getRegionId(), struct.getAddr(), regionId1,
+					regionId2));
+		}
+		listenerManager.onRegionMerge(struct, regionId1, regionId2);
 	}
 
 	@Override
@@ -219,19 +234,21 @@ public class MasterEngine implements IMasterEngine {
 	}
 
 	@Override
-	public synchronized void loadRegion(DataServerStruct struct, Region region)
+	public synchronized void loadRegion(boolean success, DataServerStruct struct, Region region)
 			throws InvalidDataServerException {
-		struct.addRegion(region);
-		unassignedRegions.remove(region.getRegionId());
+		if (success) {
+			struct.addRegion(region);
+			unassignedRegions.remove(region.getRegionId());
+			opLogger.write(new LoadOperation(region.getRegionId(), struct.getAddr()));
+		}
 		listenerManager.onRegionLoad(struct, region);
 
-		opLogger.write(new LoadOperation(region.getRegionId(), struct.getAddr()));
 	}
 
 	@Override
 	public synchronized int nextRegionId() {
 		try {
-			zk.setData(ServerConstants.ZooKeeper_Master_Region_Id,
+			zk.setData(IKVConstants.ZooKeeper_Master_Region_Id,
 					KeyValueUtil.intToBytes(nextRegionId + 1), -1);
 		} catch (Exception e) {
 			logger.error("Fail store next region id to zookeeper", e);
@@ -280,7 +297,7 @@ public class MasterEngine implements IMasterEngine {
 
 	@Override
 	public void resetRegionId() throws Exception {
-		zk.setData(ServerConstants.ZooKeeper_Master_Region_Id, KeyValueUtil.intToBytes(0), -1);
+		zk.setData(IKVConstants.ZooKeeper_Master_Region_Id, KeyValueUtil.intToBytes(0), -1);
 		nextRegionId = 0;
 	}
 
@@ -297,25 +314,27 @@ public class MasterEngine implements IMasterEngine {
 	}
 
 	@Override
-	public void splitRegion(DataServerStruct struct, Region oldRegion, Region newRegion)
-			throws InvalidDataServerException {
-		struct.addRegion(oldRegion);
-		struct.addRegion(newRegion);
-		listenerManager.onRegionSplit(oldRegion, newRegion);
+	public void splitRegion(boolean success, DataServerStruct struct, Region oldRegion,
+			Region newRegion, int oldId, int newId) throws InvalidDataServerException {
+		if (success) {
+			struct.addRegion(oldRegion);
+			struct.addRegion(newRegion);
+			opLogger.write(new SplitOperation(oldRegion.getRegionId(), newRegion.getRegionId(),
+					struct.getAddr(), oldRegion.getEnd()));
+		}
+		listenerManager.onRegionSplit(oldId, newId);
 
-		opLogger.write(new SplitOperation(oldRegion.getRegionId(), newRegion.getRegionId(), struct
-				.getAddr(), oldRegion.getEnd()));
 	}
 
 	@Override
 	public synchronized void start() throws Exception {
 		// init region id
-		if (zk.exists(ServerConstants.ZooKeeper_Master_Region_Id, false) == null) {
-			zk.create(ServerConstants.ZooKeeper_Master_Region_Id, KeyValueUtil.intToBytes(0),
+		if (zk.exists(IKVConstants.ZooKeeper_Master_Region_Id, false) == null) {
+			zk.create(IKVConstants.ZooKeeper_Master_Region_Id, KeyValueUtil.intToBytes(0),
 					Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 		} else {
 			nextRegionId = KeyValueUtil.bytesToInt(zk.getData(
-					ServerConstants.ZooKeeper_Master_Region_Id, false, null));
+					IKVConstants.ZooKeeper_Master_Region_Id, false, null));
 		}
 		String checkPointDir = PathBuilder.getMasterCheckPointDir();
 		String logDir = PathBuilder.getMasterLogDir();
@@ -370,20 +389,21 @@ public class MasterEngine implements IMasterEngine {
 				} else if (getDataServer(nr) != null && !oldStruct.containsRegion(nr)) {
 					unassignRegion(oldStruct, nr);
 				} else {
-					loadRegion(oldStruct, nr);
+					loadRegion(true, oldStruct, nr);
 				}
 			}
 		}
 	}
 
 	@Override
-	public void unloadRegoin(DataServerStruct struct, Region region)
+	public void unloadRegoin(boolean success, DataServerStruct struct, Region region, int regionId)
 			throws InvalidDataServerException {
-		struct.removeRegion(region);
-		unassignedRegions.put(region.getRegionId(), region);
-		listenerManager.onRegionUnload(struct, region);
-
-		opLogger.write(new UnloadOperation(region.getRegionId(), struct.getAddr()));
+		if (success) {
+			struct.removeRegion(region);
+			unassignedRegions.put(region.getRegionId(), region);
+			opLogger.write(new UnloadOperation(region.getRegionId(), struct.getAddr()));
+		}
+		listenerManager.onRegionUnload(struct, regionId);
 	}
 
 	@Override
@@ -400,8 +420,8 @@ public class MasterEngine implements IMasterEngine {
 	}
 
 	protected void loadLogger(String log) throws IOException {
-		// TODO Auto-generated method stub
 		Iterator<IOperation> it = new OperationFileLoggerIterator(log);
+		Region region = null;
 		while (it.hasNext()) {
 			IOperation op = it.next();
 			switch (op.getType()) {
@@ -413,12 +433,21 @@ public class MasterEngine implements IMasterEngine {
 				break;
 			case IOperation.Split:
 				SplitOperation split = (SplitOperation) op;
-				Region region = unassignedRegions.get(split.getRegionId());
+				region = unassignedRegions.get(split.getRegionId());
 				byte[] newKeyStart = KeyValueUtil.nextKey(split.getOldKeyEnd());
 				Region newRegion = new Region(split.getNewRegionId(), newKeyStart, region.getEnd());
 				region.setEnd(split.getOldKeyEnd());
 				unassignedRegions.put(split.getNewRegionId(), newRegion);
 				break;
+			case IOperation.Merge:
+				MergeOperation merge = (MergeOperation) op;
+				int id1 = merge.getRegionId1();
+				int id2 = merge.getRegionId2();
+				int newId = merge.getRegionId();
+				Region region1 = unassignedRegions.remove(id1);
+				Region region2 = unassignedRegions.remove(id2);
+				region = RegionUtil.mergeRegion(region1, region2, newId);
+				unassignedRegions.put(newId, region);
 			default:
 				break;
 			}

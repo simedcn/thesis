@@ -1,7 +1,6 @@
-package com.ebay.kvstore.server.data.storage.fs.util;
+package com.ebay.kvstore.server.data.storage.fs.task;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
+import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -12,22 +11,19 @@ import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.BaseFileStorageTest;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
-import com.ebay.kvstore.server.data.storage.helper.IRegionLoadListener;
-import com.ebay.kvstore.server.data.storage.helper.TaskManager;
-import com.ebay.kvstore.structure.Address;
+import com.ebay.kvstore.server.data.storage.task.IRegionSplitListener;
+import com.ebay.kvstore.server.data.storage.task.RegionSplitter;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.structure.RegionStat;
 
-public class RegionLoaderTest extends BaseFileStorageTest {
-	protected Address addr;
+public class RegionSplitterTest extends BaseFileStorageTest {
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() throws IOException {
 		conf.set(IConfigurationKey.Dataserver_Region_Block_Size, 64);
-		addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Addr));
 		region = new Region(0, new byte[] { 1 }, new byte[] { (byte) 0xff });
 		storage = new RegionFileStorage(conf, region, true);
-
 	}
 
 	@After
@@ -39,35 +35,39 @@ public class RegionLoaderTest extends BaseFileStorageTest {
 		for (int i = 0; i < 100; i++) {
 			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
 		}
-		storage.flush();
 		for (int i = 0; i < 110; i += 15) {
 			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
 		}
-		storage.closeLogger();
-		TaskManager.load(conf, new RegionLoadListener(), region);
-
+		RegionSplitter flusher = new RegionSplitter(storage, conf, new SplitListener());
+		flusher.run();
 	}
 
-	private class RegionLoadListener implements IRegionLoadListener {
+	private class SplitListener implements IRegionSplitListener {
 
 		@Override
-		public void onLoadBegin() {
+		public void onSplitBegin() {
 
 		}
 
 		@Override
-		public void onLoadEnd(boolean success) {
+		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
 			Assert.assertTrue(success);
-
+			return new Region(1, start, end);
 		}
 
 		@Override
-		public void onLoadCommit(boolean success, IRegionStorage storage) {
-			assertTrue(success);
-			KeyValue kv = storage.getFromBuffer(new byte[] { 15 });
-			assertArrayEquals(new byte[] { 15 }, kv.getKey());
+		public void onSplitCommit(boolean success, IRegionStorage oldStorage,
+				IRegionStorage newStorage) {
+			Assert.assertTrue(success);
+			try {
+				KeyValue[] kvs = newStorage.getFromDisk(new byte[] { 60 });
+				for (KeyValue kv : kvs) {
+					System.out.println(kv);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 	}
-
 }

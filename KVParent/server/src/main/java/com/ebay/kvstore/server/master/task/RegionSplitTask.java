@@ -8,7 +8,7 @@ import java.util.Map.Entry;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.protocol.request.SplitRegionRequest;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;
@@ -24,10 +24,10 @@ public class RegionSplitTask extends LoadBalanceTask {
 	}
 
 	@Override
-	public void onRegionSplit(Region oldRegion, Region newRegion) {
-		super.onRegionSplit(oldRegion, newRegion);
-		regionIds.remove(oldRegion.getRegionId());
-		regionIds.remove(newRegion.getRegionId());
+	public void onRegionSplit(int oldId, int newId) {
+		super.onRegionSplit(oldId, newId);
+		regionIds.remove(oldId);
+		regionIds.remove(newId);
 
 	}
 
@@ -35,15 +35,15 @@ public class RegionSplitTask extends LoadBalanceTask {
 	protected void process() {
 		synchronized (engine) {
 			Collection<DataServerStruct> dataServers = engine.getAllDataServers();
-			Map<Region, Address> targets = balancer.splitRegion(dataServers);
+			Map<Integer, Address> targets = balancer.splitRegion(dataServers);
 			if (targets != null) {
-				for (Entry<Region, Address> e : targets.entrySet()) {
-					Integer nid = regionIds.get(e.getKey().getRegionId());
+				for (Entry<Integer, Address> e : targets.entrySet()) {
+					Integer nid = regionIds.get(e.getKey());
 					if (nid == null) {
 						nid = engine.nextRegionId();
-						regionIds.put(e.getKey().getRegionId(), nid);
+						regionIds.put(e.getKey(), nid);
 					}
-					sendRequest(e.getValue(), new SplitRegionRequest(e.getKey().getRegionId(), nid));
+					sendRequest(e.getValue(), new SplitRegionRequest(e.getKey(), nid));
 				}
 			}
 

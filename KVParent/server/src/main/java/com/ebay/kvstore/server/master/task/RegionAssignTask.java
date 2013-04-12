@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.protocol.request.LoadRegionRequest;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;
@@ -40,12 +40,12 @@ public class RegionAssignTask extends LoadBalanceTask {
 			Collection<DataServerStruct> dataServers = engine.getAllDataServers();
 			Collection<Region> regions = unassigned.values();
 			Map<Region, Address> targets = balancer.assignRegion(regions, dataServers);
-			if(targets!=null){
+			if (targets != null) {
 				for (Entry<Region, Address> e : targets.entrySet()) {
 					sendRequest(e.getValue(), new LoadRegionRequest(e.getKey()));
 				}
 			}
-			
+
 		}
 	}
 

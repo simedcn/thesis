@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.ServerConstants;
+import com.ebay.kvstore.IKVConstants;
 import com.ebay.kvstore.conf.ConfigurationLoader;
 import com.ebay.kvstore.conf.IConfiguration;
 
@@ -41,7 +41,7 @@ public class ProtocolCode {
 
 	static {
 		messages = new HashMap<>();
-		loadMessage(ServerConstants.Message_Conf_Path);
+		loadMessage(IKVConstants.Message_Conf_Path);
 	}
 
 	public static String getMessage(int code) {

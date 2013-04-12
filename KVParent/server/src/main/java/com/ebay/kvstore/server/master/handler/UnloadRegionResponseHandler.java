@@ -8,7 +8,7 @@ import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.ProtocolCode;
 import com.ebay.kvstore.protocol.response.UnloadRegionResponse;
 import com.ebay.kvstore.server.master.MasterContext;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;
@@ -23,21 +23,22 @@ public class UnloadRegionResponseHandler extends MasterHandler<UnloadRegionRespo
 		IoSession session = context.getSession();
 		Address addr = Address.parse(session.getRemoteAddress());
 		Region region = protocol.getRegion();
+		int regionId = protocol.getRegionId();
 		int ret = protocol.getRetCode();
-		if (ret == ProtocolCode.Success) {
-			try {
+		boolean success = ret == ProtocolCode.Success;
+		try {
+			if (success) {
 				logger.info("unassign region {} from data server {} success.",
 						region.getRegionId(), addr);
-				DataServerStruct struct = engine.getDataServerByClient(addr);
-				engine.unloadRegoin(struct, region);
-			} catch (KVException e) {
-				logger.error("Error occured when unload region", e);
+			} else {
+				logger.info("fail to assign region to data server {}, reason:", addr,
+						ProtocolCode.getMessage(ret));
 			}
-		} else {
-			logger.info("fail to assign region to data server {}, reason:", addr,
-					ProtocolCode.getMessage(ret));
+			DataServerStruct struct = engine.getDataServerByClient(addr);
+			engine.unloadRegoin(success, struct, region, regionId);
+		} catch (KVException e) {
+			logger.error("Error occured when unload region", e);
 		}
-
 	}
 
 }

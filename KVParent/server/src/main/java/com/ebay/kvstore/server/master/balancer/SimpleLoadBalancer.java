@@ -54,7 +54,7 @@ public class SimpleLoadBalancer extends BaseLoadBalancer {
 	}
 
 	@Override
-	public Map<Region, Address> unassignRegion(Collection<DataServerStruct> dataServers) {
+	public Map<Integer, Address> unassignRegion(Collection<DataServerStruct> dataServers) {
 		if (dataServers == null || dataServers.size() == 0) {
 			return null;
 		}
@@ -74,7 +74,7 @@ public class SimpleLoadBalancer extends BaseLoadBalancer {
 				for (int j = 0; j < balance; j++) {
 					Region region = it.next();
 					if (!isBusy(region)) {
-						unloadTargets.put(region, structs[i].getAddr());
+						unloadTargets.put(region.getRegionId(), structs[i].getAddr());
 					}
 				}
 			} else {
@@ -85,7 +85,6 @@ public class SimpleLoadBalancer extends BaseLoadBalancer {
 	}
 
 	private class DataServerComparator implements Comparator<DataServerStruct> {
-
 		@Override
 		public int compare(DataServerStruct ds1, DataServerStruct ds2) {
 			return Integer.compare(ds1.getRegions().size(), ds2.getRegions().size());

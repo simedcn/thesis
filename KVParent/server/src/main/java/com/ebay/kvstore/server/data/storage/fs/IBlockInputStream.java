@@ -1,9 +1,8 @@
 package com.ebay.kvstore.server.data.storage.fs;
 
-import java.io.DataInput;
 import java.io.IOException;
 
-public interface IBlockInputStream extends DataInput {
+public interface IBlockInputStream {
 
 	public void close() throws IOException;
 
@@ -14,4 +13,14 @@ public interface IBlockInputStream extends DataInput {
 	public int getCurrentBlock();
 
 	public int getPos();
+
+	public byte readByte() throws IOException;
+
+	public void readFully(byte[] b) throws IOException;
+
+	public void readFully(byte[] b, int off, int len) throws IOException;
+
+	public int readInt() throws IOException;
+
+	public int skipBytes(int n) throws IOException;
 }

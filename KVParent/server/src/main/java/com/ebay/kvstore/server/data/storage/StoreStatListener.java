@@ -4,7 +4,7 @@ import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
 
-public class StoreStatListener implements IStoreListener {
+public class StoreStatListener implements IStoreEngineListener {
 	private RegionStat stat;
 
 	@Override

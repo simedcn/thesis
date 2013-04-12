@@ -18,6 +18,7 @@ import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.kvstore.server.data.handler.DataServerJoinResponseHandler;
 import com.ebay.kvstore.server.data.handler.LoadRegionRequestHandler;
+import com.ebay.kvstore.server.data.handler.MergeRegionRequestHandler;
 import com.ebay.kvstore.server.data.handler.SplitRegionRequestHandler;
 import com.ebay.kvstore.server.data.handler.UnloadRegionRequestHandler;
 import com.ebay.kvstore.server.data.storage.IStoreEngine;
@@ -49,7 +50,7 @@ public class DataClient {
 		dispatcher.registerHandler(IProtocolType.Split_Region_Req, new SplitRegionRequestHandler());
 		dispatcher.registerHandler(IProtocolType.DataServer_Join_Resp,
 				new DataServerJoinResponseHandler());
-
+		dispatcher.registerHandler(IProtocolType.Merge_Reigon_Req, new MergeRegionRequestHandler());
 		dispatcher.registerHandler(IProtocolType.Heart_Beart_Resp, null);
 		this.engine = engine;
 	}

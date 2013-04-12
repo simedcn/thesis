@@ -7,7 +7,7 @@ import com.ebay.kvstore.protocol.ProtocolCode;
 import com.ebay.kvstore.protocol.request.StatRequest;
 import com.ebay.kvstore.protocol.response.StatResponse;
 import com.ebay.kvstore.server.master.MasterContext;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.DataServerStruct;
 
 public class StatRequestHandler extends MasterHandler<StatRequest> {

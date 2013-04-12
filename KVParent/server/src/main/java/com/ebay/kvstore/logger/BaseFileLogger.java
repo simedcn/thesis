@@ -37,10 +37,6 @@ public abstract class BaseFileLogger implements ILogger {
 		}
 	}
 
-	@Override
-	public synchronized void flush() throws IOException {
-		out.flush();
-	}
 
 	@Override
 	public String getFile() {

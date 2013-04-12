@@ -14,9 +14,7 @@ public interface IRegionStorage {
 
 	public void dispose();
 
-	public void flush();
-
-	public String getBaseDir();
+	public String getRegionDir();
 
 	public KeyValueCache getBuffer();
 
@@ -32,17 +30,11 @@ public interface IRegionStorage {
 
 	public Region getRegion();
 
-	/**
-	 * Create a new logger, and close the old one
-	 * 
-	 * @param newLogFile
-	 * @throws IOException
-	 */
 	public void newLogger(String file) throws IOException;
 
-	public void reset();
+	public void clear();
 
-	public void resetBuffer();
+	public void clearBuffer();
 
 	public void setBuffer(KeyValueCache buffer);
 
@@ -54,12 +46,6 @@ public interface IRegionStorage {
 
 	public void stat() throws IOException;
 
-	/**
-	 * 1.put the key/value into buffer, and 2.write redo log
-	 * 
-	 * @param key
-	 * @param value
-	 */
 	public void storeInBuffer(byte[] key, byte[] value);
 
 }

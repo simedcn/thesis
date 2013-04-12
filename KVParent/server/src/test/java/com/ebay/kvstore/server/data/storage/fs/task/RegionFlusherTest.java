@@ -1,4 +1,4 @@
-package com.ebay.kvstore.server.data.storage.fs.util;
+package com.ebay.kvstore.server.data.storage.fs.task;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
@@ -20,8 +20,8 @@ import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
-import com.ebay.kvstore.server.data.storage.helper.IRegionFlushListener;
-import com.ebay.kvstore.server.data.storage.helper.RegionFlusher;
+import com.ebay.kvstore.server.data.storage.task.IRegionFlushListener;
+import com.ebay.kvstore.server.data.storage.task.RegionFlusher;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;

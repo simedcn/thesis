@@ -21,12 +21,16 @@ public interface ILoadBalancer {
 
 	public void onRegionLoad(Region region);
 
-	public void onRegionSplit(Region oldRegion, Region newRegion);
+	public void onRegionSplit(int oldId, int newId);
 
-	public void onRegionUnload(Region region);
+	public void onRegionUnload(int regionId);
 
-	public Map<Region, Address> splitRegion(Collection<DataServerStruct> dataServers);
+	public void onRegionMerge(int regionId1, int regionId2);
 
-	public Map<Region, Address> unassignRegion(Collection<DataServerStruct> dataServers);
+	public Map<RegionPair, Address> mergeRegion(Collection<DataServerStruct> dataServers);
+
+	public Map<Integer, Address> splitRegion(Collection<DataServerStruct> dataServers);
+
+	public Map<Integer, Address> unassignRegion(Collection<DataServerStruct> dataServers);
 
 }

@@ -6,7 +6,7 @@ import com.ebay.kvstore.logger.ILoggerInputStream;
 import com.ebay.kvstore.logger.ILoggerOutputStream;
 import com.ebay.kvstore.structure.Address;
 
-public class UnloadOperation implements IOperation {
+public class UnloadOperation extends BaseOperation {
 	protected int regionId;
 
 	protected Address addr;
@@ -16,36 +16,15 @@ public class UnloadOperation implements IOperation {
 	}
 
 	public UnloadOperation(int regionId, Address addr) {
+		super(regionId, addr);
 		this.regionId = regionId;
 		this.addr = addr;
 	}
 
-	@Override
-	public Address getAddr() {
-		return addr;
-	}
-
-	@Override
-	public int getRegionId() {
-		return regionId;
-	}
 
 	@Override
 	public byte getType() {
 		return Unload;
-	}
-
-	@Override
-	public void readFromExternal(ILoggerInputStream in) throws IOException {
-		this.regionId = in.readInt();
-		this.addr = Address.parse(in.readUTF());
-	}
-
-	@Override
-	public void writeToExternal(ILoggerOutputStream out) throws IOException {
-		out.write(getType());
-		out.writeInt(regionId);
-		out.writeUTF(addr.toString());
 	}
 
 }

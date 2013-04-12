@@ -26,6 +26,7 @@ import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
 
 public class MemoryStoreEngine extends BaseStoreEngine {
@@ -38,11 +39,24 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		super(conf);
 		loggers = new HashMap<Region, IDataLogger>();
 
-		long time = System.currentTimeMillis();
 		for (Region r : regions) {
-			String file = PathBuilder.getRegionLogPath(r.getRegionId(), time);
+			addRegion(r, true);
+		}
+	}
+
+	@Override
+	public void addRegion(Region region, boolean create) throws IOException {
+		if (create) {
+			if(regions.contains(region)){
+				return ;
+			}
+			long time = System.currentTimeMillis();
+			String file = PathBuilder.getRegionLogPath(region.getRegionId(), time);
 			IDataLogger logger = DataFileLogger.forCreate(file);
-			loggers.put(r, logger);
+			addRegion(region);
+			loggers.put(region, logger);
+		} else {
+			loadRegion(region);
 		}
 	}
 
@@ -199,7 +213,60 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			}
 
 		} finally {
-			callback.callback(finished, oldRegion, newRegion);
+			if (callback != null) {
+				callback.callback(finished, oldRegion, newRegion);
+			}
+		}
+	}
+
+	@Override
+	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
+			IRegionMergeCallback callback) {
+		Region region1 = getRegionById(regionId1);
+		Region region2 = getRegionById(regionId2);
+		Region region = null;
+		boolean finished = false;
+		try {
+			if (region1 == null || region2 == null || !checkRegionConsistent(region1, region2)) {
+				return;
+			}
+			byte[] start = null;
+			byte[] end = null;
+			if (region1.compareTo(region2) < 0) {
+				start = region1.getStart();
+				end = region2.getEnd();
+			} else {
+				start = region2.getStart();
+				end = region1.getEnd();
+			}
+			RegionStat stat1 = region1.getStat();
+			RegionStat stat2 = region2.getStat();
+			RegionStat stat = (RegionStat) stat1.clone();
+			stat.keyNum += stat2.keyNum;
+			stat.readCount += stat2.readCount;
+			stat.writeCount += stat2.writeCount;
+			stat.size += stat2.size;
+			region = new Region(newRegionId, start, end);
+			region.setStat(stat);
+
+			IDataLogger logger1 = loggers.remove(region1);
+			IDataLogger logger2 = loggers.remove(region2);
+			logger1.close();
+			logger2.close();
+			long time = System.currentTimeMillis();
+			String loggerPath = PathBuilder.getRegionLogPath(newRegionId, time);
+			IDataLogger logger = DataFileLogger.forCreate(loggerPath);
+			logger.append(logger1.getFile());
+			logger.append(logger2.getFile());
+			addRegion(region);
+			loggers.put(region, logger);
+			finished = true;
+		} catch (IOException e) {
+			logger.error("Error occured when merge region " + regionId1 + " and " + regionId2, e);
+		} finally {
+			if (callback != null) {
+				callback.callback(finished, regionId1, regionId2, region);
+			}
 		}
 
 	}

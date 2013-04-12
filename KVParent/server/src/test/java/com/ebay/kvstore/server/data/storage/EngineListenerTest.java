@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.server.data.storage.helper.TaskManager;
+import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
 
@@ -62,11 +62,11 @@ public class EngineListenerTest extends BaseFileTest {
 			engine.incr(new byte[] { 100 }, 5, 0);
 			assertEquals(20,
 					KeyValueUtil.bytesToInt(engine.get(new byte[] { 100 }).getValue().getValue()));
-			while (TaskManager.isRunning()) {
+			while (RegionTaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
 			engine.splitRegion(0, 5, null);
-			while (TaskManager.isRunning()) {
+			while (RegionTaskManager.isRunning()) {
 				Thread.sleep(100);
 			}
 		} catch (Exception e) {

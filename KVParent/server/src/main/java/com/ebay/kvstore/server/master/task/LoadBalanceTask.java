@@ -3,8 +3,8 @@ package com.ebay.kvstore.server.master.task;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.server.master.balancer.ILoadBalancer;
 import com.ebay.kvstore.server.master.balancer.LoadBalancerFactory;
-import com.ebay.kvstore.server.master.helper.IMasterEngine;
-import com.ebay.kvstore.server.master.helper.IMasterEngineListener;
+import com.ebay.kvstore.server.master.engine.IMasterEngine;
+import com.ebay.kvstore.server.master.engine.IMasterEngineListener;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;
 
@@ -28,13 +28,18 @@ public abstract class LoadBalanceTask extends BaseMasterTask implements IMasterE
 	}
 
 	@Override
-	public void onRegionSplit(Region oldRegion, Region newRegion) {
-		balancer.onRegionSplit(oldRegion, newRegion);
+	public void onRegionSplit(int oldId, int newId) {
+		balancer.onRegionSplit(oldId, newId);
 	}
 
 	@Override
-	public void onRegionUnload(DataServerStruct struct, Region region) {
-		balancer.onRegionUnload(region);
+	public void onRegionUnload(DataServerStruct struct, int regionId) {
+		balancer.onRegionUnload(regionId);
+	}
+
+	@Override
+	public void onRegionMerge(DataServerStruct struct, int regionId1, int regionId2) {
+		balancer.onRegionMerge(regionId1, regionId2);
 	}
 
 }

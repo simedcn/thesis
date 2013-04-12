@@ -44,11 +44,6 @@ public class OperationFileLogger extends BaseFileLogger implements IOperationLog
 	}
 
 	@Override
-	public void flush() throws IOException {
-		out.flush();
-	}
-
-	@Override
 	public String getFile() {
 		return file;
 	}

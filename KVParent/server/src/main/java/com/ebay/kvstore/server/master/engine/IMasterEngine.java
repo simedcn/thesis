@@ -1,4 +1,4 @@
-package com.ebay.kvstore.server.master.helper;
+package com.ebay.kvstore.server.master.engine;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -46,7 +46,7 @@ public interface IMasterEngine {
 
 	public Map<Integer, Region> getUnassignedRegions();
 
-	public void loadRegion(DataServerStruct struct, Region region)
+	public void loadRegion(boolean success, DataServerStruct struct, Region region)
 			throws InvalidDataServerException;
 
 	public int nextRegionId();
@@ -61,8 +61,8 @@ public interface IMasterEngine {
 
 	public void setLogger(String path);
 
-	public void splitRegion(DataServerStruct struct, Region oldRegion, Region newRegion)
-			throws InvalidDataServerException;
+	public void splitRegion(boolean success, DataServerStruct struct, Region oldRegion,
+			Region newRegion, int oldId, int newId) throws InvalidDataServerException;
 
 	public void start() throws Exception;
 
@@ -82,7 +82,7 @@ public interface IMasterEngine {
 	 */
 	public void syncDataServer(DataServerStruct struct, IoSession session) throws KVException;
 
-	public void unloadRegoin(DataServerStruct struct, Region region)
+	public void unloadRegoin(boolean success, DataServerStruct struct, Region region, int regionId)
 			throws InvalidDataServerException;
 
 	public void unregisterListener(IMasterEngineListener listener);
@@ -90,5 +90,8 @@ public interface IMasterEngine {
 	public void unregisterTask(IMasterTask task);
 
 	public boolean containsRegion(int regionId);
+
+	public void mergeRegion(boolean success, DataServerStruct struct, int regionId1, int regionId2,
+			Region region);
 
 }

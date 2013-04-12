@@ -49,7 +49,7 @@ public class AdvancedLoadBalancerTest extends BaseLoadBalancerTest {
 		Region region = new Region(regionId, nextKeyRange(), nextKeyRange());
 		region.getStat().size = 100;
 		dataServers.get(2).addRegion(region);
-		Map<Region, Address> result = loadBalancer.unassignRegion(dataServers);
+		Map<Integer, Address> result = loadBalancer.unassignRegion(dataServers);
 		assertEquals(2, result.size());
 		assertTrue(result.containsKey(region));
 	}

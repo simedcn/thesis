@@ -12,6 +12,8 @@ public interface IOperation {
 	public static byte Unload = 1;
 
 	public static byte Split = 2;
+	
+	public static byte Merge = 3;
 
 	public Address getAddr();
 
