@@ -122,7 +122,6 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 			} catch (Exception e) {
 				logger.error("", e);
 			}
-			listener.onSet(region, key, value);
 		}
 	}
 

@@ -79,16 +79,18 @@ public class RegionFileStorage implements IRegionStorage {
 
 	protected Lock flushingLock = new ReentrantLock();
 
+	protected BloomFilter keyFilter;
+
 	public RegionFileStorage(IConfiguration conf, Region region) throws IOException {
-		this(conf, region, null, null, false);
+		this(conf, region, null, null, null, false);
 	}
 
 	public RegionFileStorage(IConfiguration conf, Region region, boolean logger) throws IOException {
-		this(conf, region, null, null, true);
+		this(conf, region, null, null, null, true);
 	}
 
 	public RegionFileStorage(IConfiguration conf, Region region, String dataFile,
-			List<IndexEntry> indices, boolean logger) throws IOException {
+			List<IndexEntry> indices, BloomFilter filter, boolean logger) throws IOException {
 		fs = DFSManager.getDFS();
 		this.conf = conf;
 		this.region = region;
@@ -97,6 +99,11 @@ public class RegionFileStorage implements IRegionStorage {
 		this.indexBlockNum = conf.getInt(IConfigurationKey.Dataserver_Region_Index_Block_Num);
 		this.addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Addr));
 		this.buffer = KeyValueCache.forBuffer();
+		if (filter != null) {
+			this.keyFilter = filter;
+		} else {
+			this.keyFilter = new BloomFilter(conf);
+		}
 		if (region != null) {
 			this.baseDir = PathBuilder.getRegionDir(region.getRegionId());
 		}
@@ -116,7 +123,7 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	public RegionFileStorage(IConfiguration conf, String dataFile) throws IOException {
-		this(conf, null, dataFile, null, false);
+		this(conf, null, dataFile, null, null, false);
 	}
 
 	@Override
@@ -194,7 +201,7 @@ public class RegionFileStorage implements IRegionStorage {
 
 	@Override
 	public KeyValue[] getFromDisk(byte[] key) throws IOException {
-		if (indices == null) {
+		if (indices == null || !keyFilter.get(key)) {
 			return null;
 		}
 		IndexEntry e = getKeyIndex(key);
@@ -293,7 +300,7 @@ public class RegionFileStorage implements IRegionStorage {
 		RegionStat stat = region.getStat();
 		stat.keyNum = this.dataFileKeyNum;
 		stat.size = this.dataFileSize;
-		try{
+		try {
 			buffer.getReadLock().lock();
 			for (Entry<byte[], Value> e : buffer) {
 				byte[] key = e.getKey();
@@ -306,7 +313,7 @@ public class RegionFileStorage implements IRegionStorage {
 					stat.size += KeyValueUtil.getKeyValueLen(key, v);
 				}
 			}
-		}finally{
+		} finally {
 			buffer.getReadLock().unlock();
 		}
 		stat.dirty = false;
@@ -315,6 +322,7 @@ public class RegionFileStorage implements IRegionStorage {
 	@Override
 	public void storeInBuffer(byte[] key, byte[] value) {
 		buffer.set(key, value);
+		keyFilter.set(key);
 		redoLogger.write(new SetMutation(key, value));
 		if (buffer.getUsed() > bufferLimit) {
 			flush();
@@ -333,7 +341,8 @@ public class RegionFileStorage implements IRegionStorage {
 			} else {
 				indices.clear();
 			}
-			dataFileKeyNum = IndexBuilder.build(indices, dataFile, blockSize, indexBlockNum);
+			dataFileKeyNum = IndexBuilder.build(indices, keyFilter, dataFile, blockSize,
+					indexBlockNum);
 			dataFileSize = FSUtil.getFileSize(dataFile);
 		} catch (IOException e) {
 			logger.error("Fail to build index for " + dataFile, e);
@@ -367,6 +376,7 @@ public class RegionFileStorage implements IRegionStorage {
 	private class RegionFlushListener implements IRegionFlushListener {
 		private String oldFile;
 		private List<IndexEntry> tmpIndices;
+		private BloomFilter tmpFilter;
 		private String oldLoggerFile;
 		private String newLoggerFile;
 		private int newKeyNum;
@@ -375,7 +385,6 @@ public class RegionFileStorage implements IRegionStorage {
 			super();
 			this.oldFile = oldFile;
 			oldLoggerFile = redoLogger.getFile();
-
 		}
 
 		@Override
@@ -399,6 +408,7 @@ public class RegionFileStorage implements IRegionStorage {
 					logger.info("Region {} flush success, new data file:{}", region, file);
 					dataFile = file;
 					indices = tmpIndices;
+					keyFilter = tmpFilter;
 					dataFileKeyNum = newKeyNum;
 					dataFileSize = FSUtil.getFileSize(file);
 					oldBuffer = null;
@@ -424,7 +434,9 @@ public class RegionFileStorage implements IRegionStorage {
 			if (success) {
 				try {
 					tmpIndices = new ArrayList<>();
-					newKeyNum = IndexBuilder.build(tmpIndices, file, blockSize, indexBlockNum);
+					tmpFilter = new BloomFilter(conf);
+					newKeyNum = IndexBuilder.build(tmpIndices, tmpFilter, file, blockSize,
+							indexBlockNum);
 				} catch (Exception e) {
 					logger.error("Error occured when building index for data file:" + file, e);
 					restore();

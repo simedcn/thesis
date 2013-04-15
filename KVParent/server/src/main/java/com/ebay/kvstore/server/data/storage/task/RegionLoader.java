@@ -14,6 +14,7 @@ import com.ebay.kvstore.RegionUtil;
 import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
+import com.ebay.kvstore.server.data.storage.fs.BloomFilter;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.IndexBuilder;
@@ -50,6 +51,7 @@ public class RegionLoader extends BaseRegionTask {
 			String[] logFiles = FSUtil.getRegionLogFiles(baseDir);
 			String dataFile = null;
 			String logFile = null;
+			BloomFilter filter = null;
 			boolean success = false;
 			listener.onLoadBegin();
 			List<IndexEntry> indices = null;
@@ -79,6 +81,7 @@ public class RegionLoader extends BaseRegionTask {
 						indices = result.indices;
 						buffer = result.cache;
 						logFile = result.log;
+						filter = result.filter;
 						success = true;
 						break;
 					} catch (Exception e) {
@@ -97,7 +100,7 @@ public class RegionLoader extends BaseRegionTask {
 
 			IRegionStorage storage = null;
 			if (dataFile != null) {
-				storage = new RegionFileStorage(conf, region, baseDir + dataFile, indices, false);
+				storage = new RegionFileStorage(conf, region, baseDir + dataFile, indices,filter ,false);
 			} else {
 				storage = new RegionFileStorage(conf, region);
 			}
@@ -105,8 +108,8 @@ public class RegionLoader extends BaseRegionTask {
 				long time = System.currentTimeMillis();
 				logFile = PathBuilder.getRegionLogPath(region.getRegionId(), time);
 				storage.newLogger(logFile);
-			}else{
-				logFile = PathBuilder.getRegionDir(region.getRegionId())+logFile;
+			} else {
+				logFile = PathBuilder.getRegionDir(region.getRegionId()) + logFile;
 				storage.setLogger(logFile);
 			}
 			storage.setBuffer(buffer);
@@ -136,7 +139,8 @@ public class RegionLoader extends BaseRegionTask {
 	 */
 	private LoaderResult tryLoad(String dir, String file, String[] logFiles) throws IOException {
 		List<IndexEntry> indices = new ArrayList<>();
-		IndexBuilder.build(indices, dir + file, blockSize, indexBlockNum);
+		BloomFilter filter = new BloomFilter(conf);
+		IndexBuilder.build(indices, filter, dir + file, blockSize, indexBlockNum);
 		KeyValueCache buffer = KeyValueCache.forBuffer();
 		String log = null;
 		// load log files
@@ -152,16 +156,19 @@ public class RegionLoader extends BaseRegionTask {
 				break;
 			}
 		}
-		return new LoaderResult(indices, buffer, log);
+		return new LoaderResult(indices, filter, buffer, log);
 	}
 
 	private class LoaderResult {
 		public List<IndexEntry> indices;
+		public BloomFilter filter;
 		public KeyValueCache cache;
 		public String log;
 
-		public LoaderResult(List<IndexEntry> indices, KeyValueCache cache, String log) {
+		public LoaderResult(List<IndexEntry> indices, BloomFilter filter, KeyValueCache cache,
+				String log) {
 			this.indices = indices;
+			this.filter = filter;
 			this.cache = cache;
 			this.log = log;
 		}

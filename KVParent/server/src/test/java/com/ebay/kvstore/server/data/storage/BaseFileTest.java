@@ -42,7 +42,8 @@ public class BaseFileTest {
 		try {
 			conf = ConfigurationLoader.load();
 			addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Addr));
-			DFSManager.init(new InetSocketAddress("localhost", 9000), new Configuration());
+			Address hdfs = Address.parse(conf.get(IConfigurationKey.Hdfs_Addr));
+			DFSManager.init(hdfs.toInetSocketAddress(), new Configuration());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

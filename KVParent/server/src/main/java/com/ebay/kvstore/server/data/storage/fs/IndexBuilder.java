@@ -25,8 +25,11 @@ public class IndexBuilder {
 	 * @return
 	 * @throws IOException
 	 */
-	public static int build(List<IndexEntry> list, String file, int blockSize, int blockCount)
-			throws IOException {
+	public static int build(List<IndexEntry> list, BloomFilter filter, String file, int blockSize,
+			int blockCount) throws IOException {
+		if (filter != null) {
+			filter.clear();
+		}
 		IBlockInputStream in = new KVInputStream(DFSManager.getDFS().open(new Path(file)),
 				blockSize, 0, 0);
 		int keyNum = 0;
@@ -51,6 +54,9 @@ public class IndexBuilder {
 				kv = KeyValueUtil.readFromExternal(in);
 				keyNum++;
 				curKey = kv.getKey();
+				if (filter != null) {
+					filter.set(curKey);
+				}
 				if (prevKey == null) {
 					prevKey = curKey;
 				}

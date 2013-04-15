@@ -35,8 +35,8 @@ public abstract class BaseLoadBalancerTest extends BaseTest {
 	}
 
 	@Before
-	public void init(){
-		regionId=0;
+	public void init() {
+		regionId = 0;
 		dataServers = new ArrayList<>();
 		DataServerStruct server = new DataServerStruct(addr1, 1);
 		server.addRegion(new Region(nextRegionId(), nextKeyRange(), nextKeyRange()));
@@ -51,7 +51,7 @@ public abstract class BaseLoadBalancerTest extends BaseTest {
 		server.addRegion(new Region(nextRegionId(), nextKeyRange(), nextKeyRange()));
 		dataServers.add(server);
 	}
-	
+
 	public static int nextRegionId() {
 		return regionId++;
 	}

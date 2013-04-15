@@ -23,7 +23,6 @@ import com.ebay.kvstore.server.data.storage.task.IRegionSplitListener;
 import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
-import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
 
 public class PersistentStoreEngine extends BaseStoreEngine {

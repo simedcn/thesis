@@ -1,5 +1,7 @@
 package com.ebay.kvstore.server.data.storage.fs;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,11 +40,16 @@ public class IndexBuilderTest extends BaseFileTest {
 			}
 			out.close();
 			List<IndexEntry> index = new ArrayList<>();
-			IndexBuilder.build(index, path, blockSize, 5);
+			BloomFilter filter = new BloomFilter(1024);
+			assertFalse(filter.get(new byte[]{-1}));
+			IndexBuilder.build(index, filter, path, blockSize, 5);
 			for (IndexEntry e : index) {
 				in = new KVInputStream(fs.open(new Path(path)), blockSize, e.blockStart, e.offset);
 				Assert.assertArrayEquals(e.keyStart, KeyValueUtil.readFromExternal(in).getKey());
 				in.close();
+			}
+			for (int i = 0; i < 128; i++) {
+				assertTrue(filter.get(new byte[] { (byte) i }));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

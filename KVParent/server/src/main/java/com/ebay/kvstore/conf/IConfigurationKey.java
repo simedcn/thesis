@@ -78,4 +78,6 @@ public interface IConfigurationKey {
 
 	public static final String Tmp_File_Reserve_Days = "tmp.file.reserve.days";
 
+	public static final String Dataserver_Region_Bloomfilter_Size = "dataserver.region.bloomfilter.size";
+
 }

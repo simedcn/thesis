@@ -34,6 +34,7 @@ public class KVConfiguration implements IConfiguration, IConfigurationKey {
 		units.put(DataServer_Region_Reserve_Days, IKVConstants.Day);
 		units.put(Heartbeat_Interval, IKVConstants.Second);
 		units.put(Tmp_File_Reserve_Days, IKVConstants.Day);
+		units.put(Dataserver_Region_Bloomfilter_Size, IKVConstants.KB);
 	}
 
 	KVConfiguration(Properties p) {

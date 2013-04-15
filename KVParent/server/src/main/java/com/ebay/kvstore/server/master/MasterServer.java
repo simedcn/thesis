@@ -152,6 +152,7 @@ public class MasterServer implements IConfigurationKey, Watcher {
 	}
 
 	public synchronized void stop() {
+		logger.info("Stopping master server");
 		if (acceptor != null) {
 			acceptor.unbind();
 			acceptor.dispose();

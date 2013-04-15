@@ -2,7 +2,10 @@ package com.ebay.kvstore.client;
 
 import static org.junit.Assert.*;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Random;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -16,11 +19,13 @@ public class SystemTest extends BaseClientTest {
 
 	private Random random = new Random();
 	private int repeat;
+	private Set<byte[]> keys;
 
 	@Before
 	public void setUp() throws Exception {
 		initClient(new ClientOption(true, 2000, 30, new Address("192.168.1.102", 20000)));
 		repeat = 1000;
+		keys = new HashSet<>();
 	}
 
 	@After
@@ -31,16 +36,20 @@ public class SystemTest extends BaseClientTest {
 	public void test() {
 		while (true) {
 			try {
+				if (keys.size() > 10000) {
+					keys.clear();
+				}
 				int op = random.nextInt(10);
+				long from = System.currentTimeMillis();
 				switch (op) {
 				case 0:
 				case 1:
 				case 2:
 				case 3:
-				case 4:
-				case 5:
 					set();
 					break;
+				case 4:
+				case 5:
 				case 6:
 					get();
 					break;
@@ -54,6 +63,8 @@ public class SystemTest extends BaseClientTest {
 					break;
 				}
 				stat();
+				long to = System.currentTimeMillis();
+				System.out.println("Time:" + (to - from) + "ms");
 				Thread.sleep(1000);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -71,13 +82,24 @@ public class SystemTest extends BaseClientTest {
 	}
 
 	private void get() throws KVException {
-		for (int i = 0; i < repeat; i++) {
-			byte[] key = getRandBytes();
+		Iterator<byte[]> it = keys.iterator();
+		int index = 0;
+		while (index < repeat) {
+			byte[] key = null;
+			boolean exist = false;
+			if (random.nextBoolean() && it.hasNext()) {
+				key = it.next();
+				exist = true;
+			} else {
+				key = getRandBytes();
+			}
 			byte[] value = client.get(key);
-			if (value != null) {
+			if (exist) {
 				assertArrayEquals(key, value);
 			}
+			index++;
 		}
+
 		System.out.println("Get key/values");
 	}
 

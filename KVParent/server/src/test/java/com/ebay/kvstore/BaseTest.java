@@ -11,7 +11,6 @@ import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 
 public class BaseTest {
 	protected static IConfiguration conf;
-
 	static {
 		try {
 			conf = ConfigurationLoader.load();

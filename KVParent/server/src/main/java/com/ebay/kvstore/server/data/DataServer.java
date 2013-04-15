@@ -120,6 +120,7 @@ public class DataServer implements IConfigurationKey, Watcher {
 	}
 
 	public void stop() {
+		logger.info("Stopping data server");
 		if (acceptor != null) {
 			acceptor.unbind();
 			acceptor.dispose();

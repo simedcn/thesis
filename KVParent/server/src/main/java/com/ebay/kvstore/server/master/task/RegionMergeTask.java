@@ -1,6 +1,7 @@
 package com.ebay.kvstore.server.master.task;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -19,6 +20,7 @@ public class RegionMergeTask extends LoadBalanceTask {
 
 	public RegionMergeTask(IConfiguration conf, IMasterEngine engine) {
 		super(conf, engine);
+		this.regionIds = new HashMap<>();
 		this.interval = conf.getInt(IConfigurationKey.Master_Merge_Check_Interval);
 	}
 
