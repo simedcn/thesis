@@ -47,8 +47,8 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 	@Override
 	public void addRegion(Region region, boolean create) throws IOException {
 		if (create) {
-			if(regions.contains(region)){
-				return ;
+			if (regions.contains(region)) {
+				return;
 			}
 			long time = System.currentTimeMillis();
 			String file = PathBuilder.getRegionLogPath(region.getRegionId(), time);
@@ -67,7 +67,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public void dispose() {
+	public synchronized void dispose() {
 		for (Entry<Region, IDataLogger> e : loggers.entrySet()) {
 			e.getValue().close();
 		}

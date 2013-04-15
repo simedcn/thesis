@@ -60,6 +60,8 @@ public interface IMasterEngine {
 	public void resetRegionId() throws Exception;
 
 	public void setLogger(String path);
+	
+	public void newLogger(String path);
 
 	public void splitRegion(boolean success, DataServerStruct struct, Region oldRegion,
 			Region newRegion, int oldId, int newId) throws InvalidDataServerException;

@@ -306,6 +306,18 @@ public class MasterEngine implements IMasterEngine {
 			if (opLogger != null) {
 				opLogger.close();
 			}
+			opLogger = OperationFileLogger.forAppend(path);
+		} catch (IOException e) {
+			logger.error("Fail to append logger " + path, e);
+		}
+	}
+
+	@Override
+	public void newLogger(String path) {
+		try {
+			if (opLogger != null) {
+				opLogger.close();
+			}
 			opLogger = OperationFileLogger.forCreate(path);
 		} catch (IOException e) {
 			logger.error("Fail to create new logger " + path, e);
@@ -339,19 +351,38 @@ public class MasterEngine implements IMasterEngine {
 		String logDir = PathBuilder.getMasterLogDir();
 		String[] checkPoints = FSUtil.getMasterCheckpointFiles(checkPointDir);
 		String[] logs = FSUtil.getMasterLogFiles(logDir);
-		for (int i = checkPoints.length - 1; i >= 0; i--) {
-			String checkpoint = checkPoints[i];
-			try {
-				tryLoad(checkPointDir, checkpoint, logs);
-				logger.info("Load master state from checkpoint file:{}", checkPointDir + checkpoint);
-				break;
-			} catch (Exception e) {
-				logger.error("Fail to recover master server from " + checkpoint, e);
+		if (checkPoints.length > 0) {
+			for (int i = checkPoints.length - 1; i >= 0; i--) {
+				String checkpoint = checkPoints[i];
+				try {
+					tryLoad(checkPointDir, logDir, checkpoint, logs);
+					logger.info("Load master state from checkpoint file:{}", checkPointDir
+							+ checkpoint);
+					break;
+				} catch (Exception e) {
+					logger.error("Fail to recover master server from " + checkpoint, e);
+				}
 			}
+		} else {
+			for (int i = logs.length - 1; i >= 0; i--) {
+				String log = logs[i];
+				try {
+					reset();
+					loadLogger(logDir + log);
+					logger.info("Load master state from log file:{}", logDir + log);
+					break;
+				} catch (Exception e) {
+					logger.error("Fail to recover master server from log file " + logDir + log, e);
+				}
+			}
+
 		}
-		long time = System.currentTimeMillis();
-		String log = PathBuilder.getMasterLogPath(time);
-		opLogger = OperationFileLogger.forCreate(log);
+		if (opLogger == null) {
+			long time = System.currentTimeMillis();
+			String log = PathBuilder.getMasterLogPath(time);
+			newLogger(log);
+		}
+
 		// put the default region if there is no region added
 		if (unassignedRegions.size() == 0) {
 			Region region = new Region(nextRegionId(), new byte[] { 0 }, null);
@@ -457,6 +488,7 @@ public class MasterEngine implements IMasterEngine {
 				break;
 			}
 		}
+		setLogger(log);
 	}
 
 	protected synchronized void readFromExternal(InputStream in) throws IOException,
@@ -486,14 +518,14 @@ public class MasterEngine implements IMasterEngine {
 		unassignedRegions.clear();
 	}
 
-	protected void tryLoad(String dir, String checkpoint, String[] logs)
+	protected void tryLoad(String checkpointDir, String logDir, String checkpoint, String[] logs)
 			throws ClassNotFoundException, IOException {
 		reset();
 		long time = FSUtil.getMasterFileTimestamp(checkpoint);
-		readFromExternal(fs.open(new Path(dir, checkpoint)));
+		readFromExternal(fs.open(new Path(checkpointDir, checkpoint)));
 		for (String log : logs) {
 			if (FSUtil.getMasterFileTimestamp(log) >= time) {
-				loadLogger(dir + log);
+				loadLogger(logDir + log);
 			} else {
 				break;
 			}

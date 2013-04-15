@@ -53,14 +53,15 @@ public class MasterServer implements IConfigurationKey, Watcher {
 	public static void main(String[] args) {
 		try {
 			IConfiguration conf = ConfigurationLoader.load();
-			MasterServer server = new MasterServer(conf);
+			final MasterServer server = new MasterServer(conf);
 			if (args.length >= 1) {
 				if (args[0].equals("-format")) {
 					server.format();
 					return;
 				}
 			}
-			server.format();
+			// server.format();
+
 			server.start();
 
 		} catch (Exception e) {
@@ -141,6 +142,7 @@ public class MasterServer implements IConfigurationKey, Watcher {
 	public synchronized void start() throws Exception {
 		initZookeeper();
 		if (active) {
+
 			run();
 		} else {
 			synchronized (zooKeeper) {
@@ -161,6 +163,13 @@ public class MasterServer implements IConfigurationKey, Watcher {
 			} catch (InterruptedException e) {
 			}
 			zooKeeper = null;
+		}
+		if (engine != null) {
+			try {
+				engine.stop();
+			} catch (IOException e) {
+				logger.error("Error occured when stop master engine", e);
+			}
 		}
 	}
 
@@ -226,6 +235,12 @@ public class MasterServer implements IConfigurationKey, Watcher {
 	private void run() throws Exception {
 		zooKeeper.create(IKVConstants.ZooKeeper_Master_Addr, (masterAddr.toString()).getBytes(),
 				Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				MasterServer.this.stop();
+			}
+		});
 		initHdfs();
 		initEngine();
 		initServer();

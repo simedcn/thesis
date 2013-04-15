@@ -49,6 +49,7 @@ public class RegionLoader extends BaseRegionTask {
 			String[] dataFiles = FSUtil.getRegionFiles(baseDir);
 			String[] logFiles = FSUtil.getRegionLogFiles(baseDir);
 			String dataFile = null;
+			String logFile = null;
 			boolean success = false;
 			listener.onLoadBegin();
 			List<IndexEntry> indices = null;
@@ -61,7 +62,8 @@ public class RegionLoader extends BaseRegionTask {
 					for (int i = logFiles.length - 1; i >= 0; i--) {
 						try {
 							buffer = KeyValueCache.forBuffer();
-							RegionUtil.loadLogger(baseDir + logFiles[i], buffer);
+							logFile = logFiles[i];
+							RegionUtil.loadLogger(baseDir + logFile, buffer);
 							success = true;
 						} catch (Exception e) {
 							logger.warn("Fail to load region from log file:" + logFiles[i], e);
@@ -76,6 +78,7 @@ public class RegionLoader extends BaseRegionTask {
 						LoaderResult result = tryLoad(baseDir, dataFile, logFiles);
 						indices = result.indices;
 						buffer = result.cache;
+						logFile = result.log;
 						success = true;
 						break;
 					} catch (Exception e) {
@@ -91,15 +94,21 @@ public class RegionLoader extends BaseRegionTask {
 			}
 			phase = RegionTaskPhase.End;
 			// commit
-			long time = System.currentTimeMillis();
-			String logFile = PathBuilder.getRegionLogPath(region.getRegionId(), time);
+
 			IRegionStorage storage = null;
 			if (dataFile != null) {
 				storage = new RegionFileStorage(conf, region, baseDir + dataFile, indices, false);
 			} else {
 				storage = new RegionFileStorage(conf, region);
 			}
-			storage.newLogger(logFile);
+			if (logFile == null) {
+				long time = System.currentTimeMillis();
+				logFile = PathBuilder.getRegionLogPath(region.getRegionId(), time);
+				storage.newLogger(logFile);
+			}else{
+				logFile = PathBuilder.getRegionDir(region.getRegionId())+logFile;
+				storage.setLogger(logFile);
+			}
 			storage.setBuffer(buffer);
 			listener.onLoadCommit(success, storage);
 			phase = RegionTaskPhase.Commit;
@@ -129,26 +138,32 @@ public class RegionLoader extends BaseRegionTask {
 		List<IndexEntry> indices = new ArrayList<>();
 		IndexBuilder.build(indices, dir + file, blockSize, indexBlockNum);
 		KeyValueCache buffer = KeyValueCache.forBuffer();
+		String log = null;
 		// load log files
 		long dataTime = FSUtil.getRegionFileTimestamp(file);
 		for (int i = logFiles.length - 1; i >= 0; i--) {
 			long logTime = FSUtil.getRegionFileTimestamp(logFiles[i]);
 			if (logTime >= dataTime) {
+				if (log == null) {
+					log = logFiles[i];
+				}
 				RegionUtil.loadLogger(dir + logFiles[i], buffer);
 			} else {
 				break;
 			}
 		}
-		return new LoaderResult(indices, buffer);
+		return new LoaderResult(indices, buffer, log);
 	}
 
 	private class LoaderResult {
 		public List<IndexEntry> indices;
 		public KeyValueCache cache;
+		public String log;
 
-		public LoaderResult(List<IndexEntry> indices, KeyValueCache cache) {
+		public LoaderResult(List<IndexEntry> indices, KeyValueCache cache, String log) {
 			this.indices = indices;
 			this.cache = cache;
+			this.log = log;
 		}
 
 	}

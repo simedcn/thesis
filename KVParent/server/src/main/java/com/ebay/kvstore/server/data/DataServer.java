@@ -106,6 +106,12 @@ public class DataServer implements IConfigurationKey, Watcher {
 	}
 
 	public void start() throws Exception {
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				DataServer.this.stop();
+			}
+		});
 		initHDFS();
 		initZookeeper();
 		initServer();
@@ -132,6 +138,13 @@ public class DataServer implements IConfigurationKey, Watcher {
 			} catch (IOException e) {
 			}
 			client = null;
+		}
+		if (engine != null) {
+			try {
+				engine.dispose();
+			} catch (Exception e) {
+				logger.error("Error occured when stop data engine");
+			}
 		}
 	}
 

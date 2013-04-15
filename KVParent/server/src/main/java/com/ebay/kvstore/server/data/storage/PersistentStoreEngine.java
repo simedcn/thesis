@@ -49,9 +49,13 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public void dispose() {
+	public synchronized void dispose() {
 		for (Entry<Region, IRegionStorage> s : storages.entrySet()) {
-			s.getValue().dispose();
+			try {
+				s.getValue().dispose();
+			} catch (Exception e) {
+				logger.error("Error occured when stop region storage", e);
+			}
 		}
 	}
 

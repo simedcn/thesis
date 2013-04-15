@@ -54,7 +54,7 @@ public class CheckpointTask extends BaseMasterTask {
 				boolean success = fs.rename(new Path(tmpPath), new Path(path));
 				if (success) {
 					checkpointTime = time;
-					engine.setLogger(log);
+					engine.newLogger(log);
 					logger.info(
 							"Create master checkpoint successfully, create new checkpoint file {} and new log file {}",
 							path, log);
