@@ -276,7 +276,7 @@
 				HtmlQuoting.quoteHtmlChars(parent));
 		out.print("<hr>");
 		out.print("<a href=\"http://" + req.getServerName() + ":"
-				+ req.getServerPort() + "/browseDirectory.jsp?dir="
+				+ req.getServerPort() + "/webapps/datanode/browseDirectory.jsp?dir="
 				+ URLEncoder.encode(parent, "UTF-8") + "&namenodeInfoPort="
 				+ namenodeInfoPort + "\"><i>Go back to dir listing</i></a><br>");
 		out.print("<a href=\"#viewOptions\">Advanced view/download options</a><br>");
@@ -385,7 +385,7 @@
 		String prevUrl = null;
 		if (prevBlockIdStr != null) {
 			prevUrl = "http://" + prevHost + ":" + prevPort
-					+ "/browseBlock.jsp?blockId=" + prevBlockIdStr
+					+ "/webapps/datanode/browseBlock.jsp?blockId=" + prevBlockIdStr
 					+ "&blockSize=" + prevBlockSize + "&startOffset="
 					+ prevStartOffset + "&filename="
 					+ URLEncoder.encode(filename, "UTF-8")

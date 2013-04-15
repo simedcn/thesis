@@ -66,6 +66,7 @@ public class KVOutputStream extends FilterOutputStream implements IBlockOutputSt
 	public void writeByte(int v) throws IOException {
 		checkBlock(1);
 		super.write(v);
+		updateBlock(1);
 	}
 
 	@Override
@@ -88,7 +89,7 @@ public class KVOutputStream extends FilterOutputStream implements IBlockOutputSt
 	private void checkBlock(int len) throws IOException {
 		int total = blockPos + len;
 		if (total > blockSize) {
-			for (int i = 0; i < total - blockSize; i++) {
+			for (int i = 0; i < blockSize - blockPos; i++) {
 				out.write(0);
 			}
 			blockPos = 0;

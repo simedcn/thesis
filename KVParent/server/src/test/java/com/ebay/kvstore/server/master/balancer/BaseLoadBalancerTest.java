@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import java.util.List;
 
+import org.junit.Before;
+
 import com.ebay.kvstore.BaseTest;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
@@ -30,6 +32,11 @@ public abstract class BaseLoadBalancerTest extends BaseTest {
 		addr2 = new Address("127.0.0.1", 30002);
 		addr3 = new Address("127.0.0.1", 30003);
 
+	}
+
+	@Before
+	public void init(){
+		regionId=0;
 		dataServers = new ArrayList<>();
 		DataServerStruct server = new DataServerStruct(addr1, 1);
 		server.addRegion(new Region(nextRegionId(), nextKeyRange(), nextKeyRange()));
@@ -44,7 +51,7 @@ public abstract class BaseLoadBalancerTest extends BaseTest {
 		server.addRegion(new Region(nextRegionId(), nextKeyRange(), nextKeyRange()));
 		dataServers.add(server);
 	}
-
+	
 	public static int nextRegionId() {
 		return regionId++;
 	}

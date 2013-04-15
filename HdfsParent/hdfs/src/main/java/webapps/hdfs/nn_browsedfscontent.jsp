@@ -63,7 +63,7 @@
     }
     String fqdn = InetAddress.getByName(nodeToRedirect).getCanonicalHostName();
     redirectLocation = "http://" + fqdn + ":" + redirectPort + 
-                       "/browseDirectory.jsp?namenodeInfoPort=" + 
+                       "/webapps/datanode/browseDirectory.jsp?namenodeInfoPort=" + 
                        nn.getHttpAddress().getPort() +
                        "&dir=/" + 
                        (tokenString == null ? "" :

@@ -156,14 +156,13 @@ public class MasterEngine implements IMasterEngine {
 	}
 
 	@Override
-	public synchronized DataServerStruct getDataServer(Region region) throws InvalidRegionException {
+	public synchronized DataServerStruct getDataServer(Region region) {
 		for (DataServerStruct struct : dataServers.keySet()) {
 			if (struct.containsRegion(region)) {
 				return struct;
 			}
 		}
-		throw new InvalidRegionException("Region with " + region
-				+ " does not exists in the cluster");
+		return null;
 	}
 
 	@Override
@@ -384,12 +383,18 @@ public class MasterEngine implements IMasterEngine {
 			oldStruct.setInfo(struct.getInfo());
 			for (Region nr : newRegions) {
 				if (unassignedRegions.containsValue(nr)) {
-					unassignedRegions.remove(nr.getRegionId());
-					oldStruct.addRegion(nr);
+					loadRegion(true, oldStruct, nr);
 				} else if (getDataServer(nr) != null && !oldStruct.containsRegion(nr)) {
 					unassignRegion(oldStruct, nr);
 				} else {
-					loadRegion(true, oldStruct, nr);
+					oldStruct.removeRegion(nr);
+					oldStruct.addRegion(nr);
+				}
+			}
+			Collection<Region> oldRegions = oldStruct.getRegions();
+			for (Region region : oldRegions) {
+				if (!newRegions.contains(region)) {
+					unassignRegion(oldStruct, region);
 				}
 			}
 		}

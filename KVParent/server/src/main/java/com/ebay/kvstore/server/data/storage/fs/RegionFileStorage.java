@@ -92,7 +92,7 @@ public class RegionFileStorage implements IRegionStorage {
 		fs = DFSManager.getDFS();
 		this.conf = conf;
 		this.region = region;
-		this.bufferLimit = conf.getInt(IConfigurationKey.Dataserver_Buffer_Max);
+		this.bufferLimit = conf.getInt(IConfigurationKey.Dataserver_Region_Buffer_Max);
 		this.blockSize = conf.getInt(IConfigurationKey.Dataserver_Region_Block_Size);
 		this.indexBlockNum = conf.getInt(IConfigurationKey.Dataserver_Region_Index_Block_Num);
 		this.addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Addr));
@@ -293,16 +293,21 @@ public class RegionFileStorage implements IRegionStorage {
 		RegionStat stat = region.getStat();
 		stat.keyNum = this.dataFileKeyNum;
 		stat.size = this.dataFileSize;
-		for (Entry<byte[], Value> e : buffer) {
-			byte[] key = e.getKey();
-			Value v = e.getValue();
-			if (v.isDeleted()) {
-				stat.keyNum--;
-				stat.size -= KeyValueUtil.getKeyValueLen(key, null);
-			} else {
-				stat.keyNum++;
-				stat.size += KeyValueUtil.getKeyValueLen(key, v);
+		try{
+			buffer.getReadLock().lock();
+			for (Entry<byte[], Value> e : buffer) {
+				byte[] key = e.getKey();
+				Value v = e.getValue();
+				if (v.isDeleted()) {
+					stat.keyNum--;
+					stat.size -= KeyValueUtil.getKeyValueLen(key, null);
+				} else {
+					stat.keyNum++;
+					stat.size += KeyValueUtil.getKeyValueLen(key, v);
+				}
 			}
+		}finally{
+			buffer.getReadLock().unlock();
 		}
 		stat.dirty = false;
 	}

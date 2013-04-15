@@ -277,7 +277,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 				addRegion(newRegion, newStorage);
 				onSplit(oldStorage.getRegion(), newRegion);
 				if (callback != null) {
-					callback.callback(true, this.oldStorage.getRegion(), newStorage.getRegion());
+					callback.callback(true, this.oldStorage.getRegion(), newRegion);
 				}
 				logger.info("Region split success , region has been splitted to {} and {}",
 						oldStorage.getRegion(), newStorage.getRegion());

@@ -44,7 +44,7 @@
 				order = "DSC";
 		}
 		ret += " onClick=\"window.document.location="
-				+ "'/dfsnodelist.jsp?whatNodes=" + whatNodes + "&sorter/field="
+				+ "'dfsnodelist.jsp?whatNodes=" + whatNodes + "&sorter/field="
 				+ name + "&sorter/order=" + order
 				+ "'\" title=\"sort on this column\"";
 
@@ -54,7 +54,7 @@
 	void generateDecommissioningNodeData(JspWriter out, DatanodeDescriptor d,
 			String suffix, boolean alive, int nnHttpPort) throws IOException {
 		String url = "http://" + d.getHostName() + ":" + d.getInfoPort()
-				+ "/browseDirectory.jsp?namenodeInfoPort=" + nnHttpPort
+				+ "/webapps/hdfs/browseDirectory.jsp?namenodeInfoPort=" + nnHttpPort
 				+ "&dir=" + URLEncoder.encode("/", "UTF-8");
 
 		String name = d.getHostName() + ":" + d.getPort();
@@ -106,7 +106,7 @@
 		 */
 		// from nn_browsedfscontent.jsp:
 		String url = "http://" + d.getHostName() + ":" + d.getInfoPort()
-				+ "/browseDirectory.jsp?namenodeInfoPort=" + nnHttpPort
+				+ "/webapps/datanode/browseDirectory.jsp?namenodeInfoPort=" + nnHttpPort
 				+ "&dir=" + URLEncoder.encode("/", "UTF-8");
 
 		String name = d.getHostName() + ":" + d.getPort();
@@ -345,11 +345,11 @@
 	</div>
 	<br>
 
-	<b><a href="/nn_browsedfscontent.jsp">Browse the filesystem</a> </b>
+	<b><a href="nn_browsedfscontent.jsp">Browse the filesystem</a> </b>
 	<br>
 	<b><a href="/logs/">Namenode Logs</a> </b>
 	<br>
-	<b><a href=/dfshealth.jsp> Go back to DFS home</a> </b>
+	<b><a href=dfshealth.jsp> Go back to DFS home</a> </b>
 	<hr>
 	<%
 		generateDFSNodesList(out, nn, request);

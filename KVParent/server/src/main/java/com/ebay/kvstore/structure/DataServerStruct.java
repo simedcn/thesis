@@ -34,6 +34,9 @@ public class DataServerStruct implements Serializable {
 	public void addRegion(Region... regions) {
 		if (regions != null) {
 			for (Region region : regions) {
+				if (this.regions.contains(region)) {
+					this.regions.remove(region);
+				}
 				this.regions.add(region);
 			}
 		}

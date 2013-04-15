@@ -156,7 +156,7 @@
 		out.print("<br><a href=\"http://"
 				+ InetAddress.getByName(namenodeHost).getCanonicalHostName()
 				+ ":" + namenodeInfoPort
-				+ "/dfshealth.jsp\">Go back to DFS home</a>");
+				+ "/webapps/hdfs/dfshealth.jsp\">Go back to DFS home</a>");
 		dfs.close();
 	}%>
 

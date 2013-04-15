@@ -53,7 +53,7 @@ public class KVFileIterator implements Iterator<KeyValue> {
 				next = false;
 			} else {
 				nextLen = in.readInt();
-				if (nextLen != 0
+				if (nextLen > 0
 						&& ((blockEnd < 0) || (nextLen + in.getPos() <= (blockEnd + 1) * blockSize))) {
 					next = true;
 					in.skipBytes(-4);

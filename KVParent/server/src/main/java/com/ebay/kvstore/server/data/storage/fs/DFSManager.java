@@ -28,10 +28,9 @@ public class DFSManager {
 	@SuppressWarnings("deprecation")
 	public static synchronized void init(InetSocketAddress addr, Configuration conf)
 			throws IOException {
-		if (dfs != null) {
-			throw new RuntimeException("The DFSClient has been inited!");
+		if (dfs == null) {
+			dfs = new DistributedFileSystem(addr, conf);
 		}
-		dfs = new DistributedFileSystem(addr, conf);
 	}
 
 }

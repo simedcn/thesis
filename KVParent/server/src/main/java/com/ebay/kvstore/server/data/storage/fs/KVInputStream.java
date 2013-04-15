@@ -186,7 +186,7 @@ public class KVInputStream extends FilterInputStream implements IBlockInputStrea
 		}
 
 		currentBlock++;
-		if (in.read(blockBuffer, 0, blockSize) < blockSize) {
+		if (in.read(blockBuffer, 0, blockSize) < 0) {
 			// the file has reached the end
 			eof = true;
 		}

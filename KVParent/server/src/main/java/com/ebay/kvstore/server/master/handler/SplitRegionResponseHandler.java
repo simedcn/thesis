@@ -22,7 +22,7 @@ public class SplitRegionResponseHandler extends MasterHandler<SplitRegionRespons
 		IoSession session = context.getSession();
 		Address addr = Address.parse(session.getRemoteAddress());
 		Region oldRegion = protocol.getOldRegion();
-		Region newRegion = protocol.getOldRegion();
+		Region newRegion = protocol.getNewRegion();
 		int oldId = protocol.getOldId();
 		int newId = protocol.getNewId();
 		int ret = protocol.getRetCode();

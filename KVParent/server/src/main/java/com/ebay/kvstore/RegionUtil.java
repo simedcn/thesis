@@ -30,7 +30,7 @@ public class RegionUtil {
 					break;
 				}
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			logger.error("Error occured when loading the log file:" + file, e);
 		}
 	}

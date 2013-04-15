@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
@@ -52,7 +54,15 @@ public class MasterServer implements IConfigurationKey, Watcher {
 		try {
 			IConfiguration conf = ConfigurationLoader.load();
 			MasterServer server = new MasterServer(conf);
+			if (args.length >= 1) {
+				if (args[0].equals("-format")) {
+					server.format();
+					return;
+				}
+			}
+			server.format();
 			server.start();
+
 		} catch (Exception e) {
 			logger.error("Fail to start master server", e);
 		}
@@ -68,7 +78,6 @@ public class MasterServer implements IConfigurationKey, Watcher {
 	private boolean active = false;
 	private String znode;
 	private IMasterEngine engine;
-
 	private IConfiguration conf;
 
 	private ProtocolDispatcher dispatcher;
@@ -95,6 +104,20 @@ public class MasterServer implements IConfigurationKey, Watcher {
 				new DataServerJoinRequestHandler());
 		dispatcher.registerHandler(IProtocolType.Merge_Region_Resp,
 				new MergeRegionResponseHandler());
+	}
+
+	public void format() {
+		try {
+			logger.info("start format cluster");
+			initHdfs();
+			FileSystem fs = DFSManager.getDFS();
+			fs.delete(new Path(IKVConstants.DFS_Base_Dir), true);
+			zooKeeper = new ZooKeeper(zkAddr.toString(), zkSessionTimeout, this);
+			zooKeeper.delete(IKVConstants.ZooKeeper_Master_Region_Id, -1);
+			zooKeeper.close();
+		} catch (Exception e) {
+			logger.error("Fail to format cluster", e);
+		}
 	}
 
 	@Override

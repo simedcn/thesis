@@ -123,7 +123,7 @@
 <%JspHelper.createTitle(out, request, request.getParameter("filename")); %>
 </head>
 <body>
-<form action="/tail.jsp" method="GET">
+<form action="/webapps/datanode/tail.jsp" method="GET">
 <% 
    Configuration conf = 
      (Configuration) application.getAttribute(JspHelper.CURRENT_CONF);

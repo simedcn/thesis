@@ -44,7 +44,7 @@ public class DataFileLogger extends BaseFileLogger implements IDataLogger {
 		try {
 			mutation.writeToExternal(out);
 		} catch (IOException e) {
-			logger.error("Error occured when logging mutation:" + mutation, e);
+			logger.error("Logger: "+file + " Error occured when logging mutation:" + mutation, e);
 		}
 	}
 }

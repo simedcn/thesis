@@ -3,6 +3,7 @@ package com.ebay.kvstore.client;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -244,7 +245,7 @@ public class KVClientMain {
 		}
 	}
 
-	private void formatStat(DataServerStruct[] dataServers, PrintStream out) {
+	public static void formatStat(DataServerStruct[] dataServers, PrintStream out) {
 		if (dataServers == null) {
 			out.println("No data server found");
 			return;
@@ -285,17 +286,17 @@ public class KVClientMain {
 		}
 	}
 
-	private void indent(PrintStream out, int count) {
+	private static void indent(PrintStream out, int count) {
 		for (int i = 0; i < count; i++) {
 			out.print('\t');
 		}
 	}
 
-	private String formatRegionSize(long size) {
+	private static String formatRegionSize(long size) {
 		if (size > IKVConstants.MB) {
-			return new BigDecimal((double) size / IKVConstants.MB).setScale(2) + "MB";
+			return new BigDecimal((double) size / IKVConstants.MB).setScale(2,RoundingMode.DOWN) + "MB";
 		} else if (size > IKVConstants.KB) {
-			return new BigDecimal((double) size / IKVConstants.KB).setScale(2) + "KB";
+			return new BigDecimal((double) size / IKVConstants.KB).setScale(2,RoundingMode.DOWN) + "KB";
 		} else {
 			return size + "B";
 		}

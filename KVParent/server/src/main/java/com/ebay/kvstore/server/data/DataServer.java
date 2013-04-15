@@ -30,7 +30,10 @@ import com.ebay.kvstore.server.data.handler.GetRequestHandler;
 import com.ebay.kvstore.server.data.handler.IncrRequestHandler;
 import com.ebay.kvstore.server.data.handler.SetRequestHandler;
 import com.ebay.kvstore.server.data.storage.IStoreEngine;
+import com.ebay.kvstore.server.data.storage.IStoreEngineListener;
 import com.ebay.kvstore.server.data.storage.StoreEngineFactory;
+import com.ebay.kvstore.server.data.storage.StoreLogListener;
+import com.ebay.kvstore.server.data.storage.StoreStatListener;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
@@ -45,7 +48,7 @@ public class DataServer implements IConfigurationKey, Watcher {
 			server = new DataServer(conf);
 			server.start();
 		} catch (Exception e) {
-			logger.error("Fail to start master server", e);
+			logger.error("Fail to start data server", e);
 			server.stop();
 		}
 	}
@@ -88,8 +91,7 @@ public class DataServer implements IConfigurationKey, Watcher {
 	 */
 	@Override
 	public void process(WatchedEvent event) {
-		if (event.getPath() != null
-				&& event.getPath().equals(IKVConstants.ZooKeeper_Master_Addr)) {
+		if (event.getPath() != null && event.getPath().equals(IKVConstants.ZooKeeper_Master_Addr)) {
 			if (event.getType().equals(EventType.NodeDeleted)) {
 				// try to connect new master server if the master addr node
 				// is removed
@@ -209,6 +211,24 @@ public class DataServer implements IConfigurationKey, Watcher {
 
 	private void initStoreEngine() throws IOException {
 		engine = StoreEngineFactory.createStoreEngine(conf);
+		engine.registerListener(new StoreLogListener());
+		engine.registerListener(new StoreStatListener());
+		String[] listeners = conf.getArray(IConfigurationKey.Dataserver_Store_Listener);
+		if (listeners != null) {
+			ClassLoader loader = Thread.currentThread().getContextClassLoader();
+			for (String listener : listeners) {
+				try {
+					Class clazz = loader.loadClass(listener);
+					IStoreEngineListener iListener = (IStoreEngineListener) clazz.getConstructor()
+							.newInstance();
+					engine.registerListener(iListener);
+					logger.info("Register listener {} to store engine.", listener);
+				} catch (Exception e) {
+					logger.error("Error occured when register listener " + listener, e);
+				}
+			}
+		}
+
 	}
 
 	private void initZookeeper() throws Exception {

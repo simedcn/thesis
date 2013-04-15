@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -23,10 +24,6 @@ public class SimpleLoadBalancerTest extends BaseLoadBalancerTest {
 	public SimpleLoadBalancerTest() {
 		conf.set(IConfigurationKey.Master_Unassign_Threshhold, 2);
 		loadBalancer = LoadBalancerFactory.createLoadBalancer(conf);
-	}
-
-	@Before
-	public void setUp() throws Exception {
 	}
 
 	@After
@@ -83,7 +80,15 @@ public class SimpleLoadBalancerTest extends BaseLoadBalancerTest {
 		dataServers.get(2).addRegion(region);
 		Map<Integer, Address> result = loadBalancer.splitRegion(dataServers);
 		assertEquals(1, result.size());
-		assertTrue(result.containsKey(region));
+		assertTrue(result.containsKey(region.getRegionId()));
+	}
+	
+	@Test
+	public void testMerge(){
+		Map<RegionPair, Address> result = loadBalancer.mergeRegion(dataServers);
+		assertEquals(2, result.size());
+		assertTrue(result.containsKey(new RegionPair(0,1)));
+		assertTrue(result.containsKey(new RegionPair(2,3)));
 	}
 
 }

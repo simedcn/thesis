@@ -55,7 +55,7 @@ public interface IConfigurationKey {
 
 	public static final String Dataserver_Cache_Max = "dataserver.cache.max";
 
-	public static final String Dataserver_Buffer_Max = "dataserver.buffer.max";
+	public static final String Dataserver_Region_Buffer_Max = "dataserver.region.buffer.max";
 
 	// ////////new added
 	public static final String Dataserver_Cache_Replacement_Policy = "dataserver.cache.replacement.policy";
@@ -73,5 +73,9 @@ public interface IConfigurationKey {
 	public static final String Dataserver_Reconnect_Retry_Count = "dataserver.reconnect.retry.count";
 
 	public static final String Dataserver_Weight = "dataserver.weight";
+
+	public static final String Dataserver_Store_Listener = "dataserver.store.listener";
+
+	public static final String Tmp_File_Reserve_Days = "tmp.file.reserve.days";
 
 }

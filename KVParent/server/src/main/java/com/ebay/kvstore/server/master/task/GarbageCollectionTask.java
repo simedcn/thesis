@@ -1,6 +1,8 @@
 package com.ebay.kvstore.server.master.task;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -24,6 +26,8 @@ public class GarbageCollectionTask extends BaseMasterTask {
 
 	private int regionReserve;
 
+	private int tmpReserve;
+
 	private long current;
 
 	public GarbageCollectionTask(IConfiguration conf, IMasterEngine engine) {
@@ -34,6 +38,7 @@ public class GarbageCollectionTask extends BaseMasterTask {
 				.intValue();
 		this.regionReserve = conf.getDouble(IConfigurationKey.DataServer_Region_Reserve_Days)
 				.intValue();
+		this.tmpReserve = conf.getDouble(IConfigurationKey.Tmp_File_Reserve_Days).intValue();
 	}
 
 	@Override
@@ -88,9 +93,7 @@ public class GarbageCollectionTask extends BaseMasterTask {
 				fs.delete(regionPath, true);
 				return;
 			}
-			for (String file : files) {
-				checkDataServerRegionFile(regionPath, file);
-			}
+			checkDataServerRegionFile(regionPath, files);
 		} catch (NumberFormatException e) {
 			logger.info("Find invalid region dir:{}, try to delete it", regionDir);
 			try {
@@ -113,7 +116,10 @@ public class GarbageCollectionTask extends BaseMasterTask {
 					delete = true;
 				}
 			} else {
-				delete = true;
+				long time = FSUtil.getFileTimestamp(ckPath);
+				if (current - time > tmpReserve) {
+					delete = true;
+				}
 			}
 			if (delete) {
 				fs.delete(ckPath, true);
@@ -133,7 +139,10 @@ public class GarbageCollectionTask extends BaseMasterTask {
 					delete = true;
 				}
 			} else {
-				delete = true;
+				long time = FSUtil.getFileTimestamp(logPath);
+				if (current - time > tmpReserve) {
+					delete = true;
+				}
 			}
 			if (delete) {
 				fs.delete(logPath, true);
@@ -143,23 +152,54 @@ public class GarbageCollectionTask extends BaseMasterTask {
 		}
 	}
 
-	private void checkDataServerRegionFile(Path base, String region) {
-		Path regionPath = new Path(base, region);
-		try {
-			boolean delete = false;
-			if (FSUtil.isValidRegionFile(region) || FSUtil.isValidRegionLogFile(region)) {
+	private void checkDataServerRegionFile(Path base, List<String> files) {
+		Collections.sort(files);
+		List<String> regions = new ArrayList<>();
+		List<String> logs = new ArrayList<>();
+
+		for (String file : files) {
+			if (FSUtil.isValidRegionFile(file)) {
+				regions.add(file);
+			} else if (FSUtil.isValidRegionLogFile(file)) {
+				logs.add(file);
+			} else {
+				try {
+					Path path = new Path(base, file);
+					long time = FSUtil.getFileTimestamp(path);
+					if (current - time > tmpReserve) {
+						fs.delete(path, true);
+					}
+				} catch (Exception e) {
+					logger.error("Error occured when check file:" + file, e);
+				}
+			}
+		}
+
+		for (int i = regions.size() - 1; i >= 0; i--) {
+			String region = regions.get(i);
+			try {
 				long time = FSUtil.getRegionFileTimestamp(region);
 				if (current - time > regionReserve) {
-					delete = true;
+					fs.delete(new Path(base, region), true);
+				} else {
+					break;
 				}
-			} else {
-				delete = true;
+			} catch (Exception e) {
+				logger.error("Error occured when check region file:" + region, e);
 			}
-			if (delete) {
-				fs.delete(regionPath, true);
+		}
+		for (int i = logs.size() - 1; i >= 0; i--) {
+			String log = logs.get(i);
+			try {
+				long time = FSUtil.getRegionFileTimestamp(log);
+				if (current - time > regionReserve) {
+					fs.delete(new Path(base, log), true);
+				} else {
+					break;
+				}
+			} catch (Exception e) {
+				logger.error("Error occured when check log file:" + log, e);
 			}
-		} catch (Exception e) {
-			logger.error("Error occured when check region File:" + regionPath, e);
 		}
 	}
 

@@ -148,6 +148,9 @@ public class KeyValueUtil {
 	}
 
 	public static void writeToExternal(IBlockOutputStream out, KeyValue kv) throws IOException {
+		if(kv == null){
+			return;
+		}
 		int len = kv.getKey().length + kv.getValue().getValue().length + 4;
 		out.writeInt(len);
 		out.writeInt(kv.getKey().length);

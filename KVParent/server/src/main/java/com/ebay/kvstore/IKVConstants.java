@@ -17,9 +17,11 @@ public interface IKVConstants {
 
 	public static final String ZooKeeper_Data_Dir_Path = ZooKeeper_Data_Dir + '/';
 
-	public static final String DFS_Master_Dir = '/' + Proj_Name + "/master/";
+	public static final String DFS_Base_Dir = '/' + Proj_Name;
 
-	public static final String DFS_Data_Dir = '/' + Proj_Name + "/data/";
+	public static final String DFS_Master_Dir = DFS_Base_Dir + "/master/";
+
+	public static final String DFS_Data_Dir = DFS_Base_Dir + "/data/";
 
 	public static final String Default_Conf_Path = "kvstore.default.properties";
 

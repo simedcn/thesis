@@ -142,4 +142,10 @@ public class FSUtil {
 	private static interface Predictor {
 		public boolean predict(String filename);
 	}
+
+	public static long getFileTimestamp(Path file) throws IOException {
+		FileSystem fs = DFSManager.getDFS();
+		FileStatus status = fs.getFileStatus(file);
+		return status.getModificationTime();
+	}
 }

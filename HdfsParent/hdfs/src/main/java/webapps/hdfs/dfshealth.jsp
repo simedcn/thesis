@@ -254,7 +254,7 @@
 <tr> <td id="col1"> Upgrades: <td> <%= jspHelper.getUpgradeStatusText()%>
 </table></div><br>				      
 
-<b><a href="/nn_browsedfscontent.jsp">Browse the filesystem</a></b><br>
+<b><a href="nn_browsedfscontent.jsp">Browse the filesystem</a></b><br>
 <b><a href="/logs/">Namenode Logs</a></b>
 
 <hr>

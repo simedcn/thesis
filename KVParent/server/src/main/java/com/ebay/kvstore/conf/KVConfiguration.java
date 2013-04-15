@@ -30,9 +30,10 @@ public class KVConfiguration implements IConfiguration, IConfigurationKey {
 		units.put(Dataserver_Region_Max, IKVConstants.MB);
 		units.put(Dataserver_Region_Block_Size, IKVConstants.KB);
 		units.put(Dataserver_Cache_Max, IKVConstants.KB);
-		units.put(Dataserver_Buffer_Max, IKVConstants.KB);
+		units.put(Dataserver_Region_Buffer_Max, IKVConstants.KB);
 		units.put(DataServer_Region_Reserve_Days, IKVConstants.Day);
 		units.put(Heartbeat_Interval, IKVConstants.Second);
+		units.put(Tmp_File_Reserve_Days, IKVConstants.Day);
 	}
 
 	KVConfiguration(Properties p) {
@@ -134,6 +135,16 @@ public class KVConfiguration implements IConfiguration, IConfigurationKey {
 	@Override
 	public void set(String key, Object value) {
 		properties.setProperty(key, value.toString());
+	}
+
+	@Override
+	public String[] getArray(String key) {
+		String value = properties.getProperty(key);
+		String[] values = null;
+		if (value != null) {
+			values = value.split(",");
+		}
+		return values;
 	}
 
 }

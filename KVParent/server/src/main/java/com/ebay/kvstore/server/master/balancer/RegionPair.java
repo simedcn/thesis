@@ -52,4 +52,9 @@ public class RegionPair {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "RegionPair [regionId1=" + regionId1 + ", regionId2=" + regionId2 + "]";
+	}
+
 }
