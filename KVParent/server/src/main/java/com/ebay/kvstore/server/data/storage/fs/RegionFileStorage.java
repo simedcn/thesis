@@ -28,6 +28,9 @@ import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
 import com.ebay.kvstore.server.data.storage.task.IRegionFlushListener;
 import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
+import com.ebay.kvstore.server.monitor.IMonitorObject;
+import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
+import com.ebay.kvstore.server.monitor.MonitorFactory;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
@@ -81,6 +84,8 @@ public class RegionFileStorage implements IRegionStorage {
 
 	protected BloomFilter keyFilter;
 
+	protected IPerformanceMonitor monitor;
+
 	public RegionFileStorage(IConfiguration conf, Region region) throws IOException {
 		this(conf, region, null, null, null, false);
 	}
@@ -119,6 +124,7 @@ public class RegionFileStorage implements IRegionStorage {
 		} else {
 			this.indices = indices;
 		}
+		this.monitor = MonitorFactory.getMonitor();
 
 	}
 
@@ -208,7 +214,6 @@ public class RegionFileStorage implements IRegionStorage {
 		if (e == null) {
 			return null;
 		}
-		// TODO add input file
 		KVFileIterator it = new KVFileIterator(e.blockStart, e.blockEnd, blockSize, e.offset,
 				fs.open(new Path(dataFile)));
 		List<KeyValue> list = new LinkedList<>();
@@ -380,6 +385,7 @@ public class RegionFileStorage implements IRegionStorage {
 		private String oldLoggerFile;
 		private String newLoggerFile;
 		private int newKeyNum;
+		private IMonitorObject object;
 
 		public RegionFlushListener(String oldFile) {
 			super();
@@ -390,6 +396,8 @@ public class RegionFileStorage implements IRegionStorage {
 		@Override
 		public void onFlushBegin() {
 			flushingLock.lock();
+			object = monitor.getMonitorObject(IPerformanceMonitor.Persistent_Flush_Monitor);
+			object.start();
 			logger.info("Region {} flush begin", region);
 			newLoggerFile = baseDir + System.currentTimeMillis();
 			try {
@@ -424,6 +432,7 @@ public class RegionFileStorage implements IRegionStorage {
 					restore();
 				}
 			} finally {
+				object.stop();
 				flushingLock.unlock();
 			}
 
@@ -446,6 +455,7 @@ public class RegionFileStorage implements IRegionStorage {
 				logger.error("Region {} flush failed", region);
 				flushingLock.unlock();
 				restore();
+				object.stop();
 			}
 		}
 

@@ -21,9 +21,13 @@ import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.DataFileLogger;
 import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
+import com.ebay.kvstore.server.data.logger.DeleteMutation;
 import com.ebay.kvstore.server.data.logger.IDataLogger;
 import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
+import com.ebay.kvstore.server.monitor.IMonitorObject;
+import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
+import com.ebay.kvstore.server.monitor.MonitorFactory;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
@@ -35,13 +39,15 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 
 	protected Map<Region, IDataLogger> loggers;
 
+	private IPerformanceMonitor monitor;
+
 	public MemoryStoreEngine(IConfiguration conf, Region... regions) throws IOException {
 		super(conf);
 		loggers = new HashMap<Region, IDataLogger>();
-
 		for (Region r : regions) {
 			addRegion(r, true);
 		}
+		monitor = MonitorFactory.getMonitor();
 	}
 
 	@Override
@@ -62,8 +68,16 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public void delete(byte[] key) throws InvalidKeyException {
-		checkKeyRegion(key);
-		cache.delete(key);
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Delete_Monitor);
+		try {
+			object.start();
+			Region region = checkKeyRegion(key);
+			cache.delete(key);
+			IDataLogger logger = getRedoLogger(region);
+			logger.write(new DeleteMutation(key));
+		} finally {
+			object.stop();
+		}
 	}
 
 	@Override
@@ -75,9 +89,15 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public KeyValue get(byte[] key) throws InvalidKeyException {
-		checkKeyRegion(key);
-		KeyValue kv = cache.get(key);
-		return kv;
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Get_Monitor);
+		try {
+			object.start();
+			checkKeyRegion(key);
+			KeyValue kv = cache.get(key);
+			return kv;
+		} finally {
+			object.stop();
+		}
 	}
 
 	@Override
@@ -87,11 +107,18 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException {
-		Region region = checkKeyRegion(key);
-		IDataLogger logger = getRedoLogger(region);
-		KeyValue kv = cache.incr(key, incremental, initValue);
-		logger.write(new SetMutation(key, kv.getValue().getValue()));
-		return kv;
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Incr_Monitor);
+		try {
+			object.start();
+			Region region = checkKeyRegion(key);
+			IDataLogger logger = getRedoLogger(region);
+			KeyValue kv = cache.incr(key, incremental, initValue);
+			logger.write(new SetMutation(key, kv.getValue().getValue()));
+			return kv;
+		} finally {
+			object.stop();
+		}
+
 	}
 
 	@Override
@@ -100,7 +127,9 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		if (regions.contains(region)) {
 			return true;
 		}
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Load_Monitor);
 		try {
+			object.start();
 			String regionDir = PathBuilder.getRegionDir(region.getRegionId());
 			String[] logFiles = FSUtil.getRegionLogFiles(regionDir);
 			boolean success = false;
@@ -137,25 +166,35 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 				cache.removeAll(buffer);
 			}
 			throw e;
+		} finally {
+			object.stop();
 		}
 
 	}
 
 	@Override
 	public void set(byte[] key, byte[] value) throws InvalidKeyException {
-		Region region = checkKeyRegion(key);
-		IDataLogger logger = getRedoLogger(region);
-		cache.set(key, value);
-		logger.write(new SetMutation(key, value));
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Set_Monitor);
+		try {
+			object.start();
+			Region region = checkKeyRegion(key);
+			IDataLogger logger = getRedoLogger(region);
+			cache.set(key, value);
+			logger.write(new SetMutation(key, value));
+		} finally {
+			object.stop();
+		}
+
 	}
 
 	@Override
-	public synchronized void splitRegion(int regionId, int newRegionId,
-			IRegionSplitCallback callback) {
+	public void splitRegion(int regionId, int newRegionId, IRegionSplitCallback callback) {
 		boolean finished = false;
 		Region newRegion = null;
 		Region oldRegion = null;
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Split_Monitor);
 		try {
+			object.start();
 			oldRegion = getRegionById(regionId);
 			if (oldRegion == null) {
 				return;
@@ -216,6 +255,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			if (callback != null) {
 				callback.callback(finished, oldRegion, newRegion);
 			}
+			object.stop();
 		}
 	}
 
@@ -226,7 +266,9 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		Region region2 = getRegionById(regionId2);
 		Region region = null;
 		boolean finished = false;
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Merge_Monitor);
 		try {
+			object.start();
 			if (region1 == null || region2 == null || !checkRegionConsistent(region1, region2)) {
 				return;
 			}
@@ -267,26 +309,27 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			if (callback != null) {
 				callback.callback(finished, regionId1, regionId2, region);
 			}
+			object.stop();
 		}
 
 	}
 
 	@Override
-	public synchronized void stat() {
-		boolean dirty = false;
-		List<Region> dirtyList = new ArrayList<>();
-		for (Region region : regions) {
-			if (region.isDirty()) {
-				region.getStat().reset();
-				dirtyList.add(region);
-				dirty = true;
-			}
-		}
-		if (!dirty) {
-			return;
-		}
+	public void stat() {
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Stat_Monitor);
 		try {
+			object.start();
 			cache.getReadLock().lock();
+			List<Region> dirtyList = new ArrayList<>();
+			for (Region region : regions) {
+				if (region.isDirty()) {
+					region.getStat().reset();
+					dirtyList.add(region);
+				}
+			}
+			if (dirtyList.size() == 0) {
+				return;
+			}
 			Iterator<Entry<byte[], Value>> it = cache.iterator();
 			Region region = null;
 			Entry<byte[], Value> e = null;
@@ -303,6 +346,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			}
 		} finally {
 			cache.getReadLock().unlock();
+			object.stop();
 		}
 
 	}

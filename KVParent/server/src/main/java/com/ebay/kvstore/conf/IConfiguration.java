@@ -22,10 +22,14 @@ public interface IConfiguration extends Iterable<Entry<Object, Object>> {
 
 	public Long getLong(String key, Long defaultValue);
 
+	public Boolean getBoolean(String key);
+
+	public Boolean getBoolean(String key, Boolean defaultValue);
+
 	public IConfiguration merge(IConfiguration srcConf);
 
 	public void set(String key, Object value);
-	
+
 	public String[] getArray(String key);
 
 }

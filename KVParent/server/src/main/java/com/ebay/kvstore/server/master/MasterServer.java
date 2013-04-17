@@ -45,6 +45,8 @@ import com.ebay.kvstore.server.master.task.RegionAssignTask;
 import com.ebay.kvstore.server.master.task.RegionMergeTask;
 import com.ebay.kvstore.server.master.task.RegionSplitTask;
 import com.ebay.kvstore.server.master.task.RegionUnassignTask;
+import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
+import com.ebay.kvstore.server.monitor.MonitorFactory;
 import com.ebay.kvstore.structure.Address;
 
 public class MasterServer implements IConfigurationKey, Watcher {
@@ -84,6 +86,8 @@ public class MasterServer implements IConfigurationKey, Watcher {
 	private ProtocolDispatcher dispatcher;
 
 	private int clientSessionTimeout;
+
+	private IPerformanceMonitor monitor;
 
 	public MasterServer(IConfiguration conf) throws IOException {
 		this.conf = conf;
@@ -139,6 +143,13 @@ public class MasterServer implements IConfigurationKey, Watcher {
 		}
 	}
 
+	private void initMonitor() {
+		Address addr = Address.parse(conf.get(IConfigurationKey.Master_Monitor_Web_Addr));
+		boolean enable = conf.getBoolean(IConfigurationKey.Master_Monitor_Enable);
+		MonitorFactory.init(enable, addr);
+		monitor = MonitorFactory.getMonitor();
+	}
+
 	public synchronized void start() throws Exception {
 		initZookeeper();
 		if (active) {
@@ -170,6 +181,13 @@ public class MasterServer implements IConfigurationKey, Watcher {
 				engine.stop();
 			} catch (IOException e) {
 				logger.error("Error occured when stop master engine", e);
+			}
+		}
+		if (monitor != null) {
+			try {
+				monitor.dispose();
+			} catch (Exception e) {
+				logger.error("Error occured when stop performance monitor");
 			}
 		}
 	}
@@ -243,6 +261,7 @@ public class MasterServer implements IConfigurationKey, Watcher {
 			}
 		});
 		initHdfs();
+		initMonitor();
 		initEngine();
 		initServer();
 		logger.info("{} become master now, waiting for connections", masterAddr);

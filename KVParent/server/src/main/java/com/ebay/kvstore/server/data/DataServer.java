@@ -35,6 +35,8 @@ import com.ebay.kvstore.server.data.storage.StoreEngineFactory;
 import com.ebay.kvstore.server.data.storage.StoreLogListener;
 import com.ebay.kvstore.server.data.storage.StoreStatListener;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
+import com.ebay.kvstore.server.monitor.MonitorFactory;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 
@@ -68,6 +70,7 @@ public class DataServer implements IConfigurationKey, Watcher {
 	private int reconnectRetry;
 	private int weight;
 	private int clientSessionTimeout;// in s
+	private IPerformanceMonitor monitor;
 
 	public DataServer(IConfiguration conf) throws IOException {
 		this.conf = conf;
@@ -114,9 +117,17 @@ public class DataServer implements IConfigurationKey, Watcher {
 		});
 		initHDFS();
 		initZookeeper();
-		initServer();
+		initMonitor();
 		initStoreEngine();
+		initServer();
 		initConnection();
+	}
+
+	private void initMonitor() {
+		Address addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Monitor_Web_Addr));
+		boolean enable = conf.getBoolean(IConfigurationKey.Dataserver_Monitor_Enable);
+		MonitorFactory.init(enable, addr);
+		monitor = MonitorFactory.getMonitor();
 	}
 
 	public void stop() {
@@ -144,7 +155,14 @@ public class DataServer implements IConfigurationKey, Watcher {
 			try {
 				engine.dispose();
 			} catch (Exception e) {
-				logger.error("Error occured when stop data engine");
+				logger.error("Error occured when stop data engine", e);
+			}
+		}
+		if (monitor != null) {
+			try {
+				monitor.dispose();
+			} catch (Exception e) {
+				logger.error("Error occured when stop performance monitor");
 			}
 		}
 	}

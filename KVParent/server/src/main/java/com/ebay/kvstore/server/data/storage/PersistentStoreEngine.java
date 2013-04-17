@@ -21,6 +21,9 @@ import com.ebay.kvstore.server.data.storage.task.IRegionLoadListener;
 import com.ebay.kvstore.server.data.storage.task.IRegionMergeListener;
 import com.ebay.kvstore.server.data.storage.task.IRegionSplitListener;
 import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
+import com.ebay.kvstore.server.monitor.IMonitorObject;
+import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
+import com.ebay.kvstore.server.monitor.MonitorFactory;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
@@ -31,20 +34,32 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 
 	private static Logger logger = LoggerFactory.getLogger(PersistentStoreEngine.class);
 
+	private IPerformanceMonitor monitor;
+
 	public PersistentStoreEngine(IConfiguration conf, Region... regions) throws IOException {
 		super(conf, regions);
 		storages = new HashMap<>();
 		for (Region r : this.regions) {
 			storages.put(r, new RegionFileStorage(conf, r, true));
 		}
+		monitor = MonitorFactory.getMonitor();
 	}
 
 	@Override
 	public void delete(byte[] key) throws InvalidKeyException {
-		Region region = checkKeyRegion(key);
-		IRegionStorage storage = storages.get(region);
-		storage.deleteFromBuffer(key);
-		cache.delete(key);
+		IMonitorObject object = monitor
+				.getMonitorObject(IPerformanceMonitor.Persistent_Delete_Monitor);
+		try {
+			object.start();
+			Region region = checkKeyRegion(key);
+			IRegionStorage storage = storages.get(region);
+			storage.deleteFromBuffer(key);
+			cache.delete(key);
+			
+		} finally {
+			object.stop();
+		}
+
 	}
 
 	@Override
@@ -60,38 +75,45 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public KeyValue get(byte[] key) throws InvalidKeyException, IOException {
-		Region region = checkKeyRegion(key);
-		IRegionStorage storage = storages.get(region);
-		// 1. get from buffer
-		KeyValue kv = storage.getFromBuffer(key);
-		if (kv != null) {
-			if (kv.getValue().isDeleted()) {
-				return null;
-			} else {
-				return kv;
-			}
-		} else if ((kv = cache.get(key)) != null) {
-			// 2.get from cache
-			return kv;
-		} else {
-			// 3. get from disk
-			KeyValue[] kvs = null;
-			try {
-				kvs = storage.getFromDisk(key);
-				if (kvs != null) {
-					for (KeyValue kv2 : kvs) {
-						if (Arrays.equals(kv2.getKey(), key)) {
-							kv = kv2;
-						}
-						cache.set(kv2.getKey(), kv2.getValue());
-					}
+		IMonitorObject object = monitor
+				.getMonitorObject(IPerformanceMonitor.Persistent_Get_Monitor);
+		try {
+			object.start();
+			Region region = checkKeyRegion(key);
+			IRegionStorage storage = storages.get(region);
+			// 1. get from buffer
+			KeyValue kv = storage.getFromBuffer(key);
+			if (kv != null) {
+				if (kv.getValue().isDeleted()) {
+					return null;
+				} else {
+					return kv;
 				}
-			} catch (IOException e) {
-				logger.error("Error occured when reading from disk for key:" + key, e);
-				throw e;
+			} else if ((kv = cache.get(key)) != null) {
+				// 2.get from cache
+				return kv;
+			} else {
+				// 3. get from disk
+				KeyValue[] kvs = null;
+				try {
+					kvs = storage.getFromDisk(key);
+					if (kvs != null) {
+						for (KeyValue kv2 : kvs) {
+							if (Arrays.equals(kv2.getKey(), key)) {
+								kv = kv2;
+							}
+							cache.set(kv2.getKey(), kv2.getValue());
+						}
+					}
+				} catch (IOException e) {
+					logger.error("Error occured when reading from disk for key:" + key, e);
+					throw e;
+				}
 			}
+			return kv;
+		} finally {
+			object.stop();
 		}
-		return kv;
 	}
 
 	@Override
@@ -107,19 +129,27 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	@Override
 	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException,
 			IOException {
-		KeyValue kv = this.get(key);
-		byte[] value = null;
-		if (kv == null) {
-			value = KeyValueUtil.intToBytes(initValue + incremental);
-			kv = new KeyValue(key, new Value(value));
-		} else {
-			kv.getValue().incr(incremental);
+		IMonitorObject object = monitor
+				.getMonitorObject(IPerformanceMonitor.Persistent_Incr_Monitor);
+		try {
+			object.start();
+			KeyValue kv = this.get(key);
+			byte[] value = null;
+			if (kv == null) {
+				value = KeyValueUtil.intToBytes(initValue + incremental);
+				kv = new KeyValue(key, new Value(value));
+			} else {
+				kv.getValue().incr(incremental);
+			}
+			Region region = getKeyRegion(key);
+			IRegionStorage storage = storages.get(region);
+			storage.storeInBuffer(key, kv.getValue().getValue());
+			cache.set(key, value);
+			return kv;
+		} finally {
+			object.stop();
 		}
-		Region region = getKeyRegion(key);
-		IRegionStorage storage = storages.get(region);
-		storage.storeInBuffer(key, kv.getValue().getValue());
-		cache.set(key, value);
-		return kv;
+
 	}
 
 	@Override
@@ -132,10 +162,18 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public void set(byte[] key, byte[] value) throws InvalidKeyException {
-		Region region = checkKeyRegion(key);
-		IRegionStorage storage = storages.get(region);
-		storage.storeInBuffer(key, value);
-		cache.set(key, value);
+		IMonitorObject object = monitor
+				.getMonitorObject(IPerformanceMonitor.Persistent_Set_Monitor);
+		try {
+			object.start();
+			Region region = checkKeyRegion(key);
+			IRegionStorage storage = storages.get(region);
+			storage.storeInBuffer(key, value);
+			cache.set(key, value);
+		} finally {
+			object.stop();
+		}
+
 	}
 
 	@Override
@@ -175,15 +213,23 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public void stat() {
-		for (Entry<Region, IRegionStorage> e : storages.entrySet()) {
-			if (e.getKey().getStat().dirty) {
-				try {
-					e.getValue().stat();
-				} catch (Exception ex) {
-					logger.error("Error occured when stat the region:" + e.getValue(), ex);
+		IMonitorObject object = monitor
+				.getMonitorObject(IPerformanceMonitor.Persistent_Stat_Monitor);
+		try {
+			object.start();
+			for (Entry<Region, IRegionStorage> e : storages.entrySet()) {
+				if (e.getKey().getStat().dirty) {
+					try {
+						e.getValue().stat();
+					} catch (Exception ex) {
+						logger.error("Error occured when stat the region:" + e.getValue(), ex);
+					}
 				}
 			}
+		} finally {
+			object.stop();
 		}
+
 	}
 
 	@Override
@@ -222,9 +268,12 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	}
 
 	private class RegionLoadListener implements IRegionLoadListener {
+		private IMonitorObject object;
 
 		@Override
 		public void onLoadBegin() {
+			object = monitor.getMonitorObject(IPerformanceMonitor.Persistent_Load_Monitor);
+			object.start();
 			logger.info("Region load begin");
 		}
 
@@ -238,12 +287,15 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			} else {
 				logger.info("Region load commit failed");
 			}
+			object.stop();
 		}
 
 		@Override
 		public void onLoadEnd(boolean success) {
 			logger.info("Region load end, result:{}", success ? "success" : "fail");
-
+			if (!success) {
+				object.stop();
+			}
 		}
 	}
 
@@ -253,6 +305,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		private int regionId;
 		private IRegionStorage oldStorage;
 		private IRegionSplitCallback callback;
+		private IMonitorObject object;
 
 		public RegionSplitListener(IRegionStorage storage, int regionId,
 				IRegionSplitCallback callback) {
@@ -263,6 +316,8 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 
 		@Override
 		public void onSplitBegin() {
+			object = monitor.getMonitorObject(IPerformanceMonitor.Persistent_Split_Monitor);
+			object.start();
 			oldBuffer = oldStorage.getBuffer();
 			logger.info("Region split begin, try to split region " + oldStorage.getRegion());
 		}
@@ -282,6 +337,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 				if (callback != null) {
 					callback.callback(true, this.oldStorage.getRegion(), newRegion);
 				}
+				object.stop();
 				logger.info("Region split success , region has been splitted to {} and {}",
 						oldStorage.getRegion(), newStorage.getRegion());
 			}
@@ -305,6 +361,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			KeyValueCache newBuffer = oldStorage.getBuffer();
 			oldBuffer.addAll(newBuffer);
 			oldStorage.setBuffer(oldBuffer);
+			object.stop();
 		}
 	}
 
@@ -316,6 +373,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 
 		private int region1;
 		private int region2;
+		private IMonitorObject object;
 
 		public RegionMergeListener(IRegionMergeCallback callback, int region1, int region2,
 				int newRegionId) {
@@ -328,6 +386,8 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 
 		@Override
 		public void onMergeBegin() {
+			object = monitor.getMonitorObject(IPerformanceMonitor.Persistent_Merge_Monitor);
+			object.start();
 			logger.info("Region merge start, try to merge region {} and {}", region1, region2);
 		}
 
@@ -346,8 +406,8 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 					callback.callback(false, region1, region2, null);
 				}
 				logger.info("Region merge failed");
-
 			}
+			object.stop();
 		}
 
 		@Override
@@ -360,6 +420,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 					callback.callback(false, this.region1, this.region2, null);
 				}
 				logger.info("Region merge failed");
+				object.stop();
 			}
 			return region;
 		}

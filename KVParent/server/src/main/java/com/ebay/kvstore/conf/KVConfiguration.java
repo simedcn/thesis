@@ -121,6 +121,22 @@ public class KVConfiguration implements IConfiguration, IConfigurationKey {
 	}
 
 	@Override
+	public Boolean getBoolean(String key) {
+		return getBoolean(key, null);
+	}
+
+	@Override
+	public Boolean getBoolean(String key, Boolean defaultValue) {
+		String value = properties.getProperty(key);
+		if (value == null) {
+			return defaultValue;
+		} else {
+			return Boolean.valueOf(value);
+		}
+
+	}
+
+	@Override
 	public Iterator<Entry<Object, Object>> iterator() {
 		return properties.entrySet().iterator();
 	}

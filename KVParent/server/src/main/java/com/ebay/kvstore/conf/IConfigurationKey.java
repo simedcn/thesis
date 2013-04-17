@@ -80,4 +80,12 @@ public interface IConfigurationKey {
 
 	public static final String Dataserver_Region_Bloomfilter_Size = "dataserver.region.bloomfilter.size";
 
+	public static final String Dataserver_Monitor_Enable = "dataserver.monitor.enable";
+
+	public static final String Dataserver_Monitor_Web_Addr = "dataserver.monitor.web.addr";
+
+	public static final String Master_Monitor_Enable = "master.monitor.enable";
+
+	public static final String Master_Monitor_Web_Addr = "master.monitor.web.addr";
+
 }
