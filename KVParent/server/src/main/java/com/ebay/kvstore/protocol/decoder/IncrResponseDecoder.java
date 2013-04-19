@@ -13,12 +13,13 @@ public class IncrResponseDecoder implements IProtocolDecoder<IncrResponse> {
 		int retCode = in.getInt();
 		byte b = in.get();
 		boolean retry = (b != 0) ? true : false;
+		int ttl = in.getInt();
 		int length = in.getInt();
 		byte[] key = new byte[length];
 		in.get(key);
 		int incremental = in.getInt();
 		int value = in.getInt();
-		IncrResponse response = new IncrResponse(retCode, key, incremental, value, retry);
+		IncrResponse response = new IncrResponse(retCode, key, incremental, value, ttl, retry);
 		return response;
 	}
 

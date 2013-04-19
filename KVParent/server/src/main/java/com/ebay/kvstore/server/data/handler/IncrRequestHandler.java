@@ -23,20 +23,23 @@ public class IncrRequestHandler extends DataServerHandler<IncrRequest> {
 		IProtocol response = null;
 		int incremental = protocol.getIncremental();
 		int initValue = protocol.getInitValue();
+		int ttl = protocol.getTtl();
 		byte[] key = protocol.getKey();
 		boolean retry = protocol.isRetry();
 		try {
-			KeyValue kv = engine.incr(key, incremental, initValue);
+			KeyValue kv = engine.incr(key, incremental, initValue, ttl);
 			byte[] value = KeyValueUtil.getValue(kv);
 			response = new IncrResponse(ProtocolCode.Success, key, incremental,
-					KeyValueUtil.bytesToInt(value), retry);
-		} catch(UnsupportedOperationException e){
-			response = new IncrResponse(ProtocolCode.Invalid_Counter, key, incremental, initValue, retry);
-		}
-		catch (InvalidKeyException e) {
-			response = new IncrResponse(ProtocolCode.Invalid_Key, key, incremental, initValue, retry);
+					KeyValueUtil.bytesToInt(value), ttl, retry);
+		} catch (UnsupportedOperationException e) {
+			response = new IncrResponse(ProtocolCode.Invalid_Counter, key, incremental, initValue,
+					ttl, retry);
+		} catch (InvalidKeyException e) {
+			response = new IncrResponse(ProtocolCode.Invalid_Key, key, incremental, initValue, ttl,
+					retry);
 		} catch (IOException e) {
-			response = new IncrResponse(ProtocolCode.Dataserver_Io_Error, key, incremental, initValue, retry);
+			response = new IncrResponse(ProtocolCode.Dataserver_Io_Error, key, incremental,
+					initValue, ttl, retry);
 		}
 		session.write(response);
 	}

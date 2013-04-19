@@ -18,4 +18,6 @@ public interface IBlockOutputStream {
 	public void writeByte(int v) throws IOException;
 
 	public void writeInt(int v) throws IOException;
+
+	public void writeLong(long v) throws IOException;
 }

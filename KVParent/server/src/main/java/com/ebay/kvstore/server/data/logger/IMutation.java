@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.ebay.kvstore.logger.ILoggerInputStream;
 import com.ebay.kvstore.logger.ILoggerOutputStream;
+import com.ebay.kvstore.structure.Value;
 
 /**
  * Used to define the mutation
@@ -21,7 +22,7 @@ public interface IMutation {
 
 	public byte getType();
 
-	public byte[] getValue();
+	public Value getValue();
 
 	void readFromExternal(ILoggerInputStream in) throws IOException;
 

@@ -12,18 +12,22 @@ public class GetResponse extends ClientResponse {
 	private static final long serialVersionUID = 1L;
 	protected byte[] key;
 	protected byte[] value;
+	protected int ttl;
 
-	public GetResponse(int retCode, byte[] key, byte[] value) {
-		super(retCode);
-		this.key = key;
-		this.value = value;
-	}
-
-	public GetResponse(int retCode, byte[] key, byte[] value, boolean retry) {
+	public GetResponse(int retCode, byte[] key, byte[] value, int ttl, boolean retry) {
 		super(retCode);
 		this.key = key;
 		this.value = value;
 		this.retry = retry;
+		this.ttl = ttl;
+	}
+
+	public int getTtl() {
+		return ttl;
+	}
+
+	public void setTtl(int ttl) {
+		this.ttl = ttl;
 	}
 
 	@Override
@@ -36,6 +40,8 @@ public class GetResponse extends ClientResponse {
 			return false;
 		GetResponse other = (GetResponse) obj;
 		if (!Arrays.equals(key, other.key))
+			return false;
+		if (ttl != other.ttl)
 			return false;
 		if (!Arrays.equals(value, other.value))
 			return false;
@@ -60,6 +66,7 @@ public class GetResponse extends ClientResponse {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + Arrays.hashCode(key);
+		result = prime * result + ttl;
 		result = prime * result + Arrays.hashCode(value);
 		return result;
 	}
@@ -75,7 +82,7 @@ public class GetResponse extends ClientResponse {
 	@Override
 	public String toString() {
 		return "GetResponse [key=" + Arrays.toString(key) + ", value=" + Arrays.toString(value)
-				+ "]";
+				+ ", ttl=" + ttl + "]";
 	}
 
 }

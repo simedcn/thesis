@@ -45,8 +45,8 @@ public class KVClientMain {
 		commands.put("delete", "key\t(delete the entry that the key specifies)");
 		commands.put(
 				"incr",
-				"key incremental [initValue]\t(increment the counter that the key specifies. The default initValue is 0)");
-		commands.put("set", "key value\t(set the value of the key)");
+				"key incremental [ttl [initValue]] \t(increment the counter that the key specifies. The default initValue is 0)");
+		commands.put("set", "key value [ttl]\t(set the value of the key)");
 		commands.put("get", "key\t(get the value of the key)");
 		commands.put("stat",
 				"\t(view statistics information of data servers and regions in the cluster)");
@@ -164,14 +164,18 @@ public class KVClientMain {
 	}
 
 	private void doSet(String[] args) {
-		if (args.length != 3) {
+		if (args.length != 3 && args.length != 4) {
 			System.err.println("Error usage for set, please input 'help' for usage");
 			return;
 		}
 		String key = args[1];
 		String value = args[2];
+		int ttl = 0;
+		if (args.length == 4) {
+			ttl = Integer.valueOf(args[3]);
+		}
 		try {
-			client.set(key.getBytes(), value.getBytes());
+			client.set(key.getBytes(), value.getBytes(), ttl);
 			System.err.println("Set " + key + "=" + value + " success");
 		} catch (KVException e) {
 			System.err.println("Error:" + e.getMessage());
@@ -185,7 +189,7 @@ public class KVClientMain {
 		}
 		String key = args[1];
 		try {
-			byte[] result = client.get(key.getBytes());
+			byte[] result = client.get(key.getBytes()).getValue();
 			if (result == null) {
 				System.err.println("No value found for " + key);
 			} else {
@@ -197,7 +201,7 @@ public class KVClientMain {
 	}
 
 	private void doIncr(String[] args) {
-		if (!(args.length >= 2 & args.length <= 4)) {
+		if (!(args.length >= 2 & args.length <= 5)) {
 			System.err.println("Error usage for incr, please input 'help' for usage");
 			return;
 		}
@@ -206,12 +210,16 @@ public class KVClientMain {
 		if (args.length >= 3) {
 			incremental = Integer.valueOf(args[2]);
 		}
+		int ttl = 0;
+		if (args.length >= 4) {
+			ttl = Integer.valueOf(args[3]);
+		}
 		int initValue = 0;
-		if (args.length == 4) {
-			initValue = Integer.valueOf(args[3]);
+		if (args.length == 5) {
+			initValue = Integer.valueOf(args[4]);
 		}
 		try {
-			int result = client.incr(key.getBytes(), incremental, initValue);
+			int result = client.incr(key.getBytes(), incremental, initValue, ttl);
 			System.err.println(key + "=" + result);
 		} catch (KVException e) {
 			System.err.println("Error:" + e.getMessage());
@@ -255,8 +263,7 @@ public class KVClientMain {
 			indent(out, 1);
 			out.println("Info:");
 			indent(out, 2);
-			out.println("Memory Free:" + server.getInfo().getMemoryFree() / IKVConstants.MB
-					+ "MB");
+			out.println("Memory Free:" + server.getInfo().getMemoryFree() / IKVConstants.MB + "MB");
 			indent(out, 2);
 			out.println("Memory Total:" + server.getInfo().getMemoryTotal() / IKVConstants.MB
 					+ "MB");
@@ -294,9 +301,11 @@ public class KVClientMain {
 
 	private static String formatRegionSize(long size) {
 		if (size > IKVConstants.MB) {
-			return new BigDecimal((double) size / IKVConstants.MB).setScale(2,RoundingMode.DOWN) + "MB";
+			return new BigDecimal((double) size / IKVConstants.MB).setScale(2, RoundingMode.DOWN)
+					+ "MB";
 		} else if (size > IKVConstants.KB) {
-			return new BigDecimal((double) size / IKVConstants.KB).setScale(2,RoundingMode.DOWN) + "KB";
+			return new BigDecimal((double) size / IKVConstants.KB).setScale(2, RoundingMode.DOWN)
+					+ "KB";
 		} else {
 			return size + "B";
 		}

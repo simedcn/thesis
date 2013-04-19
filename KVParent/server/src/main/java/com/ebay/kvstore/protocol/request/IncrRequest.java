@@ -17,35 +17,29 @@ public class IncrRequest extends ClientRequest {
 
 	protected int initValue;
 
-	public IncrRequest(byte[] key, int incremental, int initValue) {
+	protected int ttl = 0;
+
+	public IncrRequest(byte[] key, int incremental, int initValue, int ttl) {
 		this.key = key;
 		this.incremental = incremental;
 		this.initValue = initValue;
+		this.ttl = ttl;
 	}
 
-	public IncrRequest(byte[] key, int incremental, int initValue, boolean retry) {
+	public IncrRequest(byte[] key, int incremental, int initValue, int ttl, boolean retry) {
 		super(retry);
 		this.key = key;
 		this.incremental = incremental;
 		this.initValue = initValue;
+		this.ttl = ttl;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		IncrRequest other = (IncrRequest) obj;
-		if (incremental != other.incremental)
-			return false;
-		if (initValue != other.initValue)
-			return false;
-		if (!Arrays.equals(key, other.key))
-			return false;
-		return true;
+	public int getTtl() {
+		return ttl;
+	}
+
+	public void setTtl(int ttl) {
+		this.ttl = ttl;
 	}
 
 	public int getIncremental() {
@@ -72,6 +66,7 @@ public class IncrRequest extends ClientRequest {
 		result = prime * result + incremental;
 		result = prime * result + initValue;
 		result = prime * result + Arrays.hashCode(key);
+		result = prime * result + ttl;
 		return result;
 	}
 
@@ -90,7 +85,27 @@ public class IncrRequest extends ClientRequest {
 	@Override
 	public String toString() {
 		return "IncrRequest [key=" + Arrays.toString(key) + ", incremental=" + incremental
-				+ ", initValue=" + initValue + "]";
+				+ ", initValue=" + initValue + ", ttl=" + ttl + "]";
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		IncrRequest other = (IncrRequest) obj;
+		if (incremental != other.incremental)
+			return false;
+		if (initValue != other.initValue)
+			return false;
+		if (!Arrays.equals(key, other.key))
+			return false;
+		if (ttl != other.ttl)
+			return false;
+		return true;
 	}
 
 }

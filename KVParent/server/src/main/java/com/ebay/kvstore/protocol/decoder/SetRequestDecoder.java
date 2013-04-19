@@ -12,6 +12,7 @@ public class SetRequestDecoder implements IProtocolDecoder<SetRequest> {
 	public SetRequest decode(IoSession session, IoBuffer in) {
 		byte b = in.get();
 		boolean retry = (b != 0) ? true : false;
+		int ttl = in.getInt();
 		int length = in.getInt();
 		byte[] key = new byte[length];
 		in.get(key);
@@ -21,7 +22,7 @@ public class SetRequestDecoder implements IProtocolDecoder<SetRequest> {
 			value = new byte[length];
 			in.get(value);
 		}
-		SetRequest request = new SetRequest(key, value, retry);
+		SetRequest request = new SetRequest(key, value, ttl, retry);
 		return request;
 	}
 

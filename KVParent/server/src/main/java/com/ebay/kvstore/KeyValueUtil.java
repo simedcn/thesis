@@ -64,13 +64,13 @@ public class KeyValueUtil {
 		if (value == null || value.getValue() == null) {
 			valueLen = 0;
 		} else {
-			valueLen = value.getValue().length;
+			valueLen = value.getValue().length + 8;
 		}
 		return 8 + key.length + valueLen;
 	}
 
 	public static int getKeyValueLen(KeyValue kv) {
-		return 8 + kv.getKey().length + kv.getValue().getValue().length;
+		return 8 + kv.getKey().length + kv.getValue().getValue().length + 8;
 	}
 
 	public static byte[] getValue(KeyValue kv) {
@@ -141,20 +141,54 @@ public class KeyValueUtil {
 		int keyLen = in.readInt();
 		byte[] key = new byte[keyLen];
 		in.readFully(key, 0, keyLen);
-		byte[] value = new byte[len - keyLen - 4];
+		byte[] value = new byte[len - keyLen - 12];
 		in.readFully(value, 0, value.length);
-		KeyValue kv = new KeyValue(key, new Value(value));
+		long expire = in.readLong();
+		KeyValue kv = new KeyValue(key, new Value(value, expire));
 		return kv;
 	}
 
 	public static void writeToExternal(IBlockOutputStream out, KeyValue kv) throws IOException {
-		if(kv == null){
+		if (kv == null) {
 			return;
 		}
-		int len = kv.getKey().length + kv.getValue().getValue().length + 4;
+		int len = kv.getKey().length + kv.getValue().getValue().length + 12;
 		out.writeInt(len);
 		out.writeInt(kv.getKey().length);
 		out.write(kv.getKey());
 		out.write(kv.getValue().getValue());
+		out.writeLong(kv.getValue().getExpire());
+	}
+
+	public static long getExpireTime(int ttl) {
+		if (ttl <= 0) {
+			return 0;
+		}
+		long time = System.currentTimeMillis() + ttl;
+		return time;
+	}
+
+	public static int getTtl(long expire) {
+		if (expire <= 0) {
+			return 0;
+		}
+		long time = expire - System.currentTimeMillis();
+		return (int) time;
+	}
+
+	public static boolean isAlive(Value value) {
+		if (value == null) {
+			return false;
+		}
+		long expire = value.getExpire();
+		return isAlive(expire);
+	}
+
+	public static boolean isAlive(long expire) {
+		if (expire <= 0) {
+			return true;
+		}
+		long time = System.currentTimeMillis();
+		return time <= expire;
 	}
 }

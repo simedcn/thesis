@@ -14,4 +14,6 @@ public interface ILoggerOutputStream {
 
 	public void writeUTF(String str) throws IOException;
 
+	public void writeLong(long expire) throws IOException;
+
 }

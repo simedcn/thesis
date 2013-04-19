@@ -39,7 +39,7 @@ public abstract class BaseRegionTask implements Runnable {
 		}
 		while (it.hasNext()) {
 			e = it.next();
-			if (!e.getValue().isDeleted()) {
+			if (!e.getValue().isDeleted() && KeyValueUtil.isAlive(e.getValue())) {
 				KeyValueUtil.writeToExternal(out, new KeyValue(e.getKey(), e.getValue()));
 			}
 		}
@@ -52,7 +52,9 @@ public abstract class BaseRegionTask implements Runnable {
 		}
 		while (it.hasNext()) {
 			kv = it.next();
-			KeyValueUtil.writeToExternal(out, kv);
+			if (KeyValueUtil.isAlive(kv.getValue())) {
+				KeyValueUtil.writeToExternal(out, kv);
+			}
 		}
 	}
 
@@ -82,17 +84,19 @@ public abstract class BaseRegionTask implements Runnable {
 					int comp = KeyValueUtil.compare(kv.getKey(), e.getKey());
 					if (comp < 0) {
 						// flush the file key
-						KeyValueUtil.writeToExternal(out, kv);
+						if (KeyValueUtil.isAlive(kv.getValue())) {
+							KeyValueUtil.writeToExternal(out, kv);
+						}
 						kv = null;
 					} else if (comp == 0) {
-						if (!e.getValue().isDeleted()) {
+						if (!e.getValue().isDeleted() && KeyValueUtil.isAlive(e.getValue())) {
 							KeyValueUtil.writeToExternal(out,
 									new KeyValue(e.getKey(), e.getValue()));
 						}
 						kv = null;
 						e = null;
 					} else {
-						if (!e.getValue().isDeleted()) {
+						if (!e.getValue().isDeleted() && KeyValueUtil.isAlive(e.getValue())) {
 							KeyValueUtil.writeToExternal(out,
 									new KeyValue(e.getKey(), e.getValue()));
 						}

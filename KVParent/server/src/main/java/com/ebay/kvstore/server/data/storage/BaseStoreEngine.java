@@ -18,6 +18,7 @@ import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.structure.Address;
+import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
 
@@ -197,5 +198,20 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 			}
 		}
 		return region;
+	}
+
+	protected KeyValue incr(KeyValue kv, byte[] key, int initValue, int incremental, int ttl) {
+		long expire = KeyValueUtil.getExpireTime(ttl);
+		Value value;
+		if (kv == null || !KeyValueUtil.isAlive(kv.getValue())) {
+			byte[] bytes = KeyValueUtil.intToBytes(initValue + incremental);
+			value = new Value(bytes, expire);
+			kv = new KeyValue(key, value);
+		} else {
+			value = kv.getValue();
+			value.incr(incremental);
+			value.setExpire(expire);
+		}
+		return kv;
 	}
 }

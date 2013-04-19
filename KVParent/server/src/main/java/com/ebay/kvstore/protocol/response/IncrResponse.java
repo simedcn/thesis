@@ -17,6 +17,8 @@ public class IncrResponse extends ClientResponse {
 
 	protected int value;
 
+	protected int ttl = 0;
+
 	public IncrResponse(int retCode, byte[] key, int incremental, int value) {
 		super(retCode);
 		this.key = key;
@@ -24,29 +26,20 @@ public class IncrResponse extends ClientResponse {
 		this.value = value;
 	}
 
-	public IncrResponse(int retCode, byte[] key, int incremental, int value, boolean retry) {
+	public IncrResponse(int retCode, byte[] key, int incremental, int value, int ttl, boolean retry) {
 		super(retCode, retry);
 		this.key = key;
 		this.incremental = incremental;
 		this.value = value;
+		this.ttl = ttl;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		IncrResponse other = (IncrResponse) obj;
-		if (incremental != other.incremental)
-			return false;
-		if (!Arrays.equals(key, other.key))
-			return false;
-		if (value != other.value)
-			return false;
-		return true;
+	public int getTtl() {
+		return ttl;
+	}
+
+	public void setTtl(int ttl) {
+		this.ttl = ttl;
 	}
 
 	public int getIncremental() {
@@ -72,6 +65,7 @@ public class IncrResponse extends ClientResponse {
 		int result = 1;
 		result = prime * result + incremental;
 		result = prime * result + Arrays.hashCode(key);
+		result = prime * result + ttl;
 		result = prime * result + value;
 		return result;
 	}
@@ -91,7 +85,27 @@ public class IncrResponse extends ClientResponse {
 	@Override
 	public String toString() {
 		return "IncrResponse [key=" + Arrays.toString(key) + ", incremental=" + incremental
-				+ ", value=" + value + "]";
+				+ ", value=" + value + ", ttl=" + ttl + "]";
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		IncrResponse other = (IncrResponse) obj;
+		if (incremental != other.incremental)
+			return false;
+		if (!Arrays.equals(key, other.key))
+			return false;
+		if (ttl != other.ttl)
+			return false;
+		if (value != other.value)
+			return false;
+		return true;
 	}
 
 }

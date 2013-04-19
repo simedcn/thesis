@@ -11,17 +11,29 @@ public class Value implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 	private byte[] value;
-	private boolean deleted;
+	private boolean deleted = false;
+	private long expire = 0;;
 
 	public Value(byte[] value) {
 		super();
 		this.value = value;
-		this.deleted = false;
+	}
+
+	public Value(byte[] value, long expire) {
+		this.value = value;
+		this.expire = expire;
 	}
 
 	public Value(byte[] value, boolean deleted) {
 		this.value = value;
 		this.deleted = deleted;
+	}
+	public long getExpire() {
+		return expire;
+	}
+	
+	public void setExpire(long expire) {
+		this.expire = expire;
 	}
 
 	@Override

@@ -35,9 +35,9 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			conf2 = ConfigurationLoader.load();
 			conf.set(IConfigurationKey.Storage_Policy, "memory");
 			conf2.set(IConfigurationKey.Storage_Policy, "memory");
-			conf.set(IConfigurationKey.Dataserver_Cache_Max, 4096);
+			conf.set(IConfigurationKey.Dataserver_Cache_Max, 4);
 			conf2.set(IConfigurationKey.Dataserver_Addr, new Address("192.1.1.1", 30000));
-			conf2.set(IConfigurationKey.Dataserver_Cache_Max, 4096);
+			conf2.set(IConfigurationKey.Dataserver_Cache_Max, 4);
 
 			region = new Region(0, new byte[] { 0 }, new byte[] { 1, 1, 1, 1, 1, 1, 1 });
 			engine = StoreEngineFactory.createStoreEngine(conf);
@@ -55,14 +55,14 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 		byte[] key1 = new byte[] { 1 };
 		byte[] key2 = new byte[] { 2 };
 		try {
-			engine.set(key1, key1);
+			engine.set(key1, key1, 0);
 			assertArrayEquals(key1, engine.get(key1).getValue().getValue());
 
 			engine.delete(key1);
 			assertNull(engine.get(key1).getValue());
 
-			engine.incr(key2, 10, 0);
-			engine.incr(key2, 2, 0);
+			engine.incr(key2, 10, 0, 0);
+			engine.incr(key2, 2, 0, 0);
 
 			assertEquals(12, KeyValueUtil.bytesToInt(engine.get(key2).getValue().getValue()));
 		} catch (Exception e) {
@@ -73,7 +73,8 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 	public void testMemoryUsage() {
 		try {
 			for (int i = 0; i < 100000; i++) {
-				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
+				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i }, 0);
+				System.out.println(engine.getMemoryUsed());
 				assertTrue(engine.getMemoryUsed() < 4096);
 			}
 		} catch (Exception e) {
@@ -85,7 +86,7 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 		try {
 			engine.setCacheLimit(1000000);
 			for (int i = 0; i < 100; i++) {
-				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
+				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i },0);
 			}
 			engine.unloadRegion(0);
 			engine2.loadRegion(region);
@@ -100,7 +101,7 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 		try {
 			engine.setCacheLimit(1000000);
 			for (int i = 0; i < 100; i++) {
-				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
+				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i },0);
 			}
 			engine.splitRegion(0, 1, null);
 			assertEquals(2, engine.getAllRegions().length);
@@ -118,7 +119,7 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			engine.addRegion(region, true);
 			engine.addRegion(region2, true);
 			for (byte i = 0; i < 100; i++) {
-				engine.set(new byte[] { i }, new byte[] { i });
+				engine.set(new byte[] { i }, new byte[] { i },0);
 			}
 			engine.mergeRegion(0, 1, 2, new IRegionMergeCallback() {
 				@Override
@@ -149,23 +150,23 @@ public class MemoryStoreEngineTest extends BaseFileTest {
 			engine.registerListener(new StoreStatListener());
 			RegionStat stat = null;
 			for (int i = 0; i < 10; i++) {
-				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i });
+				engine.set(new byte[] { (byte) i }, new byte[] { (byte) i },0);
 			}
 			engine.get(new byte[] { 0 });
-			engine.incr(new byte[] { 11 }, 10, 0);
+			engine.incr(new byte[] { 11 }, 10, 0,0);
 			engine.stat();
 			stat = engine.getAllRegions()[0].getStat();
 			assertEquals(11, stat.writeCount);
 			assertEquals(1, stat.readCount);
 			assertEquals(11, stat.keyNum);
-			assertEquals(113, stat.size);
+			assertEquals(201, stat.size);
 			assertFalse(stat.dirty);
-			engine.set(new byte[] { (byte) 0 }, new byte[] { (byte) 0 });
+			engine.set(new byte[] { (byte) 0 }, new byte[] { (byte) 0 },0);
 			assertTrue(stat.dirty);
 			assertEquals(12, stat.writeCount);
 			assertEquals(1, stat.readCount);
 			assertEquals(11, stat.keyNum);
-			assertEquals(113, stat.size);
+			assertEquals(201, stat.size);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

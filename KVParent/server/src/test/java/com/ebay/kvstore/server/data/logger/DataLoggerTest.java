@@ -10,13 +10,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ebay.kvstore.server.data.logger.DeleteMutation;
-import com.ebay.kvstore.server.data.logger.DataFileLogger;
-import com.ebay.kvstore.server.data.logger.IMutation;
-import com.ebay.kvstore.server.data.logger.IDataLogger;
-import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
-import com.ebay.kvstore.server.data.logger.SetMutation;
 import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.structure.Value;
 
 public class DataLoggerTest {
 
@@ -27,7 +22,7 @@ public class DataLoggerTest {
 	@BeforeClass
 	public static void init() {
 		try {
-			DFSManager.init(new InetSocketAddress("localhost", 9000), new Configuration());
+			DFSManager.init(new InetSocketAddress("192.168.1.102", 9000), new Configuration());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -46,7 +41,7 @@ public class DataLoggerTest {
 		try {
 			IDataLogger logger = DataFileLogger.forCreate(path);
 			for (byte i = 0; i < 50; i++) {
-				logger.write(new SetMutation(new byte[] { i }, new byte[] { i }));
+				logger.write(new SetMutation(new byte[] { i },new Value( new byte[] { i })));
 			}
 			logger.renameTo(newPath);
 			for (byte i = 0; i < 50; i++) {
@@ -55,7 +50,7 @@ public class DataLoggerTest {
 			logger.close();
 			logger = DataFileLogger.forAppend(newPath);
 			for (byte i = 0; i < 50; i++) {
-				logger.write(new SetMutation(new byte[] { i }, new byte[] { i }));
+				logger.write(new SetMutation(new byte[] { i },new Value( new byte[] { i })));
 			}
 			logger.close();
 			DataFileLoggerIterator it = new DataFileLoggerIterator(newPath);

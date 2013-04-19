@@ -20,14 +20,14 @@ public interface IStoreEngine {
 
 	public Region[] getAllRegions();
 
-	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException,
-			IOException;
+	public KeyValue incr(byte[] key, int incremental, int initValue, int ttl)
+			throws InvalidKeyException, IOException;
 
 	public boolean loadRegion(Region region) throws IOException;
 
 	public void registerListener(IStoreEngineListener listener);
 
-	public void set(byte[] key, byte[] value) throws InvalidKeyException;
+	public void set(byte[] key, byte[] value, int ttl) throws InvalidKeyException;
 
 	public void setCacheLimit(int limit);
 

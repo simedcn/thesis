@@ -17,6 +17,7 @@ public class SetRequestEncoder implements IProtocolEncoder<SetRequest> {
 	public void encode(IoSession session, SetRequest request, IoBuffer buffer) {
 		buffer.putInt(request.getType());
 		buffer.put((byte) (request.isRetry() ? 1 : 0));
+		buffer.putInt(request.getTtl());
 		buffer.putInt(request.getKey().length);
 		buffer.put(request.getKey());
 		if (request.getValue() == null) {

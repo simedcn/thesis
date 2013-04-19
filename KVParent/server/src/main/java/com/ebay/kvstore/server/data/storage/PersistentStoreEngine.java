@@ -55,7 +55,7 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			IRegionStorage storage = storages.get(region);
 			storage.deleteFromBuffer(key);
 			cache.delete(key);
-			
+
 		} finally {
 			object.stop();
 		}
@@ -84,14 +84,18 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			// 1. get from buffer
 			KeyValue kv = storage.getFromBuffer(key);
 			if (kv != null) {
-				if (kv.getValue().isDeleted()) {
+				if (kv.getValue().isDeleted() || !KeyValueUtil.isAlive(kv.getValue())) {
 					return null;
 				} else {
 					return kv;
 				}
 			} else if ((kv = cache.get(key)) != null) {
 				// 2.get from cache
-				return kv;
+				if (KeyValueUtil.isAlive(kv.getValue())) {
+					return kv;
+				} else {
+					return null;
+				}
 			} else {
 				// 3. get from disk
 				KeyValue[] kvs = null;
@@ -99,10 +103,12 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 					kvs = storage.getFromDisk(key);
 					if (kvs != null) {
 						for (KeyValue kv2 : kvs) {
-							if (Arrays.equals(kv2.getKey(), key)) {
-								kv = kv2;
+							if (KeyValueUtil.isAlive(kv2.getValue())) {
+								if (Arrays.equals(kv2.getKey(), key)) {
+									kv = kv2;
+								}
+								cache.set(kv2.getKey(), kv2.getValue());
 							}
-							cache.set(kv2.getKey(), kv2.getValue());
 						}
 					}
 				} catch (IOException e) {
@@ -127,24 +133,18 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException,
-			IOException {
+	public KeyValue incr(byte[] key, int incremental, int initValue, int ttl)
+			throws InvalidKeyException, IOException {
 		IMonitorObject object = monitor
 				.getMonitorObject(IPerformanceMonitor.Persistent_Incr_Monitor);
 		try {
 			object.start();
 			KeyValue kv = this.get(key);
-			byte[] value = null;
-			if (kv == null) {
-				value = KeyValueUtil.intToBytes(initValue + incremental);
-				kv = new KeyValue(key, new Value(value));
-			} else {
-				kv.getValue().incr(incremental);
-			}
+			kv = incr(kv, key, initValue, incremental, ttl);
 			Region region = getKeyRegion(key);
 			IRegionStorage storage = storages.get(region);
-			storage.storeInBuffer(key, kv.getValue().getValue());
-			cache.set(key, value);
+			storage.storeInBuffer(key, kv.getValue());
+			cache.set(key, kv.getValue());
 			return kv;
 		} finally {
 			object.stop();
@@ -161,15 +161,17 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public void set(byte[] key, byte[] value) throws InvalidKeyException {
+	public void set(byte[] key, byte[] value, int ttl) throws InvalidKeyException {
 		IMonitorObject object = monitor
 				.getMonitorObject(IPerformanceMonitor.Persistent_Set_Monitor);
 		try {
 			object.start();
 			Region region = checkKeyRegion(key);
 			IRegionStorage storage = storages.get(region);
-			storage.storeInBuffer(key, value);
-			cache.set(key, value);
+			long expire = KeyValueUtil.getExpireTime(ttl);
+			Value v = new Value(value, expire);
+			storage.storeInBuffer(key, v);
+			cache.set(key, v);
 		} finally {
 			object.stop();
 		}

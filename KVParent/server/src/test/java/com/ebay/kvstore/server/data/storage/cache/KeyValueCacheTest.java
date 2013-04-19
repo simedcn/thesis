@@ -1,6 +1,9 @@
 package com.ebay.kvstore.server.data.storage.cache;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -8,6 +11,7 @@ import org.junit.Test;
 import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.cache.FIFOCacheReplacer;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
+import com.ebay.kvstore.structure.Value;
 
 public class KeyValueCacheTest {
 
@@ -23,16 +27,14 @@ public class KeyValueCacheTest {
 
 	@Test
 	public void testUsed() {
-		unlimitCache.set(new byte[] { 1 }, new byte[] { 1, 2 });
-		unlimitCache.set(new byte[] { 1, 2 }, new byte[] { 1, 2 });
-		unlimitCache.set(new byte[] { 1 }, new byte[] { 1, 2, 3 });
-		assertEquals(24, unlimitCache.getUsed());
+		unlimitCache.set(new byte[] { 1 }, new Value(new byte[] { 1, 2 }));
+		unlimitCache.set(new byte[] { 1, 2 }, new Value(new byte[] { 1, 2 }));
+		unlimitCache.set(new byte[] { 1 }, new Value(new byte[] { 1, 2, 3 }));
+		assertEquals(40, unlimitCache.getUsed());
 
 		unlimitCache.delete(new byte[] { 1 });
-		assertEquals(12, unlimitCache.getUsed());
+		assertEquals(20, unlimitCache.getUsed());
 
-		unlimitCache.incr(new byte[] { 3 }, 1, 0);
-		assertEquals(25, unlimitCache.getUsed());
 	}
 
 	@Test
@@ -41,26 +43,21 @@ public class KeyValueCacheTest {
 		byte[] key2 = new byte[] { 2 };
 		byte[] key3 = new byte[] { 3 };
 
-		unlimitCache.set(key1, new byte[] { 1, 2 });
+		unlimitCache.set(key1, new Value(new byte[] { 1, 2 }));
 		assertArrayEquals(new byte[] { 1, 2 }, unlimitCache.get(key1).getValue().getValue());
 		assertNull(unlimitCache.get(key2));
 
 		unlimitCache.delete(key1);
 		assertNull(unlimitCache.get(key1));
 
-		unlimitCache.incr(key3, 5, 0);
-		unlimitCache.incr(key3, 10, 0);
-
-		assertEquals(15, KeyValueUtil.bytesToInt(unlimitCache.get(key3).getValue().getValue()));
 	}
 
 	@Test
 	public void testReplacement() {
 		for (int i = 0; i < 128; i++) {
-			limitCache.set(new byte[] { (byte) i }, new byte[] { (byte) i });
+			limitCache.set(new byte[] { (byte) i }, new Value(new byte[] { (byte) i }));
 			assertTrue(limitCache.getUsed() <= 32);
 		}
 	}
-	
 
 }

@@ -4,7 +4,7 @@ import org.apache.mina.core.session.IoSession;
 
 import com.ebay.kvstore.client.IKVClientHandler;
 import com.ebay.kvstore.client.IKVClient;
-import com.ebay.kvstore.client.async.result.IncrResult;
+import com.ebay.kvstore.client.result.IncrResult;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.ProtocolCode;
 import com.ebay.kvstore.protocol.request.IncrRequest;
@@ -24,7 +24,7 @@ public class AsyncIncrResponseHandler extends AsyncClientHandler<IncrResponse> {
 			if (ret == ProtocolCode.Invalid_Key && retry) {
 				client.updateRegionTable();
 				session.write(new IncrRequest(protocol.getKey(), protocol.getIncremental(),
-						protocol.getValue(), false));
+						protocol.getValue(), protocol.getTtl(), false));
 				return;
 			} else if (ret != ProtocolCode.Success) {
 				result = new IncrResult(protocol.getKey(), protocol.getValue(), new KVException(

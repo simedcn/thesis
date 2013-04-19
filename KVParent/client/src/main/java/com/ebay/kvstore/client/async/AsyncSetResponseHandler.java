@@ -4,8 +4,8 @@ import org.apache.mina.core.session.IoSession;
 
 import com.ebay.kvstore.client.IKVClientHandler;
 import com.ebay.kvstore.client.IKVClient;
-import com.ebay.kvstore.client.async.result.GetResult;
-import com.ebay.kvstore.client.async.result.SetResult;
+import com.ebay.kvstore.client.result.GetResult;
+import com.ebay.kvstore.client.result.SetResult;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.ProtocolCode;
 import com.ebay.kvstore.protocol.request.SetRequest;
@@ -24,7 +24,8 @@ public class AsyncSetResponseHandler extends AsyncClientHandler<SetResponse> {
 		try {
 			if (ret == ProtocolCode.Invalid_Key && retry) {
 				client.updateRegionTable();
-				session.write(new SetRequest(protocol.getKey(), protocol.getValue(), retry));
+				session.write(new SetRequest(protocol.getKey(), protocol.getValue(), protocol
+						.getTtl(), false));
 				return;
 			} else if (ret != ProtocolCode.Success) {
 				result = new SetResult(protocol.getKey(), protocol.getValue(), new KVException(

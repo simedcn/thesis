@@ -36,7 +36,7 @@ public class RegionFlusherTest extends BaseFileStorageTest {
 	@Before
 	public void init() throws IOException {
 		fout = DFSManager.getDFS().create(new Path(path), true);
-		region = new Region(0, new byte[]{0},null);
+		region = new Region(0, new byte[] { 0 }, null);
 	}
 
 	@After
@@ -57,7 +57,7 @@ public class RegionFlusherTest extends BaseFileStorageTest {
 			fin = fs.open(new Path(path));
 			KeyValueCache cache = KeyValueCache.forBuffer();
 			for (int i = 0; i < 100; i += 4) {
-				cache.set(new byte[] { (byte) i }, new byte[] { (byte) (i + 1) });
+				cache.set(new byte[] { (byte) i }, new Value(new byte[] { (byte) (i + 1) }));
 			}
 			cache.set(new byte[] { 0 }, new Value(null, true));
 			// TODO
@@ -67,8 +67,8 @@ public class RegionFlusherTest extends BaseFileStorageTest {
 						public void onFlushEnd(boolean success, String file) {
 							try {
 								assertTrue(success);
-								it = new KVFileIterator(0, -1, blockSize, 0, fs.open(new Path(
-										file)));
+								it = new KVFileIterator(0, -1, blockSize, 0,
+										fs.open(new Path(file)));
 								int i = 0;
 								while (it.hasNext()) {
 									KeyValue kv = it.next();
@@ -100,35 +100,37 @@ public class RegionFlusherTest extends BaseFileStorageTest {
 					});
 			flusher.run();
 
-			flusher = new RegionFlusher(new RegionFileStorage(conf, region), conf, new IRegionFlushListener() {
+			flusher = new RegionFlusher(new RegionFileStorage(conf, region), conf,
+					new IRegionFlushListener() {
 
-				@Override
-				public void onFlushEnd(boolean success, String file) {
-					assertTrue(success);
-					try {
-						it = new KVFileIterator(0, -1, blockSize, 0, fs.open(new Path(file)));
-						int i = 0;
-						while (it.hasNext()) {
-							KeyValue kv = it.next();
-							assertArrayEquals(new byte[] { (byte) (i + 1) }, kv.getValue()
-									.getValue());
-							i += 4;
+						@Override
+						public void onFlushEnd(boolean success, String file) {
+							assertTrue(success);
+							try {
+								it = new KVFileIterator(0, -1, blockSize, 0,
+										fs.open(new Path(file)));
+								int i = 0;
+								while (it.hasNext()) {
+									KeyValue kv = it.next();
+									assertArrayEquals(new byte[] { (byte) (i + 1) }, kv.getValue()
+											.getValue());
+									i += 4;
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
 
-				@Override
-				public void onFlushBegin() {
+						@Override
+						public void onFlushBegin() {
 
-				}
+						}
 
-				@Override
-				public void onFlushCommit(boolean success, String file) {
-					logFiles.add(file);
-				}
-			});
+						@Override
+						public void onFlushCommit(boolean success, String file) {
+							logFiles.add(file);
+						}
+					});
 			flusher.run();
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -13,6 +13,7 @@ public class SetResponseDecoder implements IProtocolDecoder<SetResponse> {
 		int retCode = in.getInt();
 		byte b = in.get();
 		boolean retry = (b != 0) ? true : false;
+		int ttl = in.getInt();
 		int length = in.getInt();
 		byte[] key = new byte[length];
 		in.get(key);
@@ -22,7 +23,7 @@ public class SetResponseDecoder implements IProtocolDecoder<SetResponse> {
 			value = new byte[length];
 			in.get(value);
 		}
-		SetResponse response = new SetResponse(retCode, key, value, retry);
+		SetResponse response = new SetResponse(retCode, key, value, ttl, retry);
 		return response;
 	}
 

@@ -1,4 +1,4 @@
-package com.ebay.kvstore.client.async.result;
+package com.ebay.kvstore.client.result;
 
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.structure.DataServerStruct;

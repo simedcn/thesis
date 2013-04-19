@@ -20,6 +20,7 @@ public class SetResponseEncoder implements IProtocolEncoder<SetResponse> {
 		buffer.putInt(response.getType());
 		buffer.putInt(response.getRetCode());
 		buffer.put((byte) (response.isRetry() ? 1 : 0));
+		buffer.putInt(response.getTtl());
 		buffer.putInt(response.getKey().length);
 		buffer.put(response.getKey());
 		if (response.getValue() == null) {

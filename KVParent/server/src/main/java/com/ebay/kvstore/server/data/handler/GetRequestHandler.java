@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.mina.core.session.IoSession;
 
+import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.protocol.IProtocol;
 import com.ebay.kvstore.protocol.ProtocolCode;
@@ -25,14 +26,16 @@ public class GetRequestHandler extends DataServerHandler<GetRequest> {
 		try {
 			KeyValue kv = engine.get(key);
 			byte[] value = null;
+			int ttl = 0;
 			if (kv != null && kv.getValue() != null) {
 				value = kv.getValue().getValue();
+				ttl = KeyValueUtil.getTtl(kv.getValue().getExpire());
 			}
-			response = new GetResponse(ProtocolCode.Success, key, value, retry);
+			response = new GetResponse(ProtocolCode.Success, key, value, ttl, retry);
 		} catch (InvalidKeyException e) {
-			response = new GetResponse(ProtocolCode.Invalid_Key, key, null, retry);
+			response = new GetResponse(ProtocolCode.Invalid_Key, key, null, 0, retry);
 		} catch (IOException e) {
-			response = new GetResponse(ProtocolCode.Dataserver_Io_Error, key, null, retry);
+			response = new GetResponse(ProtocolCode.Dataserver_Io_Error, key, null, 0, retry);
 		}
 		session.write(response);
 	}

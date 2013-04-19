@@ -14,35 +14,31 @@ public class SetRequest extends ClientRequest {
 
 	protected byte[] value;
 
-	public SetRequest(byte[] key, byte[] value) {
+	protected int ttl;
+
+	public SetRequest(byte[] key, byte[] value, int ttl) {
 		this.key = key;
 		this.value = value;
+		this.ttl = ttl;
 	}
 
-	public SetRequest(byte[] key, byte[] value, boolean retry) {
+	public SetRequest(byte[] key, byte[] value, int ttl, boolean retry) {
 		super(retry);
 		this.key = key;
 		this.value = value;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SetRequest other = (SetRequest) obj;
-		if (!Arrays.equals(key, other.key))
-			return false;
-		if (!Arrays.equals(value, other.value))
-			return false;
-		return true;
+		this.ttl = ttl;
 	}
 
 	public byte[] getKey() {
 		return key;
+	}
+
+	public int getTtl() {
+		return ttl;
+	}
+
+	public void setTtl(int ttl) {
+		this.ttl = ttl;
 	}
 
 	@Override
@@ -52,15 +48,6 @@ public class SetRequest extends ClientRequest {
 
 	public byte[] getValue() {
 		return value;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(key);
-		result = prime * result + Arrays.hashCode(value);
-		return result;
 	}
 
 	public void setKey(byte[] key) {
@@ -74,7 +61,35 @@ public class SetRequest extends ClientRequest {
 	@Override
 	public String toString() {
 		return "SetRequest [key=" + Arrays.toString(key) + ", value=" + Arrays.toString(value)
-				+ "]";
+				+ ", ttl=" + ttl + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(key);
+		result = prime * result + (int) (ttl ^ (ttl >>> 32));
+		result = prime * result + Arrays.hashCode(value);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SetRequest other = (SetRequest) obj;
+		if (!Arrays.equals(key, other.key))
+			return false;
+		if (ttl != other.ttl)
+			return false;
+		if (!Arrays.equals(value, other.value))
+			return false;
+		return true;
 	}
 
 }

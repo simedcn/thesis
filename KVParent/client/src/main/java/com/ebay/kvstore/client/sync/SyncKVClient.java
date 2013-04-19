@@ -1,16 +1,14 @@
 package com.ebay.kvstore.client.sync;
 
-import java.util.Arrays;
-
 import org.apache.mina.core.future.ReadFuture;
 import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.client.BaseClient;
 import com.ebay.kvstore.client.ClientOption;
 import com.ebay.kvstore.client.IKVClientHandler;
+import com.ebay.kvstore.client.result.GetResult;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.IProtocol;
 import com.ebay.kvstore.protocol.IProtocolType;
@@ -50,42 +48,48 @@ public class SyncKVClient extends BaseClient {
 		delete(key, true);
 	}
 
-	public synchronized byte[] get(byte[] key) throws KVException {
+	public IKVClientHandler getClientHandler() {
+		throw new UnsupportedOperationException("SyncKVClient does not support client handler");
+	}
+
+	public synchronized GetResult get(byte[] key) throws KVException {
 		checkKey(key);
 		return get(key, true);
 	}
 
-	public IKVClientHandler getClientHandler() {
-		throw new UnsupportedOperationException("Should not get IClientHandler for SyncKVClient");
+	public synchronized GetResult getCounter(byte[] key) throws KVException {
+		GetResult result = get(key);
+		return result;
 	}
 
-	public synchronized int getCounter(byte[] key) throws KVException {
-		byte[] value = get(key);
-		if (value == null || value.length != 4) {
-			throw new KVException("The key:" + Arrays.toString(key) + " is not a valid counter");
-		}
-		return KeyValueUtil.bytesToInt(value);
+	@Override
+	public int incr(byte[] key, int incremental, int initValue, int ttl) throws KVException {
+		checkKey(key);
+		return incr(key, incremental, initValue, ttl, true);
 	}
 
 	public synchronized int incr(byte[] key, int incremental, int initValue) throws KVException {
-		checkKey(key);
-		return incr(key, incremental, initValue, true);
+		return incr(key, incremental, initValue, 0);
 	}
 
 	@Override
 	public synchronized void set(byte[] key, byte[] value) throws KVException {
+		set(key, value, 0);
+	}
+
+	@Override
+	public void set(byte[] key, byte[] value, int ttl) throws KVException {
 		checkKey(key);
 		if (value == null) {
 			throw new NullPointerException("null value is not allowed");
 		}
-		set(key, value, true);
+		set(key, value, ttl, true);
 	}
 
 	public synchronized void setHandler(IKVClientHandler handler) {
 		throw new UnsupportedOperationException("Should not set IClientHandler for SyncKVClient");
 	}
 
-	// TODO stat
 	public synchronized DataServerStruct[] stat() throws KVException {
 		return stat(true);
 	}
@@ -133,7 +137,7 @@ public class SyncKVClient extends BaseClient {
 		}
 	}
 
-	private synchronized byte[] get(byte[] key, boolean retry) throws KVException {
+	private synchronized GetResult get(byte[] key, boolean retry) throws KVException {
 		IoSession session = getConnection(key);
 		IProtocol request = new GetRequest(key);
 		ReadFuture read = null;
@@ -149,7 +153,8 @@ public class SyncKVClient extends BaseClient {
 			} else if (ret != ProtocolCode.Success) {
 				throw new KVException(ProtocolCode.getMessage(ret));
 			} else {
-				return ((GetResponse) response).getValue();
+				GetResponse resp = (GetResponse) response;
+				return new GetResult(resp.getKey(), resp.getValue(), resp.getTtl());
 			}
 		} catch (InterruptedException e) {
 			logger.error("Wait method has been interrupted", e);
@@ -157,10 +162,10 @@ public class SyncKVClient extends BaseClient {
 		}
 	}
 
-	private synchronized int incr(byte[] key, int incremental, int initValue, boolean retry)
+	private synchronized int incr(byte[] key, int incremental, int initValue, int ttl, boolean retry)
 			throws KVException {
 		IoSession session = getConnection(key);
-		IProtocol request = new IncrRequest(key, incremental, initValue);
+		IProtocol request = new IncrRequest(key, incremental, initValue, ttl);
 		ReadFuture read = null;
 		try {
 			session.write(request).await();
@@ -170,7 +175,7 @@ public class SyncKVClient extends BaseClient {
 			int ret = response.getRetCode();
 			if (ret == ProtocolCode.Invalid_Key && retry) {
 				updateRegionTable();
-				return incr(key, incremental, initValue, false);
+				return incr(key, incremental, initValue, ttl, false);
 			} else if (ret != ProtocolCode.Success) {
 				throw new KVException(ProtocolCode.getMessage(ret));
 			} else {
@@ -182,9 +187,10 @@ public class SyncKVClient extends BaseClient {
 		}
 	}
 
-	private synchronized void set(byte[] key, byte[] value, boolean retry) throws KVException {
+	private synchronized void set(byte[] key, byte[] value, int ttl, boolean retry)
+			throws KVException {
 		IoSession session = getConnection(key);
-		IProtocol request = new SetRequest(key, value);
+		IProtocol request = new SetRequest(key, value, ttl);
 		ReadFuture read = null;
 		try {
 			session.write(request).await();
@@ -194,7 +200,7 @@ public class SyncKVClient extends BaseClient {
 			int ret = response.getRetCode();
 			if (ret == ProtocolCode.Invalid_Key && retry) {
 				updateRegionTable();
-				set(key, value, false);
+				set(key, value, ttl, false);
 				return;
 			} else if (ret != ProtocolCode.Success) {
 				throw new KVException(ProtocolCode.getMessage(ret));

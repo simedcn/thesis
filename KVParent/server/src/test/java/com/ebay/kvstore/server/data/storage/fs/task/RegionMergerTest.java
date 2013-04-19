@@ -18,6 +18,7 @@ import com.ebay.kvstore.server.data.storage.task.IRegionMergeListener;
 import com.ebay.kvstore.server.data.storage.task.RegionMerger;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.structure.Value;
 
 public class RegionMergerTest extends BaseFileStorageTest {
 
@@ -44,10 +45,10 @@ public class RegionMergerTest extends BaseFileStorageTest {
 	@Test
 	public void testRun() {
 		for (int i = 0; i < 50; i++) {
-			storage1.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
+			storage1.storeInBuffer(new byte[] { (byte) i }, new Value(new byte[] { (byte) i }));
 		}
 		for (int i = 50; i < 100; i++) {
-			storage2.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
+			storage2.storeInBuffer(new byte[] { (byte) i }, new Value(new byte[] { (byte) i }));
 		}
 		RegionMerger merger = new RegionMerger(conf, storage1, storage2,
 				new IRegionMergeListener() {
@@ -69,7 +70,7 @@ public class RegionMergerTest extends BaseFileStorageTest {
 								KeyValue[] kvs = storage.getFromDisk(key);
 								boolean found = false;
 								for (KeyValue kv : kvs) {
-									if (Arrays.equals(kv.getKey(),key)) {
+									if (Arrays.equals(kv.getKey(), key)) {
 										assertArrayEquals(key, kv.getValue().getValue());
 										found = true;
 										break;
@@ -81,6 +82,7 @@ public class RegionMergerTest extends BaseFileStorageTest {
 							e.printStackTrace();
 						}
 					}
+
 					@Override
 					public void onMergeBegin() {
 

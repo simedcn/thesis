@@ -8,7 +8,7 @@ public interface ICacheReplacer {
 
 	public static String FIFO = "fifo";
 
-	public void addIndex(byte[] key);
+	public void addIndex(byte[] key, long expire);
 
 	public void deleteIndex(byte[] key);
 

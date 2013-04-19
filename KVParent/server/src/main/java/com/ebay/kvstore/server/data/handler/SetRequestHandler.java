@@ -18,13 +18,14 @@ public class SetRequestHandler extends DataServerHandler<SetRequest> {
 		IoSession session = context.getSession();
 		byte[] key = protocol.getKey();
 		byte[] value = protocol.getValue();
+		int ttl = protocol.getTtl();
 		IProtocol response = null;
 		boolean retry = protocol.isRetry();
 		try {
-			engine.set(key, value);
-			response = new SetResponse(ProtocolCode.Success, key, value, retry);
+			engine.set(key, value, ttl);
+			response = new SetResponse(ProtocolCode.Success, key, value, ttl, retry);
 		} catch (InvalidKeyException e) {
-			response = new SetResponse(ProtocolCode.Invalid_Key, key, value, retry);
+			response = new SetResponse(ProtocolCode.Invalid_Key, key, value, ttl, retry);
 		}
 		session.write(response);
 	}

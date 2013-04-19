@@ -1,6 +1,5 @@
 package com.ebay.kvstore;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -23,7 +22,9 @@ public class RegionUtil {
 				IMutation mutation = it.next();
 				switch (mutation.getType()) {
 				case IMutation.Set:
-					buffer.set(mutation.getKey(), mutation.getValue());
+					if (KeyValueUtil.isAlive(mutation.getValue())) {
+						buffer.set(mutation.getKey(), mutation.getValue());
+					}
 					break;
 				case IMutation.Delete:
 					buffer.set(mutation.getKey(), new Value(null, true));

@@ -1,4 +1,4 @@
-package com.ebay.kvstore.client.async.result;
+package com.ebay.kvstore.client.result;
 
 import java.util.Arrays;
 
@@ -8,15 +8,18 @@ import com.ebay.kvstore.exception.KVException;
 public class GetResult extends BaseResult {
 
 	private byte[] value;
+	private int ttl;
 
-	public GetResult(byte[] key, byte[] value, KVException e) {
+	public GetResult(byte[] key, byte[] value, int ttl, KVException e) {
 		super(key, e);
 		this.value = value;
+		this.ttl = ttl;
 	}
 
-	public GetResult(byte[] key, byte[] value) {
+	public GetResult(byte[] key, byte[] value, int ttl) {
 		super(key, null);
 		this.value = value;
+		this.ttl = ttl;
 	}
 
 	public byte[] getValue() throws KVException {
@@ -30,5 +33,9 @@ public class GetResult extends BaseResult {
 			throw new KVException("The key:" + Arrays.toString(key) + " is not a valid counter");
 		}
 		return KeyValueUtil.bytesToInt(value);
+	}
+
+	public int getTtl() {
+		return ttl;
 	}
 }

@@ -56,9 +56,9 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
-	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException,
-			IOException {
-		KeyValue kv = engine.incr(key, incremental, initValue);
+	public KeyValue incr(byte[] key, int incremental, int initValue, int ttl)
+			throws InvalidKeyException, IOException {
+		KeyValue kv = engine.incr(key, incremental, initValue, ttl);
 		engine.onIncr(key, KeyValueUtil.bytesToInt(kv.getValue().getValue()));
 		return kv;
 	}
@@ -74,8 +74,8 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
-	public void set(byte[] key, byte[] value) throws InvalidKeyException {
-		engine.set(key, value);
+	public void set(byte[] key, byte[] value, int ttl) throws InvalidKeyException {
+		engine.set(key, value, ttl);
 		engine.onSet(key, value);
 	}
 

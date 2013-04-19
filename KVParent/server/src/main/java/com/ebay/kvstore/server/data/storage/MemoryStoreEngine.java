@@ -94,6 +94,10 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			object.start();
 			checkKeyRegion(key);
 			KeyValue kv = cache.get(key);
+			if (kv != null && !KeyValueUtil.isAlive(kv.getValue())) {
+				cache.delete(key);
+				kv = null;
+			}
 			return kv;
 		} finally {
 			object.stop();
@@ -106,14 +110,17 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public KeyValue incr(byte[] key, int incremental, int initValue) throws InvalidKeyException {
+	public KeyValue incr(byte[] key, int incremental, int initValue, int ttl)
+			throws InvalidKeyException {
 		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Incr_Monitor);
 		try {
 			object.start();
 			Region region = checkKeyRegion(key);
 			IDataLogger logger = getRedoLogger(region);
-			KeyValue kv = cache.incr(key, incremental, initValue);
-			logger.write(new SetMutation(key, kv.getValue().getValue()));
+			KeyValue kv = cache.get(key);
+			kv = incr(kv, key, initValue, incremental, ttl);
+			cache.set(key, kv.getValue());
+			logger.write(new SetMutation(key, kv.getValue()));
 			return kv;
 		} finally {
 			object.stop();
@@ -132,6 +139,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			object.start();
 			String regionDir = PathBuilder.getRegionDir(region.getRegionId());
 			String[] logFiles = FSUtil.getRegionLogFiles(regionDir);
+			String logFile = null;
 			boolean success = false;
 			if (logFiles == null || logFiles.length == 0) {
 				success = true;
@@ -140,6 +148,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 					buffer = KeyValueCache.forBuffer();
 					try {
 						RegionUtil.loadLogger(regionDir + logFiles[i], buffer);
+						logFile = regionDir + logFiles[i];
 						success = true;
 						break;
 					} catch (Exception e) {
@@ -154,9 +163,14 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			}
 			// there should be no overlap in keys
 			cache.addAll(buffer);
-			String logFile = PathBuilder.getRegionLogPath(region.getRegionId(),
-					System.currentTimeMillis());
-			IDataLogger logger = DataFileLogger.forCreate(logFile);
+			IDataLogger logger = null;
+			if (logFile != null) {
+				logger = DataFileLogger.forAppend(logFile);
+			} else {
+				logFile = PathBuilder.getRegionLogPath(region.getRegionId(),
+						System.currentTimeMillis());
+				logger = DataFileLogger.forCreate(logFile);
+			}
 			addRegion(region);
 			loggers.put(region, logger);
 			return true;
@@ -173,14 +187,16 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
-	public void set(byte[] key, byte[] value) throws InvalidKeyException {
+	public void set(byte[] key, byte[] value, int ttl) throws InvalidKeyException {
 		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Set_Monitor);
 		try {
 			object.start();
 			Region region = checkKeyRegion(key);
 			IDataLogger logger = getRedoLogger(region);
-			cache.set(key, value);
-			logger.write(new SetMutation(key, value));
+			long expire = KeyValueUtil.getExpireTime(ttl);
+			Value v = new Value(value, expire);
+			cache.set(key, v);
+			logger.write(new SetMutation(key, v));
 		} finally {
 			object.stop();
 		}

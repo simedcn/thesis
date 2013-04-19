@@ -1,10 +1,10 @@
 package com.ebay.kvstore.client;
 
-import com.ebay.kvstore.client.async.result.DeleteResult;
-import com.ebay.kvstore.client.async.result.GetResult;
-import com.ebay.kvstore.client.async.result.IncrResult;
-import com.ebay.kvstore.client.async.result.SetResult;
-import com.ebay.kvstore.client.async.result.StatResult;
+import com.ebay.kvstore.client.result.DeleteResult;
+import com.ebay.kvstore.client.result.GetResult;
+import com.ebay.kvstore.client.result.IncrResult;
+import com.ebay.kvstore.client.result.SetResult;
+import com.ebay.kvstore.client.result.StatResult;
 
 /**
  * Used for asynchronous call

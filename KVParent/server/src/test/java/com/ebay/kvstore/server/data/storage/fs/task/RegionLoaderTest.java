@@ -17,6 +17,7 @@ import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.structure.Value;
 
 public class RegionLoaderTest extends BaseFileStorageTest {
 	protected Address addr;
@@ -37,10 +38,10 @@ public class RegionLoaderTest extends BaseFileStorageTest {
 	@Test
 	public void testRun() {
 		for (int i = 0; i < 100; i++) {
-			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
+			storage.storeInBuffer(new byte[] { (byte) i }, new Value(new byte[] { (byte) i }));
 		}
 		for (int i = 0; i < 110; i += 15) {
-			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
+			storage.storeInBuffer(new byte[] { (byte) i }, new Value(new byte[] { (byte) i }));
 		}
 		storage.closeLogger();
 		RegionTaskManager.load(conf, new RegionLoadListener(), region);

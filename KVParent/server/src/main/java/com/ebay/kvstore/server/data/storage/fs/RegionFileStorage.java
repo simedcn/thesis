@@ -325,7 +325,7 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
-	public void storeInBuffer(byte[] key, byte[] value) {
+	public void storeInBuffer(byte[] key, Value value) {
 		buffer.set(key, value);
 		keyFilter.set(key);
 		redoLogger.write(new SetMutation(key, value));
@@ -362,7 +362,9 @@ public class RegionFileStorage implements IRegionStorage {
 				IMutation mutation = it.next();
 				switch (mutation.getType()) {
 				case IMutation.Set:
-					buffer.set(mutation.getKey(), mutation.getValue());
+					if (KeyValueUtil.isAlive(mutation.getValue())) {
+						buffer.set(mutation.getKey(), mutation.getValue());
+					}
 					break;
 				case IMutation.Delete:
 					buffer.set(mutation.getKey(), new Value(null, true));

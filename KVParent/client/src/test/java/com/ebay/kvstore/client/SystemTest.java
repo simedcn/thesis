@@ -11,6 +11,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ebay.kvstore.client.result.GetResult;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
@@ -93,9 +94,9 @@ public class SystemTest extends BaseClientTest {
 			} else {
 				key = getRandBytes();
 			}
-			byte[] value = client.get(key);
+			GetResult result = client.get(key);
 			if (exist) {
-				assertArrayEquals(key, value);
+				assertArrayEquals(key, result.getValue());
 			}
 			index++;
 		}

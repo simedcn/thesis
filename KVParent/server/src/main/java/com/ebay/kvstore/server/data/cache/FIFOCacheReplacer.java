@@ -12,7 +12,7 @@ public class FIFOCacheReplacer extends BaseCacheReplacer {
 	}
 
 	@Override
-	public void addIndex(byte[] key) {
+	public void addIndex(byte[] key, long expire) {
 		index.add(key);
 	}
 

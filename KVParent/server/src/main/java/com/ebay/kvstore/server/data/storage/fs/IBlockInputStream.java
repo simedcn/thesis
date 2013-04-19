@@ -22,5 +22,7 @@ public interface IBlockInputStream {
 
 	public int readInt() throws IOException;
 
+	public long readLong() throws IOException;
+
 	public int skipBytes(int n) throws IOException;
 }

@@ -3,15 +3,17 @@ package com.ebay.kvstore.client;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.client.async.result.DeleteResult;
-import com.ebay.kvstore.client.async.result.GetResult;
-import com.ebay.kvstore.client.async.result.IncrResult;
-import com.ebay.kvstore.client.async.result.SetResult;
-import com.ebay.kvstore.client.async.result.StatResult;
+import com.ebay.kvstore.client.result.DeleteResult;
+import com.ebay.kvstore.client.result.GetResult;
+import com.ebay.kvstore.client.result.IncrResult;
+import com.ebay.kvstore.client.result.SetResult;
+import com.ebay.kvstore.client.result.StatResult;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.structure.Address;
 
@@ -20,7 +22,7 @@ public class TestAsyncClient extends BaseClientTest {
 	protected ClientOption option;
 
 	public TestAsyncClient() {
-		option = new ClientOption(false, 2000, 30, new Address("127.0.0.1", 20000));
+		option = new ClientOption(false, 2000, 30, new Address("192.168.1.102", 20000));
 		initClient(option);
 		client.setHandler(new Handler());
 	}
@@ -49,9 +51,11 @@ public class TestAsyncClient extends BaseClientTest {
 			}
 			Thread.sleep(1000);
 			client.incr(new byte[] { 100 }, 0, 10);
-			while (true) {
-				Thread.sleep(10000);
-			}
+			client.set(new byte[] { 101 }, new byte[] { 101 }, 1000);
+			Thread.sleep(1000);
+			client.get(new byte[] { 101 });
+			Thread.sleep(10000);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -71,6 +75,10 @@ public class TestAsyncClient extends BaseClientTest {
 		@Override
 		public void onGet(GetResult result) {
 			try {
+				if (Arrays.equals(result.getKey(), new byte[] { 101 })) {
+					assertEquals(null, result.getValue());
+					return;
+				}
 				byte i = result.getKey()[0];
 				if (i % 2 != 0) {
 					assertArrayEquals(result.getKey(), result.getValue());

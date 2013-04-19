@@ -12,12 +12,13 @@ public class IncrRequestDecoder implements IProtocolDecoder<IncrRequest> {
 	public IncrRequest decode(IoSession session, IoBuffer in) {
 		byte b = in.get();
 		boolean retry = (b != 0) ? true : false;
+		int ttl = in.getInt();
 		int length = in.getInt();
 		byte[] key = new byte[length];
 		in.get(key);
 		int incremental = in.getInt();
 		int initValue = in.getInt();
-		IncrRequest request = new IncrRequest(key, incremental, initValue, retry);
+		IncrRequest request = new IncrRequest(key, incremental, initValue, ttl,retry);
 		return request;
 	}
 

@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import com.ebay.kvstore.logger.ILoggerInputStream;
 import com.ebay.kvstore.logger.ILoggerOutputStream;
+import com.ebay.kvstore.structure.Value;
 
 public class DeleteMutation implements IMutation {
 	protected byte[] key;
@@ -25,7 +26,7 @@ public class DeleteMutation implements IMutation {
 	}
 
 	@Override
-	public byte[] getValue() {
+	public Value getValue() {
 		return null;
 	}
 

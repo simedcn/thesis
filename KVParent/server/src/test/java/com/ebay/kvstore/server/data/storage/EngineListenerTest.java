@@ -14,7 +14,7 @@ import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
 import com.ebay.kvstore.structure.Region;
-import com.ebay.kvstore.structure.RegionStat;
+import com.ebay.kvstore.structure.Value;
 
 public class EngineListenerTest extends BaseFileTest {
 
@@ -43,7 +43,7 @@ public class EngineListenerTest extends BaseFileTest {
 	public void testListener() {
 		try {
 			for (byte i = 0; i < 100; i++) {
-				engine.set(new byte[] { i }, new byte[] { i });
+				engine.set(new byte[] { i }, new byte[] { i }, 0);
 			}
 			for (byte i = 0; i < 100; i += 2) {
 				engine.delete(new byte[] { i });
@@ -56,10 +56,10 @@ public class EngineListenerTest extends BaseFileTest {
 					assertNull(engine.get(new byte[] { i }));
 				}
 			}
-			engine.incr(new byte[] { 100 }, 5, 0);
-			engine.incr(new byte[] { 100 }, 5, 0);
-			engine.incr(new byte[] { 100 }, 5, 0);
-			engine.incr(new byte[] { 100 }, 5, 0);
+			engine.incr(new byte[] { 100 }, 5, 0, 0);
+			engine.incr(new byte[] { 100 }, 5, 0, 0);
+			engine.incr(new byte[] { 100 }, 5, 0, 0);
+			engine.incr(new byte[] { 100 }, 5, 0, 0);
 			assertEquals(20,
 					KeyValueUtil.bytesToInt(engine.get(new byte[] { 100 }).getValue().getValue()));
 			while (RegionTaskManager.isRunning()) {

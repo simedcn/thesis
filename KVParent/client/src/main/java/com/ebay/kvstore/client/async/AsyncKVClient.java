@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import com.ebay.kvstore.client.BaseClient;
 import com.ebay.kvstore.client.ClientOption;
 import com.ebay.kvstore.client.IKVClientHandler;
+import com.ebay.kvstore.client.result.GetResult;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.IProtocol;
 import com.ebay.kvstore.protocol.IProtocolType;
@@ -44,7 +45,7 @@ public class AsyncKVClient extends BaseClient {
 		session.write(request);
 	}
 
-	public byte[] get(byte[] key) throws KVException {
+	public GetResult get(byte[] key) throws KVException {
 		checkKey(key);
 		IoSession session = getConnection(key);
 		IProtocol request = new GetRequest(key);
@@ -53,33 +54,42 @@ public class AsyncKVClient extends BaseClient {
 	}
 
 	@Override
-	public void set(byte[] key, byte[] value) throws KVException {
+	public void set(byte[] key, byte[] value, int ttl) throws KVException {
 		checkKey(key);
 		if (value == null) {
 			throw new NullPointerException("null value is not allowed");
 		}
 		IoSession session = getConnection(key);
-		IProtocol request = new SetRequest(key, value);
+		IProtocol request = new SetRequest(key, value, ttl);
 		session.write(request);
+	}
 
+	@Override
+	public void set(byte[] key, byte[] value) throws KVException {
+		set(key, value, 0);
 	}
 
 	public IKVClientHandler getClientHandler() {
 		return handler;
 	}
 
-	public int getCounter(byte[] key) throws KVException {
+	public GetResult getCounter(byte[] key) throws KVException {
 		checkKey(key);
 		IoSession session = getConnection(key);
 		IProtocol request = new GetRequest(key);
 		session.write(request);
-		return 0;
+		return null;
 	}
 
 	public int incr(byte[] key, int incremental, int initValue) throws KVException {
+		return incr(key, incremental, initValue, 0);
+	}
+
+	@Override
+	public int incr(byte[] key, int incremental, int initValue, int ttl) throws KVException {
 		checkKey(key);
 		IoSession session = getConnection(key);
-		IProtocol request = new IncrRequest(key, incremental, initValue);
+		IProtocol request = new IncrRequest(key, incremental, initValue, ttl);
 		session.write(request);
 		return 0;
 	}

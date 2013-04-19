@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.structure.Value;
 
 public interface IRegionStorage {
 
@@ -46,6 +47,6 @@ public interface IRegionStorage {
 
 	public void stat() throws IOException;
 
-	public void storeInBuffer(byte[] key, byte[] value);
+	public void storeInBuffer(byte[] key, Value value);
 
 }

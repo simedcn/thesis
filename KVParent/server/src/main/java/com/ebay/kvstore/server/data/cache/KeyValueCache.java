@@ -116,24 +116,6 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 		return writeLock;
 	}
 
-	public KeyValue incr(byte[] key, int incremental, int initValue) {
-		try {
-			writeLock.lock();
-			Value v = cache.get(key);
-			if (v == null) {
-				v = new Value(KeyValueUtil.intToBytes(initValue + incremental));
-				cache.put(key, v);
-				onSet(key, v);
-			} else {
-				v.incr(incremental);
-			}
-			return new KeyValue(key, v);
-		} finally {
-			writeLock.unlock();
-		}
-
-	}
-
 	@Override
 	public Iterator<Entry<byte[], Value>> iterator() {
 		return cache.entrySet().iterator();
@@ -176,10 +158,6 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 		cache.clear();
 	}
 
-	public void set(byte[] key, byte[] value) {
-		set(key, new Value(value));
-	}
-
 	public void set(byte[] key, Value value) {
 		try {
 			writeLock.lock();
@@ -220,9 +198,6 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 	private void onDelete(byte[] key, Value value) {
 		if (value != null) {
 			used = used - getKeyValueLen(key, value);
-			if (replacer != null) {
-				replacer.deleteIndex(key);
-			}
 		}
 	}
 
@@ -235,7 +210,7 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 	private void onSet(byte[] key, Value value) {
 		used = used + getKeyValueLen(key, value);
 		if (replacer != null) {
-			replacer.addIndex(key);
+			replacer.addIndex(key, value.getExpire());
 		}
 	}
 
@@ -245,6 +220,7 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 			replacer.reIndex(key);
 		}
 	}
+
 	private class ByteArrayComparator implements Comparator<byte[]> {
 
 		@Override
@@ -253,5 +229,4 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 		}
 	}
 
-	
 }

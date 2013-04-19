@@ -16,6 +16,7 @@ import com.ebay.kvstore.server.data.storage.task.RegionSplitter;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
+import com.ebay.kvstore.structure.Value;
 
 public class RegionSplitterTest extends BaseFileStorageTest {
 
@@ -33,10 +34,10 @@ public class RegionSplitterTest extends BaseFileStorageTest {
 	@Test
 	public void testRun() {
 		for (int i = 0; i < 100; i++) {
-			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
+			storage.storeInBuffer(new byte[] { (byte) i }, new Value(new byte[] { (byte) i }));
 		}
 		for (int i = 0; i < 110; i += 15) {
-			storage.storeInBuffer(new byte[] { (byte) i }, new byte[] { (byte) i });
+			storage.storeInBuffer(new byte[] { (byte) i }, new Value(new byte[] { (byte) i }));
 		}
 		RegionSplitter flusher = new RegionSplitter(storage, conf, new SplitListener());
 		flusher.run();

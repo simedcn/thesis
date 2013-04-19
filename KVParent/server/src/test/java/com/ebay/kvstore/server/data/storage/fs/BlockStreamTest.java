@@ -68,7 +68,7 @@ public class BlockStreamTest extends BaseFileTest {
 			e.printStackTrace();
 		}
 		try {
-			it = new KVFileIterator(1, end, blockSize, 6, fs.open(new Path(path)));
+			it = new KVFileIterator(2, end, blockSize, 10, fs.open(new Path(path)));
 			int counter = 2;
 			while (it.hasNext()) {
 				KeyValue kv = it.next();

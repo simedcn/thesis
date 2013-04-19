@@ -17,6 +17,7 @@ public class IncrRequestEncoder implements IProtocolEncoder<IncrRequest> {
 	public void encode(IoSession session, IncrRequest request, IoBuffer buffer) {
 		buffer.putInt(request.getType());
 		buffer.put((byte) (request.isRetry() ? 1 : 0));
+		buffer.putInt(request.getTtl());
 		buffer.putInt(request.getKey().length);
 		buffer.put(request.getKey());
 		buffer.putInt(request.getIncremental());
