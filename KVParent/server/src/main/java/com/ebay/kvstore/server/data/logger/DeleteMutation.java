@@ -3,8 +3,8 @@ package com.ebay.kvstore.server.data.logger;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.ebay.kvstore.logger.ILoggerInputStream;
-import com.ebay.kvstore.logger.ILoggerOutputStream;
+import com.ebay.kvstore.server.logger.ILoggerInputStream;
+import com.ebay.kvstore.server.logger.ILoggerOutputStream;
 import com.ebay.kvstore.structure.Value;
 
 public class DeleteMutation implements IMutation {

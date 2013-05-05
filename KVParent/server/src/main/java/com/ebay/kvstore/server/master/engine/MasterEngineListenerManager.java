@@ -42,6 +42,17 @@ public class MasterEngineListenerManager implements IMasterEngineListener {
 	}
 
 	@Override
+	public void onRegionMerge(DataServerStruct struct, int regionId1, int regionId2) {
+		for (IMasterEngineListener listener : listeners) {
+			try {
+				listener.onRegionMerge(struct, regionId1, regionId2);
+			} catch (Exception e) {
+				logger.error("Error occured when calling onRegionUnload on listener", e);
+			}
+		}
+	}
+
+	@Override
 	public void onRegionSplit(int oldRegion, int newRegion) {
 		for (IMasterEngineListener listener : listeners) {
 			try {
@@ -73,17 +84,6 @@ public class MasterEngineListenerManager implements IMasterEngineListener {
 
 	public void unregisterListener(IMasterEngineListener listener) {
 		listeners.add(listener);
-	}
-
-	@Override
-	public void onRegionMerge(DataServerStruct struct, int regionId1, int regionId2) {
-		for (IMasterEngineListener listener : listeners) {
-			try {
-				listener.onRegionMerge(struct, regionId1, regionId2);
-			} catch (Exception e) {
-				logger.error("Error occured when calling onRegionUnload on listener", e);
-			}
-		}
 	}
 
 }

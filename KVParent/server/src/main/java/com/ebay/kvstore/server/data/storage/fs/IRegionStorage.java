@@ -9,13 +9,15 @@ import com.ebay.kvstore.structure.Value;
 
 public interface IRegionStorage {
 
+	public void clear();
+
+	public void clearBuffer();
+
 	public void closeLogger();
 
 	public void deleteFromBuffer(byte[] key);
 
 	public void dispose();
-
-	public String getRegionDir();
 
 	public KeyValueCache getBuffer();
 
@@ -31,17 +33,17 @@ public interface IRegionStorage {
 
 	public Region getRegion();
 
+	public String getRegionDir();
+
 	public void newLogger(String file) throws IOException;
-
-	public void clear();
-
-	public void clearBuffer();
 
 	public void setBuffer(KeyValueCache buffer);
 
 	public void setBufferLimit(int limit);
 
 	public void setDataFile(String file) throws IOException;
+
+	public void setDataFile(String file, boolean index) throws IOException;
 
 	public void setLogger(String file) throws IOException;
 

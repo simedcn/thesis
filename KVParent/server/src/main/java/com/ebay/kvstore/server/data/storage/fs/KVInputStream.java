@@ -137,6 +137,18 @@ public class KVInputStream extends FilterInputStream implements IBlockInputStrea
 		return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
 	}
 
+	@Override
+	public long readLong() throws IOException {
+		if (blockStream.available() < 8) {
+			readNextBlock();
+		}
+		blockStream.read(readBuffer);
+		return (((long) readBuffer[0] << 56) + ((long) (readBuffer[1] & 255) << 48)
+				+ ((long) (readBuffer[2] & 255) << 40) + ((long) (readBuffer[3] & 255) << 32)
+				+ ((long) (readBuffer[4] & 255) << 24) + ((readBuffer[5] & 255) << 16)
+				+ ((readBuffer[6] & 255) << 8) + ((readBuffer[7] & 255) << 0));
+	}
+
 	/**
 	 * Skip n bytes, n could either be positive or negative. if n < 0, make sure
 	 * n<= {@link KVInputStream#getBlockPos()}. if n>0, n should not exceed the
@@ -169,22 +181,10 @@ public class KVInputStream extends FilterInputStream implements IBlockInputStrea
 				throw new IndexOutOfBoundsException("Cannot skip to an old block");
 			}
 			blockStream.reset();
-			blockStream.skip(index);
+			blockStream.skip(	index);
 
 		}
 		return 0;
-	}
-
-	@Override
-	public long readLong() throws IOException {
-		if (blockStream.available() < 8) {
-			readNextBlock();
-		}
-		blockStream.read(readBuffer);
-		return (((long) readBuffer[0] << 56) + ((long) (readBuffer[1] & 255) << 48)
-				+ ((long) (readBuffer[2] & 255) << 40) + ((long) (readBuffer[3] & 255) << 32)
-				+ ((long) (readBuffer[4] & 255) << 24) + ((readBuffer[5] & 255) << 16)
-				+ ((readBuffer[6] & 255) << 8) + ((readBuffer[7] & 255) << 0));
 	}
 
 	/**

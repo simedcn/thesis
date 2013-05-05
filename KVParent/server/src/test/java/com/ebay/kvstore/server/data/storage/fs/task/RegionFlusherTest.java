@@ -13,18 +13,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.BaseFileStorageTest;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
 import com.ebay.kvstore.server.data.storage.task.IRegionFlushListener;
 import com.ebay.kvstore.server.data.storage.task.RegionFlusher;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.KeyValueIOUtil;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
-import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
 
 public class RegionFlusherTest extends BaseFileStorageTest {
@@ -50,7 +49,7 @@ public class RegionFlusherTest extends BaseFileStorageTest {
 
 			out = new KVOutputStream(fout, blockSize);
 			for (int i = 0; i < 100; i += 2) {
-				KeyValueUtil.writeToExternal(out, new KeyValue(new byte[] { (byte) i }, new Value(
+				KeyValueIOUtil.writeToExternal(out, new KeyValue(new byte[] { (byte) i }, new Value(
 						new byte[] { (byte) i })));
 			}
 			out.close();
@@ -87,7 +86,6 @@ public class RegionFlusherTest extends BaseFileStorageTest {
 								e.printStackTrace();
 							}
 						}
-
 						@Override
 						public void onFlushBegin() {
 

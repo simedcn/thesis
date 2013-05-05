@@ -10,30 +10,34 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.KeyValueUtil;
-import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IBlockOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.KeyValueIOUtil;
+import com.ebay.kvstore.server.util.PathBuilder;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class RegionSplitter extends BaseRegionTask {
 
 	private static Logger logger = LoggerFactory.getLogger(RegionSplitter.class);
 
 	protected IRegionSplitListener listener;
+	protected int newRegionId;
 
-	public RegionSplitter(IRegionStorage storage, IConfiguration conf, IRegionSplitListener listener) {
+	public RegionSplitter(IRegionStorage storage, IConfiguration conf, int newRegionId,
+			IRegionSplitListener listener) {
 		super(storage, conf);
 		this.listener = listener;
+		this.newRegionId = newRegionId;
 	}
 
 	@Override
@@ -92,12 +96,12 @@ public class RegionSplitter extends BaseRegionTask {
 					}
 					if (fileLeft) {
 						if (result.kv != null) {
-							KeyValueUtil.writeToExternal(oldTempOut, kv);
+							KeyValueIOUtil.writeToExternal(oldTempOut, kv);
 							currentSize += KeyValueUtil.getKeyValueLen(kv);
 						}
 						while (fileIt.hasNext()) {
 							kv = fileIt.next();
-							KeyValueUtil.writeToExternal(oldTempOut, kv);
+							KeyValueIOUtil.writeToExternal(oldTempOut, kv);
 							currentSize += KeyValueUtil.getKeyValueLen(kv);
 							if (currentSize >= fileSize) {
 								oldKeyEnd = kv.getKey();
@@ -108,13 +112,13 @@ public class RegionSplitter extends BaseRegionTask {
 					} else {
 						if (result.e != null && !result.e.getValue().isDeleted()) {
 							kv = new KeyValue(result.e.getKey(), result.e.getValue());
-							KeyValueUtil.writeToExternal(oldTempOut, kv);
+							KeyValueIOUtil.writeToExternal(oldTempOut, kv);
 							currentSize += KeyValueUtil.getKeyValueLen(kv);
 						}
 						while (cacheIt.hasNext()) {
 							e = cacheIt.next();
 							kv = new KeyValue(e.getKey(), e.getValue());
-							KeyValueUtil.writeToExternal(oldTempOut, kv);
+							KeyValueIOUtil.writeToExternal(oldTempOut, kv);
 							currentSize += KeyValueUtil.getKeyValueLen(kv);
 							if (currentSize >= fileSize / 2) {
 								oldKeyEnd = kv.getKey();
@@ -129,10 +133,14 @@ public class RegionSplitter extends BaseRegionTask {
 				newTempOut.close();
 
 				byte[] newKeyStart = KeyValueUtil.nextKey(oldKeyEnd);
+
 				Region oldRegion = storage.getRegion();
-				Region newRegion = listener.onSplitEnd(true, newKeyStart, oldRegion.getEnd());
-				oldRegion.setEnd(oldKeyEnd);
+				listener.onSplitEnd(true, newKeyStart, oldRegion.getEnd());
 				phase = RegionTaskPhase.End;
+				Region newRegion = new Region(newRegionId, null, null);
+				newStorage = new RegionFileStorage(conf, newRegion);
+				storage.setDataFile(oldTempFile);
+				newStorage.setDataFile(newTempFile);
 				String oldRegionFile = PathBuilder.getRegionFilePath(oldRegion.getRegionId(), time);
 				String newRegionFile = PathBuilder.getRegionFilePath(newRegion.getRegionId(), time);
 				String newRegionDir = PathBuilder.getRegionDir(newRegion.getRegionId());
@@ -145,13 +153,15 @@ public class RegionSplitter extends BaseRegionTask {
 					listener.onSplitCommit(false, null, null);
 					return;
 				}
-				newStorage = new RegionFileStorage(conf, newRegion);
 				String oldLogFile = PathBuilder.getRegionLogPath(oldRegion.getRegionId(), time);
 				String newLogFile = PathBuilder.getRegionLogPath(newRegion.getRegionId(), time);
 				storage.newLogger(oldLogFile);
 				newStorage.newLogger(newLogFile);
-				storage.setDataFile(oldRegionFile);
-				newStorage.setDataFile(newRegionFile);
+				storage.setDataFile(oldRegionFile, false);
+				newStorage.setDataFile(newRegionFile, false);
+				newRegion.setStart(KeyValueUtil.nextKey(oldKeyEnd));
+				newRegion.setEnd(oldRegion.getEnd());
+				oldRegion.setEnd(oldKeyEnd);
 			} finally {
 				cache.getWriteLock().unlock();
 			}
@@ -215,7 +225,7 @@ public class RegionSplitter extends BaseRegionTask {
 			}
 			if (kvToWrite != null && !kvToWrite.getValue().isDeleted()) {
 				lastKey = kvToWrite.getKey();
-				KeyValueUtil.writeToExternal(out, kvToWrite);
+				KeyValueIOUtil.writeToExternal(out, kvToWrite);
 				currentSize += KeyValueUtil.getKeyValueLen(kvToWrite);
 				if (currentSize >= max) {
 					break;

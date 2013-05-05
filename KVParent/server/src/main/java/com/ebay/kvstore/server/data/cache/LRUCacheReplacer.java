@@ -1,19 +1,21 @@
 package com.ebay.kvstore.server.data.cache;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class LRUCacheReplacer extends BaseCacheReplacer {
 
-	protected List<byte[]> index;
-
+	protected Map<byte[],Object> index;
+	protected Object dummy = new Object();
+	
 	public LRUCacheReplacer() {
-		index = new LinkedList<>();
+		index = new LinkedHashMap<byte[],Object>(16, .75f, true);
 	}
 
 	@Override
 	public void addIndex(byte[] key, long expire) {
-		index.add(key);
+		index.put(key,dummy);
 	}
 
 	@Override
@@ -23,17 +25,18 @@ public class LRUCacheReplacer extends BaseCacheReplacer {
 
 	@Override
 	public byte[] getReplacement() {
-		if (index.size() > 0) {
-			return index.remove(0);
-		} else {
-			return null;
+		Iterator<byte[]> it = index.keySet().iterator();
+		byte[] replacement = null;
+		if (it.hasNext()) {
+			replacement = it.next();
+			index.remove(replacement);
 		}
+		return replacement;
 	}
 
 	@Override
 	public void reIndex(byte[] key) {
-		index.remove(key);
-		index.add(key);
+		index.get(key);
 	}
 
 }

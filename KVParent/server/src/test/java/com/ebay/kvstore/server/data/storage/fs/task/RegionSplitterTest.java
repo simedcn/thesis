@@ -7,7 +7,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.BaseFileStorageTest;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
@@ -39,7 +39,7 @@ public class RegionSplitterTest extends BaseFileStorageTest {
 		for (int i = 0; i < 110; i += 15) {
 			storage.storeInBuffer(new byte[] { (byte) i }, new Value(new byte[] { (byte) i }));
 		}
-		RegionSplitter flusher = new RegionSplitter(storage, conf, new SplitListener());
+		RegionSplitter flusher = new RegionSplitter(storage, conf,1, new SplitListener());
 		flusher.run();
 	}
 
@@ -51,9 +51,8 @@ public class RegionSplitterTest extends BaseFileStorageTest {
 		}
 
 		@Override
-		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
+		public void onSplitEnd(boolean success, byte[] start, byte[] end) {
 			Assert.assertTrue(success);
-			return new Region(1, start, end);
 		}
 
 		@Override

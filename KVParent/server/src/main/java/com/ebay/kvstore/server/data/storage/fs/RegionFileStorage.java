@@ -13,29 +13,30 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.FSUtil;
-import com.ebay.kvstore.KeyValueUtil;
-import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.RegionUtil;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.DataFileLogger;
 import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
 import com.ebay.kvstore.server.data.logger.DeleteMutation;
-import com.ebay.kvstore.server.data.logger.IDataLogger;
 import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
 import com.ebay.kvstore.server.data.storage.task.IRegionFlushListener;
 import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
+import com.ebay.kvstore.server.logger.ILogger;
 import com.ebay.kvstore.server.monitor.IMonitorObject;
 import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
 import com.ebay.kvstore.server.monitor.MonitorFactory;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.FSUtil;
+import com.ebay.kvstore.server.util.PathBuilder;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
+import com.ebay.kvstore.util.RegionUtil;
 
 /**
  * Used for manage region data file in HDFS
@@ -49,7 +50,7 @@ public class RegionFileStorage implements IRegionStorage {
 
 	protected volatile Region region;
 
-	protected volatile IDataLogger redoLogger;
+	protected volatile ILogger redoLogger;
 
 	protected volatile KeyValueCache buffer;
 
@@ -133,6 +134,25 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
+	public void clear() {
+		region = null;
+		if (buffer != null) {
+			buffer.reset();
+		}
+		if (indices != null) {
+			indices.clear();
+		}
+		if (redoLogger != null) {
+			redoLogger.close();
+		}
+	}
+
+	@Override
+	public void clearBuffer() {
+		this.buffer.reset();
+	}
+
+	@Override
 	public synchronized void closeLogger() {
 		if (redoLogger != null) {
 			redoLogger.close();
@@ -153,23 +173,6 @@ public class RegionFileStorage implements IRegionStorage {
 		} finally {
 			flushingLock.unlock();
 		}
-	}
-
-	private void flush() {
-		logger.info("Try to flush region storage, region id:" + region.getRegionId()
-				+ " current buffer size is:" + buffer.getUsed() + " buffer limit is:" + bufferLimit);
-		if (!RegionTaskManager.isRunning()) {
-			RegionTaskManager.flush(this, conf, new RegionFlushListener(dataFile));
-		}
-	}
-
-	@Override
-	public String getRegionDir() {
-		if (region == null) {
-			throw new UnsupportedOperationException(
-					"BaseDir has not been initialized properly, as region is null");
-		}
-		return baseDir;
 	}
 
 	@Override
@@ -230,30 +233,20 @@ public class RegionFileStorage implements IRegionStorage {
 	}
 
 	@Override
+	public String getRegionDir() {
+		if (region == null) {
+			throw new UnsupportedOperationException(
+					"BaseDir has not been initialized properly, as region is null");
+		}
+		return baseDir;
+	}
+
+	@Override
 	public synchronized void newLogger(String file) throws IOException {
 		if (redoLogger != null) {
 			redoLogger.close();
 		}
 		redoLogger = DataFileLogger.forCreate(file);
-	}
-
-	@Override
-	public void clear() {
-		region = null;
-		if (buffer != null) {
-			buffer.reset();
-		}
-		if (indices != null) {
-			indices.clear();
-		}
-		if (redoLogger != null) {
-			redoLogger.close();
-		}
-	}
-
-	@Override
-	public void clearBuffer() {
-		this.buffer.reset();
 	}
 
 	@Override
@@ -268,13 +261,20 @@ public class RegionFileStorage implements IRegionStorage {
 
 	@Override
 	public void setDataFile(String file) throws IOException {
+		setDataFile(file,true);
+	}
+
+	@Override
+	public void setDataFile(String file, boolean index) throws IOException {
 		String oldFile = this.dataFile;
-		try {
-			this.dataFile = file;
-			buildIndex();
-		} catch (IOException e) {
-			this.dataFile = oldFile;
-			throw e;
+		this.dataFile = file;
+		if(index){
+			try {
+				buildIndex();
+			} catch (IOException e) {
+				this.dataFile = oldFile;
+				throw e;
+			}
 		}
 	}
 
@@ -327,7 +327,6 @@ public class RegionFileStorage implements IRegionStorage {
 	@Override
 	public void storeInBuffer(byte[] key, Value value) {
 		buffer.set(key, value);
-		keyFilter.set(key);
 		redoLogger.write(new SetMutation(key, value));
 		if (buffer.getUsed() > bufferLimit) {
 			flush();
@@ -373,6 +372,14 @@ public class RegionFileStorage implements IRegionStorage {
 			}
 		} catch (IOException e) {
 			logger.error("Error occured when loading the log file:" + file, e);
+		}
+	}
+
+	private void flush() {
+		logger.info("Try to flush region storage, region id:" + region.getRegionId()
+				+ " current buffer size is:" + buffer.getUsed() + " buffer limit is:" + bufferLimit);
+		if (!RegionTaskManager.isRunning()) {
+			RegionTaskManager.flush(this, conf, new RegionFlushListener(dataFile));
 		}
 	}
 

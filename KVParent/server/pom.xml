@@ -78,6 +78,10 @@
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.ebay.chluo.KVStore</groupId>
+			<artifactId>common</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

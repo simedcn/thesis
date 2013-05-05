@@ -5,7 +5,7 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.client.BaseClient;
+import com.ebay.kvstore.client.BaseKVClient;
 import com.ebay.kvstore.client.ClientOption;
 import com.ebay.kvstore.client.IKVClientHandler;
 import com.ebay.kvstore.client.result.GetResult;
@@ -28,7 +28,7 @@ import com.ebay.kvstore.protocol.response.RegionTableResponse;
 import com.ebay.kvstore.protocol.response.StatResponse;
 import com.ebay.kvstore.structure.DataServerStruct;
 
-public class SyncKVClient extends BaseClient {
+public class SyncKVClient extends BaseKVClient {
 
 	private Logger logger = LoggerFactory.getLogger(SyncKVClient.class);
 
@@ -43,33 +43,38 @@ public class SyncKVClient extends BaseClient {
 		this.dispatcher.registerHandler(IProtocolType.Region_Table_Resp, handler);
 	}
 
+	@Override
 	public synchronized void delete(byte[] key) throws KVException {
 		checkKey(key);
 		delete(key, true);
 	}
 
-	public IKVClientHandler getClientHandler() {
-		throw new UnsupportedOperationException("SyncKVClient does not support client handler");
-	}
-
+	@Override
 	public synchronized GetResult get(byte[] key) throws KVException {
 		checkKey(key);
 		return get(key, true);
 	}
 
+	@Override
+	public IKVClientHandler getClientHandler() {
+		throw new UnsupportedOperationException("SyncKVClient does not support client handler");
+	}
+
+	@Override
 	public synchronized GetResult getCounter(byte[] key) throws KVException {
 		GetResult result = get(key);
 		return result;
 	}
 
 	@Override
+	public synchronized int incr(byte[] key, int incremental, int initValue) throws KVException {
+		return incr(key, incremental, initValue, 0);
+	}
+
+	@Override
 	public int incr(byte[] key, int incremental, int initValue, int ttl) throws KVException {
 		checkKey(key);
 		return incr(key, incremental, initValue, ttl, true);
-	}
-
-	public synchronized int incr(byte[] key, int incremental, int initValue) throws KVException {
-		return incr(key, incremental, initValue, 0);
 	}
 
 	@Override
@@ -86,10 +91,12 @@ public class SyncKVClient extends BaseClient {
 		set(key, value, ttl, true);
 	}
 
+	@Override
 	public synchronized void setHandler(IKVClientHandler handler) {
 		throw new UnsupportedOperationException("Should not set IClientHandler for SyncKVClient");
 	}
 
+	@Override
 	public synchronized DataServerStruct[] stat() throws KVException {
 		return stat(true);
 	}

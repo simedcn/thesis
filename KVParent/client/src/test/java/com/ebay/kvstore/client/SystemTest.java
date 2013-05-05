@@ -24,7 +24,7 @@ public class SystemTest extends BaseClientTest {
 
 	@Before
 	public void setUp() throws Exception {
-		initClient(new ClientOption(true, 2000, 30, new Address("192.168.1.102", 20000)));
+		initClient(new ClientOption(true, 2000, 30, new Address("127.0.0.1", 20000)));
 		repeat = 1000;
 		keys = new HashSet<>();
 	}
@@ -126,7 +126,7 @@ public class SystemTest extends BaseClientTest {
 	}
 
 	private byte[] getRandBytes() {
-		int length = Math.abs(random.nextInt() % 1000) + 10;
+		int length = Math.abs(random.nextInt() % 10000) + 10;
 		byte[] bytes = new byte[length];
 		random.nextBytes(bytes);
 		return bytes;

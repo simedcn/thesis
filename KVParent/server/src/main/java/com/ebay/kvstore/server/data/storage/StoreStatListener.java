@@ -42,8 +42,8 @@ public class StoreStatListener implements IStoreEngineListener {
 
 	@Override
 	public void onSplit(Region oldRegion, Region newRegion) {
-		stat = oldRegion.getStat();
-		stat.dirty = true;
+		oldRegion.getStat().dirty = true;
+		newRegion.getStat().dirty = true;
 	}
 
 }

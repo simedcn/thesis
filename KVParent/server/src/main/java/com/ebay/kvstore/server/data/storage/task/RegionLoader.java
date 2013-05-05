@@ -8,18 +8,17 @@ import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.FSUtil;
-import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.RegionUtil;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.fs.BloomFilter;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.IndexBuilder;
 import com.ebay.kvstore.server.data.storage.fs.IndexEntry;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.FSUtil;
+import com.ebay.kvstore.server.util.PathBuilder;
 import com.ebay.kvstore.structure.Region;
 
 public class RegionLoader extends BaseRegionTask {
@@ -65,7 +64,7 @@ public class RegionLoader extends BaseRegionTask {
 						try {
 							buffer = KeyValueCache.forBuffer();
 							logFile = logFiles[i];
-							RegionUtil.loadLogger(baseDir + logFile, buffer);
+							buffer.loadLogger(baseDir + logFile);
 							success = true;
 						} catch (Exception e) {
 							logger.warn("Fail to load region from log file:" + logFiles[i], e);
@@ -151,7 +150,7 @@ public class RegionLoader extends BaseRegionTask {
 				if (log == null) {
 					log = logFiles[i];
 				}
-				RegionUtil.loadLogger(dir + logFiles[i], buffer);
+				buffer.loadLogger(dir + logFiles[i]);
 			} else {
 				break;
 			}

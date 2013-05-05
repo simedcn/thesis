@@ -1,8 +1,8 @@
 package com.ebay.kvstore.server.master.balancer;
 
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.conf.InvalidConfException;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.InvalidConfException;
 
 public class LoadBalancerFactory {
 

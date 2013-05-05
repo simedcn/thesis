@@ -18,7 +18,6 @@ public class FIFOCacheReplacer extends BaseCacheReplacer {
 
 	@Override
 	public void deleteIndex(byte[] key) {
-		// TODO Auto-generated method stub
 		index.remove(key);
 	}
 

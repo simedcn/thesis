@@ -10,12 +10,11 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.MinaUtil;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.handler.DataServerJoinResponseHandler;
 import com.ebay.kvstore.server.data.handler.LoadRegionRequestHandler;
 import com.ebay.kvstore.server.data.handler.MergeRegionRequestHandler;
@@ -23,6 +22,7 @@ import com.ebay.kvstore.server.data.handler.SplitRegionRequestHandler;
 import com.ebay.kvstore.server.data.handler.UnloadRegionRequestHandler;
 import com.ebay.kvstore.server.data.storage.IStoreEngine;
 import com.ebay.kvstore.structure.Address;
+import com.ebay.kvstore.util.MinaUtil;
 
 public class DataClient {
 	private Address masterAddr;

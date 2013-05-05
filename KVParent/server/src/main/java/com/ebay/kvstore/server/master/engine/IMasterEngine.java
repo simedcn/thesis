@@ -29,6 +29,8 @@ public interface IMasterEngine {
 
 	public boolean containsDataServer(Address addr);
 
+	public boolean containsRegion(int regionId);
+
 	public Collection<DataServerStruct> getAllDataServers();
 
 	public DataServerStruct getDataServer(Address addr);
@@ -49,19 +51,22 @@ public interface IMasterEngine {
 	public void loadRegion(boolean success, DataServerStruct struct, Region region)
 			throws InvalidDataServerException;
 
+	public void mergeRegion(boolean success, DataServerStruct struct, int regionId1, int regionId2,
+			Region region);
+
+	public void newLogger(String path);
+
 	public int nextRegionId();
 
 	public void registerListener(IMasterEngineListener listener);
 
 	public void registerTask(IMasterTask task, boolean listener);
-
+	
 	public void removeDataServer(IoSession session);
 
 	public void resetRegionId() throws Exception;
 
 	public void setLogger(String path);
-	
-	public void newLogger(String path);
 
 	public void splitRegion(boolean success, DataServerStruct struct, Region oldRegion,
 			Region newRegion, int oldId, int newId) throws InvalidDataServerException;
@@ -90,10 +95,5 @@ public interface IMasterEngine {
 	public void unregisterListener(IMasterEngineListener listener);
 
 	public void unregisterTask(IMasterTask task);
-
-	public boolean containsRegion(int regionId);
-
-	public void mergeRegion(boolean success, DataServerStruct struct, int regionId1, int regionId2,
-			Region region);
 
 }

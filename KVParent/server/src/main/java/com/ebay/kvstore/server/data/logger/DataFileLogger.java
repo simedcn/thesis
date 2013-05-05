@@ -2,10 +2,7 @@ package com.ebay.kvstore.server.data.logger;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.ebay.kvstore.logger.BaseFileLogger;
+import com.ebay.kvstore.server.logger.BaseFileLogger;
 
 /**
  * Used for log mutation operations in case of redo them to restore data.
@@ -13,9 +10,8 @@ import com.ebay.kvstore.logger.BaseFileLogger;
  * @author luochen
  * 
  */
-public class DataFileLogger extends BaseFileLogger implements IDataLogger {
+public class DataFileLogger extends BaseFileLogger {
 
-	private static Logger logger = LoggerFactory.getLogger(DataFileLogger.class);
 
 	public static DataFileLogger forAppend(String file) throws IOException {
 		return new DataFileLogger(file, true);
@@ -39,12 +35,4 @@ public class DataFileLogger extends BaseFileLogger implements IDataLogger {
 		}
 	}
 
-	@Override
-	public synchronized void write(IMutation mutation) {
-		try {
-			mutation.writeToExternal(out);
-		} catch (IOException e) {
-			logger.error("Logger: "+file + " Error occured when logging mutation:" + mutation, e);
-		}
-	}
 }

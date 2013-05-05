@@ -8,22 +8,27 @@ import com.ebay.kvstore.structure.Region;
 
 public interface IStoreEngine {
 
+	public void addRegion(Region region, boolean create) throws IOException;
+
 	public void delete(byte[] key) throws InvalidKeyException;
 
 	public void dispose();
 
 	public KeyValue get(byte[] key) throws InvalidKeyException, IOException;
 
+	public Region[] getAllRegions();
+
 	public int getCacheLimit();
 
 	public long getMemoryUsed();
-
-	public Region[] getAllRegions();
 
 	public KeyValue incr(byte[] key, int incremental, int initValue, int ttl)
 			throws InvalidKeyException, IOException;
 
 	public boolean loadRegion(Region region) throws IOException;
+
+	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
+			IRegionMergeCallback callback);
 
 	public void registerListener(IStoreEngineListener listener);
 
@@ -38,9 +43,4 @@ public interface IStoreEngine {
 	public Region unloadRegion(int regionId);
 
 	public void unregisterListener(IStoreEngineListener listener);
-
-	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
-			IRegionMergeCallback callback);
-
-	public void addRegion(Region region, boolean create) throws IOException;
 }

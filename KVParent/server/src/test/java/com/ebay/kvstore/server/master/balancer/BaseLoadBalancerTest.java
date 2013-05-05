@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.junit.Before;
 
-import com.ebay.kvstore.BaseTest;
+import com.ebay.kvstore.server.util.BaseTest;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;

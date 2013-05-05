@@ -1,6 +1,6 @@
 package com.ebay.kvstore.server.data.cache;
 
-import static com.ebay.kvstore.KeyValueUtil.getKeyValueLen;
+import static com.ebay.kvstore.util.KeyValueUtil.getKeyValueLen;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,11 +12,18 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.ebay.kvstore.KeyValueUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
+import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
+
+	private static Logger logger = LoggerFactory.getLogger(KeyValueCache.class);
 
 	public static KeyValueCache forBuffer() {
 		return new KeyValueCache(-1, null);
@@ -119,6 +126,27 @@ public class KeyValueCache implements Iterable<Entry<byte[], Value>> {
 	@Override
 	public Iterator<Entry<byte[], Value>> iterator() {
 		return cache.entrySet().iterator();
+	}
+
+	public void loadLogger(String file) {
+		try {
+			DataFileLoggerIterator it = new DataFileLoggerIterator(file);
+			while (it.hasNext()) {
+				IMutation mutation = it.next();
+				switch (mutation.getType()) {
+				case IMutation.Set:
+					if (KeyValueUtil.isAlive(mutation.getValue())) {
+						this.set(mutation.getKey(), mutation.getValue());
+					}
+					break;
+				case IMutation.Delete:
+					this.set(mutation.getKey(), new Value(null, true));
+					break;
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Error occured when loading the log file:" + file, e);
+		}
 	}
 
 	public void remove(byte[] start, byte[] end) {

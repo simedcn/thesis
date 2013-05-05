@@ -2,19 +2,13 @@ package com.ebay.kvstore.client.result;
 
 import java.util.Arrays;
 
-import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.exception.KVException;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class GetResult extends BaseResult {
 
 	private byte[] value;
 	private int ttl;
-
-	public GetResult(byte[] key, byte[] value, int ttl, KVException e) {
-		super(key, e);
-		this.value = value;
-		this.ttl = ttl;
-	}
 
 	public GetResult(byte[] key, byte[] value, int ttl) {
 		super(key, null);
@@ -22,9 +16,10 @@ public class GetResult extends BaseResult {
 		this.ttl = ttl;
 	}
 
-	public byte[] getValue() throws KVException {
-		checkException();
-		return value;
+	public GetResult(byte[] key, byte[] value, int ttl, KVException e) {
+		super(key, e);
+		this.value = value;
+		this.ttl = ttl;
 	}
 
 	public int getCounter() throws KVException {
@@ -37,5 +32,10 @@ public class GetResult extends BaseResult {
 
 	public int getTtl() {
 		return ttl;
+	}
+
+	public byte[] getValue() throws KVException {
+		checkException();
+		return value;
 	}
 }

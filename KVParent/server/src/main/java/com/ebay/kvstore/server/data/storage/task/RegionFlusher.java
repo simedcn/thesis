@@ -6,14 +6,14 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfiguration;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IBlockOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
 import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.PathBuilder;
 
 public class RegionFlusher extends BaseRegionTask {
 	private static Logger logger = LoggerFactory.getLogger(RegionFlusher.class);

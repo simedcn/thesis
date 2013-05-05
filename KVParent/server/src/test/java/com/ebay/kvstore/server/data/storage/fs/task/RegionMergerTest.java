@@ -10,7 +10,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.BaseFileStorageTest;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;

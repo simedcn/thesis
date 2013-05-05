@@ -30,24 +30,24 @@ public class ClientOption {
 		return connectTimeout;
 	}
 
+	public int getConnectTimeout() {
+		return connectTimeout;
+	}
+
 	public Collection<Address> getMasterAddrs() {
 		return masterAddrs;
+	}
+
+	public int getSessionTimeout() {
+		return sessionTimeout;
 	}
 
 	public boolean isSync() {
 		return sync;
 	}
 
-	public int getConnectTimeout() {
-		return connectTimeout;
-	}
-
 	public void setConnectTimeout(int connectTimeout) {
 		this.connectTimeout = connectTimeout;
-	}
-
-	public int getSessionTimeout() {
-		return sessionTimeout;
 	}
 
 	public void setSessionTimeout(int sessionTimeout) {

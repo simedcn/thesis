@@ -8,7 +8,7 @@ import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.server.util.KeyValueIOUtil;
 import com.ebay.kvstore.structure.KeyValue;
 
 /**
@@ -78,7 +78,7 @@ public class KVFileIterator implements Iterator<KeyValue> {
 	@Override
 	public KeyValue next() {
 		try {
-			KeyValue kv = KeyValueUtil.readFromExternal(in);
+			KeyValue kv = KeyValueIOUtil.readFromExternal(in);
 			return kv;
 		} catch (IOException e) {
 			logger.error("Error occured when reading the RegionDataFile.", e);

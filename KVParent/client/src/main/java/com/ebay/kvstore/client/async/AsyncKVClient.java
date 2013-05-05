@@ -4,7 +4,7 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.client.BaseClient;
+import com.ebay.kvstore.client.BaseKVClient;
 import com.ebay.kvstore.client.ClientOption;
 import com.ebay.kvstore.client.IKVClientHandler;
 import com.ebay.kvstore.client.result.GetResult;
@@ -19,7 +19,7 @@ import com.ebay.kvstore.protocol.request.SetRequest;
 import com.ebay.kvstore.protocol.request.StatRequest;
 import com.ebay.kvstore.structure.DataServerStruct;
 
-public class AsyncKVClient extends BaseClient {
+public class AsyncKVClient extends BaseKVClient {
 
 	private static Logger logger = LoggerFactory.getLogger(AsyncKVClient.class);
 
@@ -38,6 +38,7 @@ public class AsyncKVClient extends BaseClient {
 
 	}
 
+	@Override
 	public void delete(byte[] key) throws KVException {
 		checkKey(key);
 		IoSession session = getConnection(key);
@@ -45,12 +46,46 @@ public class AsyncKVClient extends BaseClient {
 		session.write(request);
 	}
 
+	@Override
 	public GetResult get(byte[] key) throws KVException {
 		checkKey(key);
 		IoSession session = getConnection(key);
 		IProtocol request = new GetRequest(key);
 		session.write(request);
 		return null;
+	}
+
+	@Override
+	public IKVClientHandler getClientHandler() {
+		return handler;
+	}
+
+	@Override
+	public GetResult getCounter(byte[] key) throws KVException {
+		checkKey(key);
+		IoSession session = getConnection(key);
+		IProtocol request = new GetRequest(key);
+		session.write(request);
+		return null;
+	}
+
+	@Override
+	public int incr(byte[] key, int incremental, int initValue) throws KVException {
+		return incr(key, incremental, initValue, 0);
+	}
+
+	@Override
+	public int incr(byte[] key, int incremental, int initValue, int ttl) throws KVException {
+		checkKey(key);
+		IoSession session = getConnection(key);
+		IProtocol request = new IncrRequest(key, incremental, initValue, ttl);
+		session.write(request);
+		return 0;
+	}
+
+	@Override
+	public void set(byte[] key, byte[] value) throws KVException {
+		set(key, value, 0);
 	}
 
 	@Override
@@ -65,39 +100,11 @@ public class AsyncKVClient extends BaseClient {
 	}
 
 	@Override
-	public void set(byte[] key, byte[] value) throws KVException {
-		set(key, value, 0);
-	}
-
-	public IKVClientHandler getClientHandler() {
-		return handler;
-	}
-
-	public GetResult getCounter(byte[] key) throws KVException {
-		checkKey(key);
-		IoSession session = getConnection(key);
-		IProtocol request = new GetRequest(key);
-		session.write(request);
-		return null;
-	}
-
-	public int incr(byte[] key, int incremental, int initValue) throws KVException {
-		return incr(key, incremental, initValue, 0);
-	}
-
-	@Override
-	public int incr(byte[] key, int incremental, int initValue, int ttl) throws KVException {
-		checkKey(key);
-		IoSession session = getConnection(key);
-		IProtocol request = new IncrRequest(key, incremental, initValue, ttl);
-		session.write(request);
-		return 0;
-	}
-
 	public void setHandler(IKVClientHandler handler) {
 		this.handler = handler;
 	}
 
+	@Override
 	public DataServerStruct[] stat() throws KVException {
 		IoSession session = getMasterConnection();
 		IProtocol request = new StatRequest(true);

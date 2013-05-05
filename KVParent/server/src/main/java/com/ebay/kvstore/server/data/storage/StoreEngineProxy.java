@@ -2,10 +2,10 @@ package com.ebay.kvstore.server.data.storage;
 
 import java.io.IOException;
 
-import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class StoreEngineProxy implements IStoreEngine {
 
@@ -13,6 +13,11 @@ public class StoreEngineProxy implements IStoreEngine {
 
 	public StoreEngineProxy(BaseStoreEngine engine) {
 		this.engine = engine;
+	}
+
+	@Override
+	public void addRegion(Region region, boolean create) throws IOException {
+		engine.addRegion(region, create);
 	}
 
 	@Override
@@ -27,17 +32,17 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
-	public void addRegion(Region region, boolean create) throws IOException {
-		engine.addRegion(region, create);
-	}
-
-	@Override
 	public KeyValue get(byte[] key) throws InvalidKeyException, IOException {
 		KeyValue kv = engine.get(key);
 		if (kv != null) {
 			engine.onGet(key, kv.getValue());
 		}
 		return kv;
+	}
+
+	@Override
+	public Region[] getAllRegions() {
+		return engine.getAllRegions();
 	}
 
 	@Override
@@ -51,11 +56,6 @@ public class StoreEngineProxy implements IStoreEngine {
 	}
 
 	@Override
-	public Region[] getAllRegions() {
-		return engine.getAllRegions();
-	}
-
-	@Override
 	public KeyValue incr(byte[] key, int incremental, int initValue, int ttl)
 			throws InvalidKeyException, IOException {
 		KeyValue kv = engine.incr(key, incremental, initValue, ttl);
@@ -66,6 +66,12 @@ public class StoreEngineProxy implements IStoreEngine {
 	@Override
 	public boolean loadRegion(Region region) throws IOException {
 		return engine.loadRegion(region);
+	}
+
+	@Override
+	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
+			IRegionMergeCallback callback) {
+		engine.mergeRegion(regionId1, regionId2, newRegionId, callback);
 	}
 
 	@Override
@@ -87,12 +93,6 @@ public class StoreEngineProxy implements IStoreEngine {
 	@Override
 	public void splitRegion(int regionId, int newRegionId, IRegionSplitCallback callback) {
 		engine.splitRegion(regionId, newRegionId, callback);
-	}
-
-	@Override
-	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
-			IRegionMergeCallback callback) {
-		engine.mergeRegion(regionId1, regionId2, newRegionId, callback);
 	}
 
 	@Override

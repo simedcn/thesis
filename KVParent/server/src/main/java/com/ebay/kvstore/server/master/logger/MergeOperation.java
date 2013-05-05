@@ -2,8 +2,8 @@ package com.ebay.kvstore.server.master.logger;
 
 import java.io.IOException;
 
-import com.ebay.kvstore.logger.ILoggerInputStream;
-import com.ebay.kvstore.logger.ILoggerOutputStream;
+import com.ebay.kvstore.server.logger.ILoggerInputStream;
+import com.ebay.kvstore.server.logger.ILoggerOutputStream;
 import com.ebay.kvstore.structure.Address;
 
 public class MergeOperation extends BaseOperation {
@@ -11,11 +11,6 @@ public class MergeOperation extends BaseOperation {
 	protected int regionId1;
 
 	protected int regionId2;
-
-	@Override
-	public byte getType() {
-		return Merge;
-	}
 
 	public MergeOperation() {
 		this(0, null, 0, 0);
@@ -33,6 +28,11 @@ public class MergeOperation extends BaseOperation {
 
 	public int getRegionId2() {
 		return regionId2;
+	}
+
+	@Override
+	public byte getType() {
+		return Merge;
 	}
 
 	@Override

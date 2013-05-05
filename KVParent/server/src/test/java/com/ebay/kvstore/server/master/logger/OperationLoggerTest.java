@@ -4,21 +4,18 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ebay.kvstore.BaseTest;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.logger.ILogger;
+import com.ebay.kvstore.server.util.BaseTest;
+import com.ebay.kvstore.server.util.DFSManager;
 import com.ebay.kvstore.structure.Address;
 
-public class OperationLoggerTest extends BaseTest{
-
+public class OperationLoggerTest extends BaseTest {
 
 	@Before
 	public void setUp() throws Exception {
@@ -34,17 +31,17 @@ public class OperationLoggerTest extends BaseTest{
 		String newPath = "/test/master.test.new.log";
 		Address addr = Address.parse("127.0.0.1:1000");
 		DFSManager.getDFS().mkdirs(new Path("/test/"));
-		IOperationLogger logger = OperationFileLogger.forCreate(path);
+		ILogger logger = OperationFileLogger.forCreate(path);
 		for (byte i = 0; i < 10; i++) {
 			logger.write(new LoadOperation(i, addr));
 			logger.write(new UnloadOperation(i, addr));
-			logger.write(new SplitOperation(i, i + 1, addr, new byte[] { i }));
+			logger.write(new SplitOperation(i, i + 1, addr, new byte[] { i }, new byte[] { i }));
 		}
 		logger.renameTo(newPath);
 		for (byte i = 10; i < 20; i++) {
 			logger.write(new LoadOperation(i, addr));
 			logger.write(new UnloadOperation(i, addr));
-			logger.write(new SplitOperation(i, i + 1, addr, new byte[] { i }));
+			logger.write(new SplitOperation(i, i + 1, addr, new byte[] { i }, new byte[] { i }));
 		}
 		logger.close();
 		OperationFileLoggerIterator it = new OperationFileLoggerIterator(newPath);

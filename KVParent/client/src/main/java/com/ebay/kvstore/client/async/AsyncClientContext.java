@@ -16,12 +16,12 @@ public class AsyncClientContext implements IContext {
 		this.session = session;
 	}
 
-	public IoSession getSession() {
-		return session;
-	}
-
 	public IKVClient getClient() {
 		return client;
+	}
+
+	public IoSession getSession() {
+		return session;
 	}
 
 }

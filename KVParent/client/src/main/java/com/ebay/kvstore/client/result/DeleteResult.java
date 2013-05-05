@@ -4,12 +4,12 @@ import com.ebay.kvstore.exception.KVException;
 
 public class DeleteResult extends BaseResult {
 
-	public DeleteResult(byte[] key, KVException e) {
-		super(key, e);
-	}
-
 	public DeleteResult(byte[] key) {
 		super(key, null);
+	}
+
+	public DeleteResult(byte[] key, KVException e) {
+		super(key, e);
 	}
 
 	public boolean isSuccess() throws KVException {

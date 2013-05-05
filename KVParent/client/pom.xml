@@ -21,8 +21,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.ebay.chluo.KVStore</groupId>
-			<artifactId>server</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<artifactId>common</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

@@ -6,7 +6,8 @@ import java.util.List;
 
 import org.apache.hadoop.fs.Path;
 
-import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.KeyValueIOUtil;
 import com.ebay.kvstore.structure.KeyValue;
 
 public class IndexBuilder {
@@ -51,7 +52,7 @@ public class IndexBuilder {
 				} else {
 					in.skipBytes(-4);
 				}
-				kv = KeyValueUtil.readFromExternal(in);
+				kv = KeyValueIOUtil.readFromExternal(in);
 				keyNum++;
 				curKey = kv.getKey();
 				if (filter != null) {

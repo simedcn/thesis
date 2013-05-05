@@ -10,10 +10,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.KeyValueUtil;
-import com.ebay.kvstore.RegionUtil;
-import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.exception.InvalidKeyException;
+import com.ebay.kvstore.server.conf.IConfiguration;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.RegionFileStorage;
@@ -27,6 +25,8 @@ import com.ebay.kvstore.server.monitor.MonitorFactory;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
+import com.ebay.kvstore.util.RegionUtil;
 
 public class PersistentStoreEngine extends BaseStoreEngine {
 
@@ -43,6 +43,21 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			storages.put(r, new RegionFileStorage(conf, r, true));
 		}
 		monitor = MonitorFactory.getMonitor();
+	}
+
+	@Override
+	public void addRegion(Region region, boolean create) throws IOException {
+		if (create) {
+			if (regions.contains(region)) {
+				return;
+			}
+			IRegionStorage storage = new RegionFileStorage(conf, region, true);
+			addRegion(region);
+			storages.put(region, storage);
+		} else {
+			loadRegion(region);
+		}
+
 	}
 
 	@Override
@@ -161,6 +176,24 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
+	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
+			IRegionMergeCallback callback) {
+		Region region1 = getRegionById(regionId1);
+		Region region2 = getRegionById(regionId2);
+		if (region1 == null || region2 == null || !checkRegionConsistent(region1, region2)) {
+			if (callback != null) {
+				callback.callback(false, regionId1, regionId2, null);
+			}
+			return;
+		}
+		IRegionStorage storage1 = storages.get(region1);
+		IRegionStorage storage2 = storages.get(region2);
+		RegionTaskManager.merge(conf, storage1, storage2, new RegionMergeListener(callback,
+				regionId1, regionId2, newRegionId));
+
+	}
+
+	@Override
 	public void set(byte[] key, byte[] value, int ttl) throws InvalidKeyException {
 		IMonitorObject object = monitor
 				.getMonitorObject(IPerformanceMonitor.Persistent_Set_Monitor);
@@ -192,25 +225,8 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			return;
 		}
 		IRegionStorage storage = storages.get(region);
-		RegionTaskManager.split(storage, conf, new RegionSplitListener(storage, newRegionId,
+		RegionTaskManager.split(storage, conf, newRegionId, new RegionSplitListener(storage,
 				callback));
-	}
-
-	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
-			IRegionMergeCallback callback) {
-		Region region1 = getRegionById(regionId1);
-		Region region2 = getRegionById(regionId2);
-		if (region1 == null || region2 == null || !checkRegionConsistent(region1, region2)) {
-			if (callback != null) {
-				callback.callback(false, regionId1, regionId2, null);
-			}
-			return;
-		}
-		IRegionStorage storage1 = storages.get(region1);
-		IRegionStorage storage2 = storages.get(region2);
-		RegionTaskManager.merge(conf, storage1, storage2, new RegionMergeListener(callback,
-				regionId1, regionId2, newRegionId));
-
 	}
 
 	@Override
@@ -239,6 +255,12 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		return removeRegion(regionId);
 	}
 
+	protected void addRegion(Region region, IRegionStorage storage) {
+		storages.put(region, storage);
+		addRegion(region);
+	}
+
+	@Override
 	protected Region removeRegion(int regionId) {
 		Region region = super.removeRegion(regionId);
 		if (region == null) {
@@ -246,27 +268,8 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 		}
 		IRegionStorage storage = storages.remove(region);
 		storage.dispose();
+		cache.remove(region.getStart(), region.getEnd());
 		return region;
-	}
-
-	protected void addRegion(Region region, IRegionStorage storage) {
-		storages.put(region, storage);
-		addRegion(region);
-	}
-
-	@Override
-	public void addRegion(Region region, boolean create) throws IOException {
-		if (create) {
-			if (regions.contains(region)) {
-				return;
-			}
-			IRegionStorage storage = new RegionFileStorage(conf, region, true);
-			addRegion(region);
-			storages.put(region, storage);
-		} else {
-			loadRegion(region);
-		}
-
 	}
 
 	private class RegionLoadListener implements IRegionLoadListener {
@@ -298,72 +301,6 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			if (!success) {
 				object.stop();
 			}
-		}
-	}
-
-	private class RegionSplitListener implements IRegionSplitListener {
-
-		private KeyValueCache oldBuffer;
-		private int regionId;
-		private IRegionStorage oldStorage;
-		private IRegionSplitCallback callback;
-		private IMonitorObject object;
-
-		public RegionSplitListener(IRegionStorage storage, int regionId,
-				IRegionSplitCallback callback) {
-			this.oldStorage = storage;
-			this.regionId = regionId;
-			this.callback = callback;
-		}
-
-		@Override
-		public void onSplitBegin() {
-			object = monitor.getMonitorObject(IPerformanceMonitor.Persistent_Split_Monitor);
-			object.start();
-			oldBuffer = oldStorage.getBuffer();
-			logger.info("Region split begin, try to split region " + oldStorage.getRegion());
-		}
-
-		@Override
-		public void onSplitCommit(boolean success, IRegionStorage oldStorage,
-				IRegionStorage newStorage) {
-			if (!success) {
-				restore();
-				if (callback != null) {
-					callback.callback(false, this.oldStorage.getRegion(), null);
-				}
-			} else {
-				Region newRegion = newStorage.getRegion();
-				addRegion(newRegion, newStorage);
-				onSplit(oldStorage.getRegion(), newRegion);
-				if (callback != null) {
-					callback.callback(true, this.oldStorage.getRegion(), newRegion);
-				}
-				object.stop();
-				logger.info("Region split success , region has been splitted to {} and {}",
-						oldStorage.getRegion(), newStorage.getRegion());
-			}
-		}
-
-		@Override
-		public Region onSplitEnd(boolean success, byte[] start, byte[] end) {
-			if (success) {
-				return new Region(regionId, start, end);
-			} else {
-				restore();
-				if (callback != null) {
-					callback.callback(false, this.oldStorage.getRegion(), null);
-				}
-				return null;
-			}
-		}
-
-		private void restore() {
-			logger.info("Region split failed, source region is:" + oldStorage.getRegion());
-			KeyValueCache newBuffer = oldStorage.getBuffer();
-			oldBuffer.addAll(newBuffer);
-			oldStorage.setBuffer(oldBuffer);
-			object.stop();
 		}
 	}
 
@@ -427,5 +364,65 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			return region;
 		}
 
+	}
+
+	private class RegionSplitListener implements IRegionSplitListener {
+
+		private KeyValueCache oldBuffer;
+		private IRegionStorage oldStorage;
+		private IRegionSplitCallback callback;
+		private IMonitorObject object;
+
+		public RegionSplitListener(IRegionStorage storage, IRegionSplitCallback callback) {
+			this.oldStorage = storage;
+			this.callback = callback;
+		}
+
+		@Override
+		public void onSplitBegin() {
+			object = monitor.getMonitorObject(IPerformanceMonitor.Persistent_Split_Monitor);
+			object.start();
+			oldBuffer = oldStorage.getBuffer();
+			logger.info("Region split begin, try to split region " + oldStorage.getRegion());
+		}
+
+		@Override
+		public void onSplitCommit(boolean success, IRegionStorage oldStorage,
+				IRegionStorage newStorage) {
+			if (!success) {
+				restore();
+				if (callback != null) {
+					callback.callback(false, this.oldStorage.getRegion(), null);
+				}
+			} else {
+				Region newRegion = newStorage.getRegion();
+				addRegion(newRegion, newStorage);
+				onSplit(oldStorage.getRegion(), newRegion);
+				if (callback != null) {
+					callback.callback(true, this.oldStorage.getRegion(), newRegion);
+				}
+				object.stop();
+				logger.info("Region split success , region has been splitted to {} and {}",
+						oldStorage.getRegion(), newStorage.getRegion());
+			}
+		}
+
+		@Override
+		public void onSplitEnd(boolean success, byte[] start, byte[] end) {
+			if (!success) {
+				restore();
+				if (callback != null) {
+					callback.callback(false, this.oldStorage.getRegion(), null);
+				}
+			}
+		}
+
+		private void restore() {
+			logger.info("Region split failed, source region is:" + oldStorage.getRegion());
+			KeyValueCache newBuffer = oldStorage.getBuffer();
+			oldBuffer.addAll(newBuffer);
+			oldStorage.setBuffer(oldBuffer);
+			object.stop();
+		}
 	}
 }

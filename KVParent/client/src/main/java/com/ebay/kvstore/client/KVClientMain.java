@@ -15,7 +15,6 @@ import java.util.NoSuchElementException;
 import jline.Completor;
 import jline.ConsoleReader;
 
-import com.ebay.kvstore.IKVConstants;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
@@ -38,6 +37,20 @@ public class KVClientMain {
 	private int timeout = 2000;
 
 	private String[] args;
+	
+	public static final int Day = 24 * 3600 * 1000;
+
+	public static final int Hour = 3600 * 1000;
+
+	public static final int Minute = 60 * 1000;
+
+	public static final int Second = 1000;
+
+	public static final int KB = 1024;
+
+	public static final int MB = 1024 * 1024;
+
+	public static final long GB = 1024 * 1024 * 1024;
 
 	static {
 		commands = new HashMap<String, String>();
@@ -46,16 +59,74 @@ public class KVClientMain {
 		commands.put(
 				"incr",
 				"key incremental [ttl [initValue]] \t(increment the counter that the key specifies. The default initValue is 0)");
-		commands.put("set", "key value [ttl]\t(set the value of the key)");
+		commands.put("set", "key value [ttl=0]\t(set the value of the key)");
 		commands.put("get", "key\t(get the value of the key)");
 		commands.put("stat",
 				"\t(view statistics information of data servers and regions in the cluster)");
 		commands.put("help", "");
 	}
 
+	public static void formatStat(DataServerStruct[] dataServers, PrintStream out) {
+		if (dataServers == null) {
+			out.println("No data server found");
+			return;
+		}
+		for (DataServerStruct server : dataServers) {
+			out.println("Data Server: " + server.getAddr());
+			indent(out, 1);
+			out.println("Info:");
+			indent(out, 2);
+			out.println("Memory Free:" + server.getInfo().getMemoryFree() /MB + "MB");
+			indent(out, 2);
+			out.println("Memory Total:" + server.getInfo().getMemoryTotal() / MB
+					+ "MB");
+			indent(out, 2);
+			out.println("Cpu Usage:" + server.getInfo().getCpuUsage() * 100 + "%");
+			Collection<Region> regions = server.getRegions();
+			indent(out, 1);
+			out.println("Regions:");
+			for (Region region : regions) {
+				indent(out, 2);
+				out.print("Region:");
+				out.print(region.getRegionId());
+				indent(out, 1);
+				out.print(Arrays.toString(region.getStart()));
+				out.print('-');
+				out.print(Arrays.toString(region.getEnd()));
+				out.println();
+				indent(out, 3);
+				out.println("Read Count:" + region.getStat().readCount);
+				indent(out, 3);
+				out.println("Write Count:" + region.getStat().writeCount);
+				indent(out, 3);
+				out.println("Entry Num:" + region.getStat().keyNum);
+				indent(out, 3);
+				out.println("Size:" + formatRegionSize(region.getStat().size));
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		KVClientMain main = new KVClientMain(args);
 		main.run();
+	}
+
+	private static String formatRegionSize(long size) {
+		if (size > MB) {
+			return new BigDecimal((double) size /MB).setScale(2, RoundingMode.DOWN)
+					+ "MB";
+		} else if (size > KB) {
+			return new BigDecimal((double) size / KB).setScale(2, RoundingMode.DOWN)
+					+ "KB";
+		} else {
+			return size + "B";
+		}
+	}
+
+	private static void indent(PrintStream out, int count) {
+		for (int i = 0; i < count; i++) {
+			out.print('\t');
+		}
 	}
 
 	public KVClientMain(String[] args) {
@@ -78,20 +149,93 @@ public class KVClientMain {
 		client.close();
 	}
 
-	private void process() {
-		System.err.println("Welcome to KVStore");
+	private void doDelete(String[] args) {
+		if (args.length != 2) {
+			System.err.println("Error usage for delete, please input 'help' for usage");
+			return;
+		}
+		String key = args[1];
 		try {
-			ConsoleReader reader = new ConsoleReader();
-			reader.setBellEnabled(false);
-			reader.addCompletor(new CommandCompletor());
-			String line = null;
-			while ((line = reader.readLine("kvstore>")) != null) {
-				if (!line.isEmpty()) {
-					parseLine(line);
-				}
+			client.delete(key.getBytes());
+			System.err.println("Delete " + key + " success");
+		} catch (KVException e) {
+			System.err.println("Error:" + e.getMessage());
+		}
+	}
+
+	private void doGet(String[] args) {
+		if (args.length != 2) {
+			System.err.println("Error usage for get, please input 'help' for usage");
+			return;
+		}
+		String key = args[1];
+		try {
+			byte[] result = client.get(key.getBytes()).getValue();
+			if (result == null) {
+				System.err.println("No value found for " + key);
+			} else {
+				System.err.println(key + "=" + new String(result));
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (KVException e) {
+			System.err.println("Error:" + e.getMessage());
+		}
+	}
+
+	private void doIncr(String[] args) {
+		if (!(args.length >= 2 & args.length <= 5)) {
+			System.err.println("Error usage for incr, please input 'help' for usage");
+			return;
+		}
+		String key = args[1];
+		int incremental = 1;
+		if (args.length >= 3) {
+			incremental = Integer.valueOf(args[2]);
+		}
+		int ttl = 0;
+		if (args.length >= 4) {
+			ttl = Integer.valueOf(args[3]);
+		}
+		int initValue = 0;
+		if (args.length == 5) {
+			initValue = Integer.valueOf(args[4]);
+		}
+		try {
+			int result = client.incr(key.getBytes(), incremental, initValue, ttl);
+			System.err.println(key + "=" + result);
+		} catch (KVException e) {
+			System.err.println("Error:" + e.getMessage());
+		}
+	}
+
+	private void doSet(String[] args) {
+		if (args.length != 3 && args.length != 4) {
+			System.err.println("Error usage for set, please input 'help' for usage");
+			return;
+		}
+		String key = args[1];
+		String value = args[2];
+		int ttl = 0;
+		if (args.length == 4) {
+			ttl = Integer.valueOf(args[3]);
+		}
+		try {
+			client.set(key.getBytes(), value.getBytes(), ttl);
+			System.err.println("Set " + key + "=" + value + " success");
+		} catch (KVException e) {
+			System.err.println("Error:" + e.getMessage());
+		}
+	}
+
+	private void doStat(String[] args) {
+		if (args.length != 1) {
+			System.err.println("Error usage for stat, please input 'help' for usage");
+			return;
+		}
+		try {
+			DataServerStruct[] dataServers = client.stat();
+			formatStat(dataServers, System.err);
+		} catch (KVException e) {
+			System.err.println("Error:" + e.getMessage());
 		}
 	}
 
@@ -155,159 +299,28 @@ public class KVClientMain {
 		}
 	}
 
+	private void process() {
+		System.err.println("Welcome to KVStore");
+		try {
+			ConsoleReader reader = new ConsoleReader();
+			reader.setBellEnabled(false);
+			reader.addCompletor(new CommandCompletor());
+			String line = null;
+			while ((line = reader.readLine("kvstore>")) != null) {
+				if (!line.isEmpty()) {
+					parseLine(line);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void usage() {
 		System.err
 				.println("kvstore -server host:port[,host:port[,host:port]...] [-timeout time] [-h]");
 		for (String cmd : commands.keySet()) {
 			System.err.println("\t" + cmd + " " + commands.get(cmd));
-		}
-	}
-
-	private void doSet(String[] args) {
-		if (args.length != 3 && args.length != 4) {
-			System.err.println("Error usage for set, please input 'help' for usage");
-			return;
-		}
-		String key = args[1];
-		String value = args[2];
-		int ttl = 0;
-		if (args.length == 4) {
-			ttl = Integer.valueOf(args[3]);
-		}
-		try {
-			client.set(key.getBytes(), value.getBytes(), ttl);
-			System.err.println("Set " + key + "=" + value + " success");
-		} catch (KVException e) {
-			System.err.println("Error:" + e.getMessage());
-		}
-	}
-
-	private void doGet(String[] args) {
-		if (args.length != 2) {
-			System.err.println("Error usage for get, please input 'help' for usage");
-			return;
-		}
-		String key = args[1];
-		try {
-			byte[] result = client.get(key.getBytes()).getValue();
-			if (result == null) {
-				System.err.println("No value found for " + key);
-			} else {
-				System.err.println(key + "=" + new String(result));
-			}
-		} catch (KVException e) {
-			System.err.println("Error:" + e.getMessage());
-		}
-	}
-
-	private void doIncr(String[] args) {
-		if (!(args.length >= 2 & args.length <= 5)) {
-			System.err.println("Error usage for incr, please input 'help' for usage");
-			return;
-		}
-		String key = args[1];
-		int incremental = 1;
-		if (args.length >= 3) {
-			incremental = Integer.valueOf(args[2]);
-		}
-		int ttl = 0;
-		if (args.length >= 4) {
-			ttl = Integer.valueOf(args[3]);
-		}
-		int initValue = 0;
-		if (args.length == 5) {
-			initValue = Integer.valueOf(args[4]);
-		}
-		try {
-			int result = client.incr(key.getBytes(), incremental, initValue, ttl);
-			System.err.println(key + "=" + result);
-		} catch (KVException e) {
-			System.err.println("Error:" + e.getMessage());
-		}
-	}
-
-	private void doDelete(String[] args) {
-		if (args.length != 2) {
-			System.err.println("Error usage for delete, please input 'help' for usage");
-			return;
-		}
-		String key = args[1];
-		try {
-			client.delete(key.getBytes());
-			System.err.println("Delete " + key + " success");
-		} catch (KVException e) {
-			System.err.println("Error:" + e.getMessage());
-		}
-	}
-
-	private void doStat(String[] args) {
-		if (args.length != 1) {
-			System.err.println("Error usage for stat, please input 'help' for usage");
-			return;
-		}
-		try {
-			DataServerStruct[] dataServers = client.stat();
-			formatStat(dataServers, System.err);
-		} catch (KVException e) {
-			System.err.println("Error:" + e.getMessage());
-		}
-	}
-
-	public static void formatStat(DataServerStruct[] dataServers, PrintStream out) {
-		if (dataServers == null) {
-			out.println("No data server found");
-			return;
-		}
-		for (DataServerStruct server : dataServers) {
-			out.println("Data Server: " + server.getAddr());
-			indent(out, 1);
-			out.println("Info:");
-			indent(out, 2);
-			out.println("Memory Free:" + server.getInfo().getMemoryFree() / IKVConstants.MB + "MB");
-			indent(out, 2);
-			out.println("Memory Total:" + server.getInfo().getMemoryTotal() / IKVConstants.MB
-					+ "MB");
-			indent(out, 2);
-			out.println("Cpu Usage:" + server.getInfo().getCpuUsage() * 100 + "%");
-			Collection<Region> regions = server.getRegions();
-			indent(out, 1);
-			out.println("Regions:");
-			for (Region region : regions) {
-				indent(out, 2);
-				out.print("Region:");
-				out.print(region.getRegionId());
-				indent(out, 1);
-				out.print(Arrays.toString(region.getStart()));
-				out.print('-');
-				out.print(Arrays.toString(region.getEnd()));
-				out.println();
-				indent(out, 3);
-				out.println("Read Count:" + region.getStat().readCount);
-				indent(out, 3);
-				out.println("Write Count:" + region.getStat().writeCount);
-				indent(out, 3);
-				out.println("Entry Num:" + region.getStat().keyNum);
-				indent(out, 3);
-				out.println("Size:" + formatRegionSize(region.getStat().size));
-			}
-		}
-	}
-
-	private static void indent(PrintStream out, int count) {
-		for (int i = 0; i < count; i++) {
-			out.print('\t');
-		}
-	}
-
-	private static String formatRegionSize(long size) {
-		if (size > IKVConstants.MB) {
-			return new BigDecimal((double) size / IKVConstants.MB).setScale(2, RoundingMode.DOWN)
-					+ "MB";
-		} else if (size > IKVConstants.KB) {
-			return new BigDecimal((double) size / IKVConstants.KB).setScale(2, RoundingMode.DOWN)
-					+ "KB";
-		} else {
-			return size + "B";
 		}
 	}
 

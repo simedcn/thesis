@@ -15,16 +15,14 @@ import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.IKVConstants;
-import com.ebay.kvstore.MinaUtil;
-import com.ebay.kvstore.conf.ConfigurationLoader;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.protocol.IProtocol;
 import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
 import com.ebay.kvstore.protocol.request.DataServerJoinRequest;
+import com.ebay.kvstore.server.conf.ConfigurationLoader;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.handler.DeleteRequestHandler;
 import com.ebay.kvstore.server.data.handler.GetRequestHandler;
 import com.ebay.kvstore.server.data.handler.IncrRequestHandler;
@@ -34,11 +32,13 @@ import com.ebay.kvstore.server.data.storage.IStoreEngineListener;
 import com.ebay.kvstore.server.data.storage.StoreEngineFactory;
 import com.ebay.kvstore.server.data.storage.StoreLogListener;
 import com.ebay.kvstore.server.data.storage.StoreStatListener;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
 import com.ebay.kvstore.server.monitor.MonitorFactory;
+import com.ebay.kvstore.server.util.DFSManager;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
+import com.ebay.kvstore.util.IKVConstants;
+import com.ebay.kvstore.util.MinaUtil;
 
 public class DataServer implements IConfigurationKey, Watcher {
 	private static Logger logger = LoggerFactory.getLogger(DataServer.class);
@@ -121,13 +121,6 @@ public class DataServer implements IConfigurationKey, Watcher {
 		initStoreEngine();
 		initServer();
 		initConnection();
-	}
-
-	private void initMonitor() {
-		Address addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Monitor_Web_Addr));
-		boolean enable = conf.getBoolean(IConfigurationKey.Dataserver_Monitor_Enable);
-		MonitorFactory.init(enable, addr);
-		monitor = MonitorFactory.getMonitor();
 	}
 
 	public void stop() {
@@ -230,6 +223,13 @@ public class DataServer implements IConfigurationKey, Watcher {
 
 	private void initHDFS() throws IOException {
 		DFSManager.init(hdfsAddr.toInetSocketAddress(), new Configuration());
+	}
+
+	private void initMonitor() {
+		Address addr = Address.parse(conf.get(IConfigurationKey.Dataserver_Monitor_Web_Addr));
+		boolean enable = conf.getBoolean(IConfigurationKey.Dataserver_Monitor_Enable);
+		MonitorFactory.init(enable, addr);
+		monitor = MonitorFactory.getMonitor();
 	}
 
 	private void initServer() throws IOException {

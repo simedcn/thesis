@@ -13,6 +13,15 @@ import com.ebay.kvstore.structure.Address;
 public class TomcatServer extends BaseWebServer {
 	private static Logger logger = LoggerFactory.getLogger(TomcatServer.class);
 
+	public static void main(String[] args) {
+		try {
+			TomcatServer server = new TomcatServer(Address.parse("127.0.0.1:8080"));
+			server.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	protected volatile Tomcat tomcat = null;
 
 	protected Runner runner = null;
@@ -59,15 +68,6 @@ public class TomcatServer extends BaseWebServer {
 			} catch (Exception e) {
 				logger.error("Fail to start tomcat server", e);
 			}
-		}
-	}
-
-	public static void main(String[] args) {
-		try {
-			TomcatServer server = new TomcatServer(Address.parse("127.0.0.1:8080"));
-			server.start();
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 

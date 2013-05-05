@@ -10,11 +10,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.KeyValueUtil;
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.storage.task.RegionTaskManager;
 import com.ebay.kvstore.structure.Region;
-import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class EngineListenerTest extends BaseFileTest {
 

@@ -12,7 +12,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;

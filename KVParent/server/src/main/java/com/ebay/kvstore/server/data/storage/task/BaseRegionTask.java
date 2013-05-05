@@ -7,16 +7,17 @@ import java.util.Map.Entry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.ebay.kvstore.KeyValueUtil;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.data.storage.fs.IBlockOutputStream;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.KeyValueIOUtil;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public abstract class BaseRegionTask implements Runnable {
 	protected IRegionStorage storage;
@@ -35,12 +36,12 @@ public abstract class BaseRegionTask implements Runnable {
 	protected void flushCache(Iterator<Entry<byte[], Value>> it, IBlockOutputStream out,
 			Entry<byte[], Value> e) throws IOException {
 		if (e != null && !e.getValue().isDeleted()) {
-			KeyValueUtil.writeToExternal(out, new KeyValue(e.getKey(), e.getValue()));
+			KeyValueIOUtil.writeToExternal(out, new KeyValue(e.getKey(), e.getValue()));
 		}
 		while (it.hasNext()) {
 			e = it.next();
 			if (!e.getValue().isDeleted() && KeyValueUtil.isAlive(e.getValue())) {
-				KeyValueUtil.writeToExternal(out, new KeyValue(e.getKey(), e.getValue()));
+				KeyValueIOUtil.writeToExternal(out, new KeyValue(e.getKey(), e.getValue()));
 			}
 		}
 	}
@@ -48,12 +49,12 @@ public abstract class BaseRegionTask implements Runnable {
 	protected void flushFile(Iterator<KeyValue> it, IBlockOutputStream out, KeyValue kv)
 			throws IOException {
 		if (kv != null) {
-			KeyValueUtil.writeToExternal(out, kv);
+			KeyValueIOUtil.writeToExternal(out, kv);
 		}
 		while (it.hasNext()) {
 			kv = it.next();
 			if (KeyValueUtil.isAlive(kv.getValue())) {
-				KeyValueUtil.writeToExternal(out, kv);
+				KeyValueIOUtil.writeToExternal(out, kv);
 			}
 		}
 	}
@@ -85,19 +86,19 @@ public abstract class BaseRegionTask implements Runnable {
 					if (comp < 0) {
 						// flush the file key
 						if (KeyValueUtil.isAlive(kv.getValue())) {
-							KeyValueUtil.writeToExternal(out, kv);
+							KeyValueIOUtil.writeToExternal(out, kv);
 						}
 						kv = null;
 					} else if (comp == 0) {
 						if (!e.getValue().isDeleted() && KeyValueUtil.isAlive(e.getValue())) {
-							KeyValueUtil.writeToExternal(out,
+							KeyValueIOUtil.writeToExternal(out,
 									new KeyValue(e.getKey(), e.getValue()));
 						}
 						kv = null;
 						e = null;
 					} else {
 						if (!e.getValue().isDeleted() && KeyValueUtil.isAlive(e.getValue())) {
-							KeyValueUtil.writeToExternal(out,
+							KeyValueIOUtil.writeToExternal(out,
 									new KeyValue(e.getKey(), e.getValue()));
 						}
 						e = null;

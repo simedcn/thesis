@@ -1,6 +1,7 @@
 package com.ebay.kvstore.server.master.task;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.OutputStream;
 
@@ -10,11 +11,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.BaseTest;
-import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
 import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.server.master.engine.MasterEngine;
+import com.ebay.kvstore.server.util.BaseTest;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.PathBuilder;
 
 public class GarbageCollectionTaskTest extends BaseTest {
 

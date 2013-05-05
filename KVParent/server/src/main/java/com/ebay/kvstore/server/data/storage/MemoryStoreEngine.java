@@ -12,38 +12,37 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.FSUtil;
-import com.ebay.kvstore.KeyValueUtil;
-import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.RegionUtil;
-import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.exception.InvalidKeyException;
+import com.ebay.kvstore.server.conf.IConfiguration;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.server.data.logger.DataFileLogger;
 import com.ebay.kvstore.server.data.logger.DataFileLoggerIterator;
 import com.ebay.kvstore.server.data.logger.DeleteMutation;
-import com.ebay.kvstore.server.data.logger.IDataLogger;
 import com.ebay.kvstore.server.data.logger.IMutation;
 import com.ebay.kvstore.server.data.logger.SetMutation;
+import com.ebay.kvstore.server.logger.ILogger;
 import com.ebay.kvstore.server.monitor.IMonitorObject;
 import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
 import com.ebay.kvstore.server.monitor.MonitorFactory;
+import com.ebay.kvstore.server.util.FSUtil;
+import com.ebay.kvstore.server.util.PathBuilder;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
 import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class MemoryStoreEngine extends BaseStoreEngine {
 
 	private static Logger logger = LoggerFactory.getLogger(MemoryStoreEngine.class);
 
-	protected Map<Region, IDataLogger> loggers;
+	protected Map<Region, ILogger> loggers;
 
 	private IPerformanceMonitor monitor;
 
 	public MemoryStoreEngine(IConfiguration conf, Region... regions) throws IOException {
 		super(conf);
-		loggers = new HashMap<Region, IDataLogger>();
+		loggers = new HashMap<Region, ILogger>();
 		for (Region r : regions) {
 			addRegion(r, true);
 		}
@@ -58,7 +57,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			}
 			long time = System.currentTimeMillis();
 			String file = PathBuilder.getRegionLogPath(region.getRegionId(), time);
-			IDataLogger logger = DataFileLogger.forCreate(file);
+			ILogger logger = DataFileLogger.forCreate(file);
 			addRegion(region);
 			loggers.put(region, logger);
 		} else {
@@ -73,7 +72,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			object.start();
 			Region region = checkKeyRegion(key);
 			cache.delete(key);
-			IDataLogger logger = getRedoLogger(region);
+			ILogger logger = getRedoLogger(region);
 			logger.write(new DeleteMutation(key));
 		} finally {
 			object.stop();
@@ -82,7 +81,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 
 	@Override
 	public synchronized void dispose() {
-		for (Entry<Region, IDataLogger> e : loggers.entrySet()) {
+		for (Entry<Region, ILogger> e : loggers.entrySet()) {
 			e.getValue().close();
 		}
 	}
@@ -116,7 +115,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		try {
 			object.start();
 			Region region = checkKeyRegion(key);
-			IDataLogger logger = getRedoLogger(region);
+			ILogger logger = getRedoLogger(region);
 			KeyValue kv = cache.get(key);
 			kv = incr(kv, key, initValue, incremental, ttl);
 			cache.set(key, kv.getValue());
@@ -147,7 +146,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 				for (int i = logFiles.length - 1; i >= 0; i--) {
 					buffer = KeyValueCache.forBuffer();
 					try {
-						RegionUtil.loadLogger(regionDir + logFiles[i], buffer);
+						buffer.loadLogger(regionDir + logFiles[i]);
 						logFile = regionDir + logFiles[i];
 						success = true;
 						break;
@@ -163,7 +162,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			}
 			// there should be no overlap in keys
 			cache.addAll(buffer);
-			IDataLogger logger = null;
+			ILogger logger = null;
 			if (logFile != null) {
 				logger = DataFileLogger.forAppend(logFile);
 			} else {
@@ -187,12 +186,67 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 	}
 
 	@Override
+	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
+			IRegionMergeCallback callback) {
+		Region region1 = getRegionById(regionId1);
+		Region region2 = getRegionById(regionId2);
+		Region region = null;
+		boolean finished = false;
+		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Merge_Monitor);
+		try {
+			object.start();
+			if (region1 == null || region2 == null || !checkRegionConsistent(region1, region2)) {
+				return;
+			}
+			byte[] start = null;
+			byte[] end = null;
+			if (region1.compareTo(region2) < 0) {
+				start = region1.getStart();
+				end = region2.getEnd();
+			} else {
+				start = region2.getStart();
+				end = region1.getEnd();
+			}
+			RegionStat stat1 = region1.getStat();
+			RegionStat stat2 = region2.getStat();
+			RegionStat stat = stat1.clone();
+			stat.keyNum += stat2.keyNum;
+			stat.readCount += stat2.readCount;
+			stat.writeCount += stat2.writeCount;
+			stat.size += stat2.size;
+			region = new Region(newRegionId, start, end);
+			region.setStat(stat);
+
+			ILogger logger1 = loggers.remove(region1);
+			ILogger logger2 = loggers.remove(region2);
+			logger1.close();
+			logger2.close();
+			long time = System.currentTimeMillis();
+			String loggerPath = PathBuilder.getRegionLogPath(newRegionId, time);
+			ILogger logger = DataFileLogger.forCreate(loggerPath);
+			logger.append(logger1.getFile());
+			logger.append(logger2.getFile());
+			addRegion(region);
+			loggers.put(region, logger);
+			finished = true;
+		} catch (IOException e) {
+			logger.error("Error occured when merge region " + regionId1 + " and " + regionId2, e);
+		} finally {
+			if (callback != null) {
+				callback.callback(finished, regionId1, regionId2, region);
+			}
+			object.stop();
+		}
+
+	}
+
+	@Override
 	public void set(byte[] key, byte[] value, int ttl) throws InvalidKeyException {
 		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Set_Monitor);
 		try {
 			object.start();
 			Region region = checkKeyRegion(key);
-			IDataLogger logger = getRedoLogger(region);
+			ILogger logger = getRedoLogger(region);
 			long expire = KeyValueUtil.getExpireTime(ttl);
 			Value v = new Value(value, expire);
 			cache.set(key, v);
@@ -220,10 +274,14 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			// traverse the cache
 			try {
 				cache.getReadLock().lock();
+				boolean found = false;
 				for (Entry<byte[], Value> e : cache) {
 					if (oldRegion.compareTo(e.getKey()) == 0) {
 						list.add(e);
 						size += KeyValueUtil.getKeyValueLen(e.getKey(), e.getValue());
+						found = true;
+					}else if(found){
+						break;
 					}
 				}
 			} finally {
@@ -241,7 +299,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			newKeyStart = KeyValueUtil.nextKey(oldKeyEnd);
 			oldRegion.setEnd(oldKeyEnd);
 			newRegion = new Region(newRegionId, newKeyStart, newKeyEnd);
-			IDataLogger oldLogger = loggers.get(oldRegion);
+			ILogger oldLogger = loggers.get(oldRegion);
 			oldLogger.close();
 			String logFile = oldLogger.getFile();
 			long time = System.currentTimeMillis();
@@ -249,7 +307,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			String newLogPath = PathBuilder.getRegionLogPath(newRegionId, time);
 			try {
 				oldLogger = DataFileLogger.forCreate(oldLogPath);
-				IDataLogger newLogger = DataFileLogger.forCreate(newLogPath);
+				ILogger newLogger = DataFileLogger.forCreate(newLogPath);
 				loggers.put(oldRegion, oldLogger);
 				loggers.put(newRegion, newLogger);
 				addRegion(newRegion);
@@ -273,61 +331,6 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			}
 			object.stop();
 		}
-	}
-
-	@Override
-	public void mergeRegion(int regionId1, int regionId2, int newRegionId,
-			IRegionMergeCallback callback) {
-		Region region1 = getRegionById(regionId1);
-		Region region2 = getRegionById(regionId2);
-		Region region = null;
-		boolean finished = false;
-		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Merge_Monitor);
-		try {
-			object.start();
-			if (region1 == null || region2 == null || !checkRegionConsistent(region1, region2)) {
-				return;
-			}
-			byte[] start = null;
-			byte[] end = null;
-			if (region1.compareTo(region2) < 0) {
-				start = region1.getStart();
-				end = region2.getEnd();
-			} else {
-				start = region2.getStart();
-				end = region1.getEnd();
-			}
-			RegionStat stat1 = region1.getStat();
-			RegionStat stat2 = region2.getStat();
-			RegionStat stat = (RegionStat) stat1.clone();
-			stat.keyNum += stat2.keyNum;
-			stat.readCount += stat2.readCount;
-			stat.writeCount += stat2.writeCount;
-			stat.size += stat2.size;
-			region = new Region(newRegionId, start, end);
-			region.setStat(stat);
-
-			IDataLogger logger1 = loggers.remove(region1);
-			IDataLogger logger2 = loggers.remove(region2);
-			logger1.close();
-			logger2.close();
-			long time = System.currentTimeMillis();
-			String loggerPath = PathBuilder.getRegionLogPath(newRegionId, time);
-			IDataLogger logger = DataFileLogger.forCreate(loggerPath);
-			logger.append(logger1.getFile());
-			logger.append(logger2.getFile());
-			addRegion(region);
-			loggers.put(region, logger);
-			finished = true;
-		} catch (IOException e) {
-			logger.error("Error occured when merge region " + regionId1 + " and " + regionId2, e);
-		} finally {
-			if (callback != null) {
-				callback.callback(finished, regionId1, regionId2, region);
-			}
-			object.stop();
-		}
-
 	}
 
 	@Override
@@ -373,13 +376,13 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		if (region == null) {
 			return null;
 		}
-		IDataLogger logger = loggers.remove(region);
+		ILogger logger = loggers.remove(region);
 		logger.close();
 		cache.remove(region.getStart(), region.getEnd());
 		return region;
 	}
 
-	private IDataLogger getRedoLogger(Region region) {
+	private ILogger getRedoLogger(Region region) {
 		return loggers.get(region);
 	}
 }

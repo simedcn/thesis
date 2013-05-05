@@ -22,7 +22,7 @@ public interface IPerformanceMonitor {
 	public static final String Persistent_Split_Monitor = "com.ebay.kvstore.data.storage.task.RegionSpliter";
 	public static final String Persistent_Merge_Monitor = "com.ebay.kvstore.data.storage.task.RegionMerger";
 
-	public IMonitorObject getMonitorObject(String key);
-
 	public void dispose() throws Exception;
+
+	public IMonitorObject getMonitorObject(String key);
 }

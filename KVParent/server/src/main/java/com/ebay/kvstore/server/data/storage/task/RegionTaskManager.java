@@ -5,7 +5,7 @@ import java.lang.reflect.Constructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfiguration;
 import com.ebay.kvstore.server.data.storage.fs.IRegionStorage;
 import com.ebay.kvstore.structure.Region;
 
@@ -24,6 +24,15 @@ public class RegionTaskManager {
 		}
 	}
 
+	public static Boolean isRunning() {
+		return lock;
+	}
+
+	public static boolean load(IConfiguration conf, IRegionLoadListener listener, Region region) {
+		RegionLoader loader = new RegionLoader(conf, listener, region);
+		return loader.load();
+	}
+
 	public static boolean merge(IConfiguration conf, IRegionStorage storage1,
 			IRegionStorage storage2, IRegionMergeListener listener) {
 		try {
@@ -34,19 +43,10 @@ public class RegionTaskManager {
 		}
 	}
 
-	public static Boolean isRunning() {
-		return lock;
-	}
-
-	public static boolean load(IConfiguration conf, IRegionLoadListener listener, Region region) {
-		RegionLoader loader = new RegionLoader(conf, listener, region);
-		return loader.load();
-	}
-
-	public static boolean split(IRegionStorage storage, IConfiguration conf,
+	public static boolean split(IRegionStorage storage, IConfiguration conf,int regionId,
 			IRegionTaskListener listener) {
 		try {
-			return run(RegionSplitter.class, storage, conf, listener);
+			return run(RegionSplitter.class, storage, conf,regionId, listener);
 		} catch (Exception e) {
 			logger.error("Fail to start SplitFlusher Thread", e);
 			return false;

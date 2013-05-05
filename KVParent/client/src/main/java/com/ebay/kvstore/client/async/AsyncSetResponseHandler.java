@@ -4,7 +4,6 @@ import org.apache.mina.core.session.IoSession;
 
 import com.ebay.kvstore.client.IKVClientHandler;
 import com.ebay.kvstore.client.IKVClient;
-import com.ebay.kvstore.client.result.GetResult;
 import com.ebay.kvstore.client.result.SetResult;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.ProtocolCode;

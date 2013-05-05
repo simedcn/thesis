@@ -18,20 +18,20 @@ public class PerformanceMonitor implements IPerformanceMonitor {
 	}
 
 	@Override
-	public IMonitorObject getMonitorObject(String key) {
-		Stopwatch watch = null;
-		if (enable) {
-			watch = SimonManager.getStopwatch(key);
-		}
-		return new MonitorObject(watch);
-	}
-
-	@Override
 	public void dispose() throws Exception {
 		if (enable) {
 			webserver.stop();
 		}
 
+	}
+
+	@Override
+	public IMonitorObject getMonitorObject(String key) {
+		Stopwatch watch = null;
+		if (enable) {
+			watch = SimonManager.getStopwatch(key);
+		}
+		return new JavaSimonObject(watch);
 	}
 
 }

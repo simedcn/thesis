@@ -8,16 +8,13 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.storage.BaseFileTest;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
-import com.ebay.kvstore.server.data.storage.fs.KVFileIterator;
-import com.ebay.kvstore.server.data.storage.fs.KVOutputStream;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.KeyValueIOUtil;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Value;
 
@@ -44,7 +41,7 @@ public class BlockStreamTest extends BaseFileTest {
 		try {
 			out = new KVOutputStream(fs.create(new Path(path), true), blockSize);
 			for (int i = 0; i < 100; i++) {
-				KeyValueUtil.writeToExternal(out, new KeyValue(new byte[] { (byte) i }, new Value(
+				KeyValueIOUtil.writeToExternal(out, new KeyValue(new byte[] { (byte) i }, new Value(
 						new byte[] { (byte) i })));
 			}
 			end = out.getCurrentBlock();

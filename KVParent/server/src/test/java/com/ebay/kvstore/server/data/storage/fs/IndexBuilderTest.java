@@ -1,6 +1,7 @@
 package com.ebay.kvstore.server.data.storage.fs;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +13,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.storage.BaseFileTest;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.KeyValueIOUtil;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Value;
 
@@ -35,7 +37,7 @@ public class IndexBuilderTest extends BaseFileTest {
 		try {
 			out = new KVOutputStream(fs.create(new Path(path), true), blockSize);
 			for (int i = 0; i < 128; i++) {
-				KeyValueUtil.writeToExternal(out, new KeyValue(new byte[] { (byte) i }, new Value(
+				KeyValueIOUtil.writeToExternal(out, new KeyValue(new byte[] { (byte) i }, new Value(
 						new byte[] { (byte) i })));
 			}
 			out.close();
@@ -45,7 +47,7 @@ public class IndexBuilderTest extends BaseFileTest {
 			IndexBuilder.build(index, filter, path, blockSize, 5);
 			for (IndexEntry e : index) {
 				in = new KVInputStream(fs.open(new Path(path)), blockSize, e.blockStart, e.offset);
-				Assert.assertArrayEquals(e.keyStart, KeyValueUtil.readFromExternal(in).getKey());
+				Assert.assertArrayEquals(e.keyStart, KeyValueIOUtil.readFromExternal(in).getKey());
 				in.close();
 			}
 			for (int i = 0; i < 128; i++) {

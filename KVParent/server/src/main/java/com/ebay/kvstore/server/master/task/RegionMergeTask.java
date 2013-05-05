@@ -5,14 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.protocol.request.MergeRegionRequest;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.master.balancer.RegionPair;
 import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
-import com.ebay.kvstore.structure.Region;
 
 public class RegionMergeTask extends LoadBalanceTask {
 
@@ -22,6 +21,12 @@ public class RegionMergeTask extends LoadBalanceTask {
 		super(conf, engine);
 		this.regionIds = new HashMap<>();
 		this.interval = conf.getInt(IConfigurationKey.Master_Merge_Check_Interval);
+	}
+
+	@Override
+	public void onRegionMerge(DataServerStruct struct, int regionId1, int regionId2) {
+		super.onRegionMerge(struct, regionId1, regionId2);
+		regionIds.remove(new RegionPair(regionId1, regionId2));
 	}
 
 	@Override
@@ -43,12 +48,6 @@ public class RegionMergeTask extends LoadBalanceTask {
 			}
 
 		}
-	}
-
-	@Override
-	public void onRegionMerge(DataServerStruct struct, int regionId1, int regionId2) {
-		super.onRegionMerge(struct, regionId1, regionId2);
-		regionIds.remove(new RegionPair(regionId1, regionId2));
 	}
 
 }

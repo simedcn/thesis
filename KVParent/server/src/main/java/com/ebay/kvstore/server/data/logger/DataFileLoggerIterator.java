@@ -8,9 +8,9 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.logger.FileLoggerInputStream;
-import com.ebay.kvstore.logger.ILoggerInputStream;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.logger.FileLoggerInputStream;
+import com.ebay.kvstore.server.logger.ILoggerInputStream;
+import com.ebay.kvstore.server.util.DFSManager;
 
 public class DataFileLoggerIterator implements Iterator<IMutation> {
 

@@ -7,9 +7,9 @@ import java.util.Iterator;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 
-import com.ebay.kvstore.logger.FileLoggerInputStream;
-import com.ebay.kvstore.logger.ILoggerInputStream;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.logger.FileLoggerInputStream;
+import com.ebay.kvstore.server.logger.ILoggerInputStream;
+import com.ebay.kvstore.server.util.DFSManager;
 
 public class OperationFileLoggerIterator implements Iterator<IOperation> {
 
@@ -20,11 +20,9 @@ public class OperationFileLoggerIterator implements Iterator<IOperation> {
 
 	protected IOperation operation;
 
-	private String path;
 
 	public OperationFileLoggerIterator(String path) throws IOException {
 		this.in = new FileLoggerInputStream(DFSManager.getDFS().open(new Path(path)));
-		this.path = path;
 	}
 
 	@Override

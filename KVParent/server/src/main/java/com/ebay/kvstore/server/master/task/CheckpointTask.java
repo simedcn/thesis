@@ -11,11 +11,11 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.master.engine.IMasterEngine;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.PathBuilder;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;
 

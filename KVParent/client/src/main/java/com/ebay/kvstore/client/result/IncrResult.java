@@ -6,13 +6,13 @@ public class IncrResult extends BaseResult {
 
 	private int value;
 
-	public IncrResult(byte[] key, int value, KVException e) {
-		super(key, e);
+	public IncrResult(byte[] key, int value) {
+		super(key, null);
 		this.value = value;
 	}
 
-	public IncrResult(byte[] key, int value) {
-		super(key, null);
+	public IncrResult(byte[] key, int value, KVException e) {
+		super(key, e);
 		this.value = value;
 	}
 

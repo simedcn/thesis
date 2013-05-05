@@ -2,8 +2,8 @@ package com.ebay.kvstore.server.data.storage.fs;
 
 import java.util.Arrays;
 
-import com.ebay.kvstore.IKeyComparable;
-import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.util.IKeyComparable;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class IndexEntry implements Comparable<IndexEntry>, IKeyComparable {
 	byte[] keyStart;

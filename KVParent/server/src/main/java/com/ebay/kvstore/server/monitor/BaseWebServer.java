@@ -1,6 +1,6 @@
 package com.ebay.kvstore.server.monitor;
 
-import com.ebay.kvstore.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfiguration;
 import com.ebay.kvstore.structure.Address;
 
 public abstract class BaseWebServer implements IWebServer {

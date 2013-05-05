@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.apache.mina.core.session.IoSession;
 
-import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.exception.InvalidKeyException;
 import com.ebay.kvstore.protocol.IProtocol;
 import com.ebay.kvstore.protocol.ProtocolCode;
@@ -13,6 +12,7 @@ import com.ebay.kvstore.protocol.response.IncrResponse;
 import com.ebay.kvstore.server.data.DataServerContext;
 import com.ebay.kvstore.server.data.storage.IStoreEngine;
 import com.ebay.kvstore.structure.KeyValue;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class IncrRequestHandler extends DataServerHandler<IncrRequest> {
 

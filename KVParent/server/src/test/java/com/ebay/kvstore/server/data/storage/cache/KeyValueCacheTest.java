@@ -8,10 +8,10 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.KeyValueUtil;
 import com.ebay.kvstore.server.data.cache.FIFOCacheReplacer;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class KeyValueCacheTest {
 

@@ -11,13 +11,13 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ebay.kvstore.KeyValueUtil;
-import com.ebay.kvstore.conf.ConfigurationLoader;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.ConfigurationLoader;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.RegionStat;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class MemoryStoreEngineTest extends BaseFileTest {
 

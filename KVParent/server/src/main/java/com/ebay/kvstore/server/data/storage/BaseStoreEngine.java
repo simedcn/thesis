@@ -11,16 +11,16 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.KeyValueUtil;
-import com.ebay.kvstore.RegionUtil;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.exception.InvalidKeyException;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.data.cache.KeyValueCache;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.KeyValue;
 import com.ebay.kvstore.structure.Region;
 import com.ebay.kvstore.structure.Value;
+import com.ebay.kvstore.util.KeyValueUtil;
+import com.ebay.kvstore.util.RegionUtil;
 
 public abstract class BaseStoreEngine implements IStoreEngine {
 
@@ -51,13 +51,13 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 	}
 
 	@Override
-	public int getCacheLimit() {
-		return cacheLimit;
+	public Region[] getAllRegions() {
+		return regions.toArray(new Region[regions.size()]);
 	}
 
 	@Override
-	public Region[] getAllRegions() {
-		return regions.toArray(new Region[regions.size()]);
+	public int getCacheLimit() {
+		return cacheLimit;
 	}
 
 	public void onLoad(Region region) {
@@ -187,19 +187,6 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 		return null;
 	}
 
-	protected synchronized Region removeRegion(int regionId) {
-		Iterator<Region> it = regions.iterator();
-		Region region = null;
-		while (it.hasNext()) {
-			region = it.next();
-			if (region.getRegionId() == regionId) {
-				it.remove();
-				break;
-			}
-		}
-		return region;
-	}
-
 	protected KeyValue incr(KeyValue kv, byte[] key, int initValue, int incremental, int ttl) {
 		long expire = KeyValueUtil.getExpireTime(ttl);
 		Value value;
@@ -213,5 +200,18 @@ public abstract class BaseStoreEngine implements IStoreEngine {
 			value.setExpire(expire);
 		}
 		return kv;
+	}
+
+	protected synchronized Region removeRegion(int regionId) {
+		Iterator<Region> it = regions.iterator();
+		Region region = null;
+		while (it.hasNext()) {
+			region = it.next();
+			if (region.getRegionId() == regionId) {
+				it.remove();
+				break;
+			}
+		}
+		return region;
 	}
 }

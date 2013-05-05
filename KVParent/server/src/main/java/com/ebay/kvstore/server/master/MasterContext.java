@@ -2,8 +2,8 @@ package com.ebay.kvstore.server.master;
 
 import org.apache.mina.core.session.IoSession;
 
-import com.ebay.kvstore.conf.IConfiguration;
 import com.ebay.kvstore.protocol.context.IContext;
+import com.ebay.kvstore.server.conf.IConfiguration;
 import com.ebay.kvstore.server.master.engine.IMasterEngine;
 
 public class MasterContext implements IContext {

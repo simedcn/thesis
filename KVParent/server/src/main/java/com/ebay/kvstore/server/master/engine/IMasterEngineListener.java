@@ -9,9 +9,9 @@ public interface IMasterEngineListener {
 
 	public void onRegionLoad(DataServerStruct struct, Region region);
 
+	public void onRegionMerge(DataServerStruct struct, int regionId1, int regionId2);
+
 	public void onRegionSplit(int oldRegion, int newRegion);
 
 	public void onRegionUnload(DataServerStruct struct, int region);
-
-	public void onRegionMerge(DataServerStruct struct, int regionId1, int regionId2);
 }

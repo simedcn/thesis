@@ -10,12 +10,12 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.FSUtil;
-import com.ebay.kvstore.PathBuilder;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.master.engine.IMasterEngine;
+import com.ebay.kvstore.server.util.DFSManager;
+import com.ebay.kvstore.server.util.FSUtil;
+import com.ebay.kvstore.server.util.PathBuilder;
 
 public class GarbageCollectionTask extends BaseMasterTask {
 	private static Logger logger = LoggerFactory.getLogger(GarbageCollectionTask.class);
@@ -48,29 +48,6 @@ public class GarbageCollectionTask extends BaseMasterTask {
 		checkDataDir();
 	}
 
-	private void checkMasterDir() {
-		try {
-			String checkPointBase = PathBuilder.getMasterCheckPointDir();
-			Path checkPointPath = new Path(checkPointBase);
-			List<String> checkpoints = FSUtil.listFiles(checkPointBase);
-			for (String checkpoint : checkpoints) {
-				checkMasterCheckpointFile(checkPointPath, checkpoint);
-			}
-		} catch (Exception e) {
-			logger.error("Error occured check master checkpoint dir", e);
-		}
-		try {
-			String logBase = PathBuilder.getMasterLogDir();
-			Path logPath = new Path(logBase);
-			List<String> logs = FSUtil.listFiles(logBase);
-			for (String log : logs) {
-				checkMasterLogFile(logPath, log);
-			}
-		} catch (Exception e) {
-			logger.error("Error occured check master log dir", e);
-		}
-	}
-
 	private void checkDataDir() {
 		try {
 			String base = PathBuilder.getDataServerDir();
@@ -80,75 +57,6 @@ public class GarbageCollectionTask extends BaseMasterTask {
 			}
 		} catch (IOException e) {
 			logger.error("Error occured when list data dirs", e);
-		}
-	}
-
-	private void checkRegion(String baseDir, String region) {
-		String regionDir = baseDir + region;
-		try {
-			int regionId = Integer.valueOf(region);
-			Path regionPath = new Path(regionDir);
-			List<String> files = FSUtil.listFiles(regionDir);
-			if (!engine.containsRegion(regionId) && files.size() == 0) {
-				fs.delete(regionPath, true);
-				return;
-			}
-			checkDataServerRegionFile(regionPath, files);
-		} catch (NumberFormatException e) {
-			logger.info("Find invalid region dir:{}, try to delete it", regionDir);
-			try {
-				fs.delete(new Path(regionDir), true);
-			} catch (IOException ioe) {
-				logger.info("Fail to delete region dir:" + regionDir, ioe);
-			}
-		} catch (Exception e) {
-			logger.error("Error occured when check region Dir:" + regionDir, e);
-		}
-	}
-
-	private void checkMasterCheckpointFile(Path base, String checkpoint) {
-		Path ckPath = new Path(base, checkpoint);
-		try {
-			boolean delete = false;
-			if (FSUtil.isValidCheckpointFile(checkpoint)) {
-				long time = FSUtil.getRegionFileTimestamp(checkpoint);
-				if (current - time > checkpointReserve) {
-					delete = true;
-				}
-			} else {
-				long time = FSUtil.getFileTimestamp(ckPath);
-				if (current - time > tmpReserve) {
-					delete = true;
-				}
-			}
-			if (delete) {
-				fs.delete(ckPath, true);
-			}
-		} catch (Exception e) {
-			logger.error("Error occured when check master checkpoint File:" + ckPath, e);
-		}
-	}
-
-	private void checkMasterLogFile(Path base, String log) {
-		Path logPath = new Path(base, log);
-		try {
-			boolean delete = false;
-			if (FSUtil.isValidMasterLogFile(log)) {
-				long time = FSUtil.getRegionFileTimestamp(log);
-				if (current - time > checkpointReserve) {
-					delete = true;
-				}
-			} else {
-				long time = FSUtil.getFileTimestamp(logPath);
-				if (current - time > tmpReserve) {
-					delete = true;
-				}
-			}
-			if (delete) {
-				fs.delete(logPath, true);
-			}
-		} catch (Exception e) {
-			logger.error("Error occured when check master log file:" + logPath, e);
 		}
 	}
 
@@ -175,7 +83,7 @@ public class GarbageCollectionTask extends BaseMasterTask {
 			}
 		}
 
-		for (int i = regions.size() - 1; i >= 0; i--) {
+		for (int i = 0; i<regions.size(); i++) {
 			String region = regions.get(i);
 			try {
 				long time = FSUtil.getRegionFileTimestamp(region);
@@ -188,7 +96,7 @@ public class GarbageCollectionTask extends BaseMasterTask {
 				logger.error("Error occured when check region file:" + region, e);
 			}
 		}
-		for (int i = logs.size() - 1; i >= 0; i--) {
+		for (int i=0;i<logs.size(); i++) {
 			String log = logs.get(i);
 			try {
 				long time = FSUtil.getRegionFileTimestamp(log);
@@ -200,6 +108,98 @@ public class GarbageCollectionTask extends BaseMasterTask {
 			} catch (Exception e) {
 				logger.error("Error occured when check log file:" + log, e);
 			}
+		}
+	}
+
+	private void checkMasterCheckpointFile(Path base, String checkpoint) {
+		Path ckPath = new Path(base, checkpoint);
+		try {
+			boolean delete = false;
+			if (FSUtil.isValidCheckpointFile(checkpoint)) {
+				long time = FSUtil.getRegionFileTimestamp(checkpoint);
+				if (current - time > checkpointReserve) {
+					delete = true;
+				}
+			} else {
+				long time = FSUtil.getFileTimestamp(ckPath);
+				if (current - time > tmpReserve) {
+					delete = true;
+				}
+			}
+			if (delete) {
+				fs.delete(ckPath, true);
+			}
+		} catch (Exception e) {
+			logger.error("Error occured when check master checkpoint File:" + ckPath, e);
+		}
+	}
+
+	private void checkMasterDir() {
+		try {
+			String checkPointBase = PathBuilder.getMasterCheckPointDir();
+			Path checkPointPath = new Path(checkPointBase);
+			List<String> checkpoints = FSUtil.listFiles(checkPointBase);
+			for (String checkpoint : checkpoints) {
+				checkMasterCheckpointFile(checkPointPath, checkpoint);
+			}
+		} catch (Exception e) {
+			logger.error("Error occured check master checkpoint dir", e);
+		}
+		try {
+			String logBase = PathBuilder.getMasterLogDir();
+			Path logPath = new Path(logBase);
+			List<String> logs = FSUtil.listFiles(logBase);
+			for (String log : logs) {
+				checkMasterLogFile(logPath, log);
+			}
+		} catch (Exception e) {
+			logger.error("Error occured check master log dir", e);
+		}
+	}
+
+	private void checkMasterLogFile(Path base, String log) {
+		Path logPath = new Path(base, log);
+		try {
+			boolean delete = false;
+			if (FSUtil.isValidMasterLogFile(log)) {
+				long time = FSUtil.getRegionFileTimestamp(log);
+				if (current - time > checkpointReserve) {
+					delete = true;
+				}
+			} else {
+				long time = FSUtil.getFileTimestamp(logPath);
+				if (current - time > tmpReserve) {
+					delete = true;
+				}
+			}
+			if (delete) {
+				fs.delete(logPath, true);
+			}
+		} catch (Exception e) {
+			logger.error("Error occured when check master log file:" + logPath, e);
+		}
+	}
+
+	private void checkRegion(String baseDir, String region) {
+		String regionDir = baseDir + region;
+		try {
+			int regionId = Integer.valueOf(region);
+			Path regionPath = new Path(regionDir);
+			List<String> files = FSUtil.listFiles(regionDir);
+			if (!engine.containsRegion(regionId) && files.size() == 0) {
+				fs.delete(regionPath, true);
+				return;
+			}
+			checkDataServerRegionFile(regionPath, files);
+		} catch (NumberFormatException e) {
+			logger.info("Find invalid region dir:{}, try to delete it", regionDir);
+			try {
+				fs.delete(new Path(regionDir), true);
+			} catch (IOException ioe) {
+				logger.info("Fail to delete region dir:" + regionDir, ioe);
+			}
+		} catch (Exception e) {
+			logger.error("Error occured when check region Dir:" + regionDir, e);
 		}
 	}
 

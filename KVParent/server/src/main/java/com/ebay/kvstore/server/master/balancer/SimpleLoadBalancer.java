@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.ebay.kvstore.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfiguration;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
 import com.ebay.kvstore.structure.Region;

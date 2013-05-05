@@ -4,10 +4,10 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.exception.KVException;
 import com.ebay.kvstore.protocol.IProtocol;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.Address;
 

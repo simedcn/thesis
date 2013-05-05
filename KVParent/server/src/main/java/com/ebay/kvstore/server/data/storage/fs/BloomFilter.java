@@ -2,11 +2,24 @@ package com.ebay.kvstore.server.data.storage.fs;
 
 import java.util.BitSet;
 
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
-import com.ebay.kvstore.conf.InvalidConfException;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
+import com.ebay.kvstore.server.conf.InvalidConfException;
 
 public class BloomFilter {
+	private static int hashCode(byte[] key, int prime) {
+		if (key == null)
+			return 0;
+
+		int result = 1;
+		for (byte element : key)
+			result = prime * result + element;
+		if (result < 0) {
+			result = -result;
+		}
+		return result;
+	}
+
 	private BitSet bits;
 
 	private int size;
@@ -26,6 +39,10 @@ public class BloomFilter {
 		this.bits = new BitSet(size);
 	}
 
+	public void clear() {
+		bits.clear();
+	}
+
 	public boolean get(byte[] key) {
 		int h1 = hashCode(key, 17);
 		int h2 = hashCode(key, 23);
@@ -33,10 +50,6 @@ public class BloomFilter {
 		int h4 = hashCode(key, 37);
 		return bits.get(h1 % size) && bits.get(h2 % size) && bits.get(h3 % size)
 				&& bits.get(h4 % size);
-	}
-
-	public void clear() {
-		bits.clear();
 	}
 
 	public void set(byte[] key) {
@@ -49,19 +62,6 @@ public class BloomFilter {
 		bits.set(h3 % size);
 		bits.set(h4 % size);
 
-	}
-
-	private static int hashCode(byte[] key, int prime) {
-		if (key == null)
-			return 0;
-
-		int result = 1;
-		for (byte element : key)
-			result = prime * result + element;
-		if (result < 0) {
-			result = -result;
-		}
-		return result;
 	}
 
 }

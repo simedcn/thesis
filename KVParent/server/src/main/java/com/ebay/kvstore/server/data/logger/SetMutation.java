@@ -3,8 +3,8 @@ package com.ebay.kvstore.server.data.logger;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.ebay.kvstore.logger.ILoggerInputStream;
-import com.ebay.kvstore.logger.ILoggerOutputStream;
+import com.ebay.kvstore.server.logger.ILoggerInputStream;
+import com.ebay.kvstore.server.logger.ILoggerOutputStream;
 import com.ebay.kvstore.structure.Value;
 
 public class SetMutation implements IMutation {
@@ -54,6 +54,11 @@ public class SetMutation implements IMutation {
 	}
 
 	@Override
+	public String toString() {
+		return "SetMutation [key=" + Arrays.toString(key) + ", value=" + value + "]";
+	}
+
+	@Override
 	public void writeToExternal(ILoggerOutputStream out) throws IOException {
 		out.write(getType());
 		out.writeInt(key.length);
@@ -61,11 +66,6 @@ public class SetMutation implements IMutation {
 		out.writeInt(value.getValue().length);
 		out.write(value.getValue());
 		out.writeLong(value.getExpire());
-	}
-
-	@Override
-	public String toString() {
-		return "SetMutation [key=" + Arrays.toString(key) + ", value=" + value + "]";
 	}
 
 }

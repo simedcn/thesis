@@ -20,15 +20,12 @@ import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ebay.kvstore.IKVConstants;
-import com.ebay.kvstore.MinaUtil;
-import com.ebay.kvstore.conf.ConfigurationLoader;
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.protocol.IProtocolType;
 import com.ebay.kvstore.protocol.context.IContext;
 import com.ebay.kvstore.protocol.handler.ProtocolDispatcher;
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.conf.ConfigurationLoader;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.server.master.engine.MasterEngine;
 import com.ebay.kvstore.server.master.handler.DataServerJoinRequestHandler;
@@ -47,7 +44,10 @@ import com.ebay.kvstore.server.master.task.RegionSplitTask;
 import com.ebay.kvstore.server.master.task.RegionUnassignTask;
 import com.ebay.kvstore.server.monitor.IPerformanceMonitor;
 import com.ebay.kvstore.server.monitor.MonitorFactory;
+import com.ebay.kvstore.server.util.DFSManager;
 import com.ebay.kvstore.structure.Address;
+import com.ebay.kvstore.util.IKVConstants;
+import com.ebay.kvstore.util.MinaUtil;
 
 public class MasterServer implements IConfigurationKey, Watcher {
 	private static Logger logger = LoggerFactory.getLogger(MasterServer.class);
@@ -143,17 +143,9 @@ public class MasterServer implements IConfigurationKey, Watcher {
 		}
 	}
 
-	private void initMonitor() {
-		Address addr = Address.parse(conf.get(IConfigurationKey.Master_Monitor_Web_Addr));
-		boolean enable = conf.getBoolean(IConfigurationKey.Master_Monitor_Enable);
-		MonitorFactory.init(enable, addr);
-		monitor = MonitorFactory.getMonitor();
-	}
-
 	public synchronized void start() throws Exception {
 		initZookeeper();
 		if (active) {
-
 			run();
 		} else {
 			synchronized (zooKeeper) {
@@ -205,6 +197,13 @@ public class MasterServer implements IConfigurationKey, Watcher {
 
 	private void initHdfs() throws IOException {
 		DFSManager.init(hdfsAddr.toInetSocketAddress(), new Configuration());
+	}
+
+	private void initMonitor() {
+		Address addr = Address.parse(conf.get(IConfigurationKey.Master_Monitor_Web_Addr));
+		boolean enable = conf.getBoolean(IConfigurationKey.Master_Monitor_Enable);
+		MonitorFactory.init(enable, addr);
+		monitor = MonitorFactory.getMonitor();
 	}
 
 	private void initServer() throws IOException {

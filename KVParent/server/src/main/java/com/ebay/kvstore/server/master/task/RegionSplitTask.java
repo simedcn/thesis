@@ -5,13 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.ebay.kvstore.conf.IConfiguration;
-import com.ebay.kvstore.conf.IConfigurationKey;
 import com.ebay.kvstore.protocol.request.SplitRegionRequest;
+import com.ebay.kvstore.server.conf.IConfiguration;
+import com.ebay.kvstore.server.conf.IConfigurationKey;
 import com.ebay.kvstore.server.master.engine.IMasterEngine;
 import com.ebay.kvstore.structure.Address;
 import com.ebay.kvstore.structure.DataServerStruct;
-import com.ebay.kvstore.structure.Region;
 
 public class RegionSplitTask extends LoadBalanceTask {
 

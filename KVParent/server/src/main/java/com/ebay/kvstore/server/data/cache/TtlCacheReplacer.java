@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.ebay.kvstore.KeyValueUtil;
+import com.ebay.kvstore.util.KeyValueUtil;
 
 public class TtlCacheReplacer extends BaseCacheReplacer {
 

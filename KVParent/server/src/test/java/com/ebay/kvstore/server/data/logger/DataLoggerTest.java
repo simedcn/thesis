@@ -10,7 +10,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ebay.kvstore.server.data.storage.fs.DFSManager;
+import com.ebay.kvstore.server.logger.ILogger;
+import com.ebay.kvstore.server.util.DFSManager;
 import com.ebay.kvstore.structure.Value;
 
 public class DataLoggerTest {
@@ -39,7 +40,7 @@ public class DataLoggerTest {
 	@Test
 	public void test() {
 		try {
-			IDataLogger logger = DataFileLogger.forCreate(path);
+			ILogger logger = DataFileLogger.forCreate(path);
 			for (byte i = 0; i < 50; i++) {
 				logger.write(new SetMutation(new byte[] { i },new Value( new byte[] { i })));
 			}
