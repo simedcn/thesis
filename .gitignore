@@ -1,7 +1,5 @@
 *.class
-*.jar
-*.war
-*.ear
+lib/
 bin/
 target/
 obj/
