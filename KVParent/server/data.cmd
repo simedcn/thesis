@@ -1,0 +1,1 @@
+java -classpath .;conf\*;lib\*;*; com.ebay.kvstore.server.data.DataServer %*

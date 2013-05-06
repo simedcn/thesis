@@ -52,7 +52,7 @@ public abstract class BaseKVClient implements IKVClient {
 	}
 
 	@Override
-	public void close() {
+	public synchronized void close() {
 		Collection<IoSession> sessions = connections.values();
 		for (IoSession session : sessions) {
 			session.close(true);
