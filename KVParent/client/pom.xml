@@ -26,6 +26,7 @@
 		<dependency>
 			<groupId>org.javasimon</groupId>
 			<artifactId>javasimon-core</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

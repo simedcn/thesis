@@ -1,1 +1,1 @@
-java -classpath conf/*;lib/*;*; com.ebay.kvstore.server.master.MasterServer %*
+java  -Xms768m -Xmx2048m -XX:PermSize=128m -XX:MaxPermSize=256m -classpath .;conf/*;lib/*;*; com.ebay.kvstore.server.master.MasterServer %*

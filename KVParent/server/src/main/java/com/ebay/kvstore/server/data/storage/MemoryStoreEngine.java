@@ -341,7 +341,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 			cache.getReadLock().lock();
 			List<Region> dirtyList = new ArrayList<>();
 			for (Region region : regions) {
-				if (region.isDirty()) {
+				if (region.getStat().dirty) {
 					region.getStat().reset();
 					dirtyList.add(region);
 				}

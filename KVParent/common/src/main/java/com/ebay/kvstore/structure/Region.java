@@ -18,7 +18,6 @@ public class Region implements Serializable, Comparable<Region>, IKeyComparable 
 	private byte[] end;
 	private RegionStat stat;
 	// whether the region has been changed after last stat.
-	private transient boolean dirty = true;
 
 	public Region(int regionId, byte[] start, byte[] end) {
 		super();
@@ -93,14 +92,6 @@ public class Region implements Serializable, Comparable<Region>, IKeyComparable 
 		int result = 1;
 		result = prime * result + regionId;
 		return result;
-	}
-
-	public boolean isDirty() {
-		return dirty;
-	}
-
-	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
 	}
 
 	public void setEnd(byte[] end) {
