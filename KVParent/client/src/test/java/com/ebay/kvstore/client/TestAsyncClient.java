@@ -22,7 +22,7 @@ public class TestAsyncClient extends BaseClientTest {
 	protected ClientOption option;
 
 	public TestAsyncClient() {
-		option = new ClientOption(false, 2000, 30, new Address("192.168.1.102", 20000));
+		option = new ClientOption(false, 2000, 30, new Address("127.0.0.1", 20000));
 		initClient(option);
 		client.setHandler(new Handler());
 	}

@@ -14,7 +14,7 @@ import com.ebay.kvstore.structure.Address;
 public class TestSyncClient extends BaseClientTest {
 
 	public TestSyncClient() {
-		initClient(new ClientOption(true, 2000, 30, new Address("192.168.1.102", 20000)));
+		initClient(new ClientOption(true, 2000, 30, new Address("127.0.0.1", 20000)));
 	}
 
 	@Before
