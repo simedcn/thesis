@@ -159,7 +159,7 @@ public class RegionSplitter extends BaseRegionTask {
 				newStorage.newLogger(newLogFile);
 				storage.setDataFile(oldRegionFile, false);
 				newStorage.setDataFile(newRegionFile, false);
-				newRegion.setStart(KeyValueUtil.nextKey(oldKeyEnd));
+				newRegion.setStart(newKeyStart);
 				newRegion.setEnd(oldRegion.getEnd());
 				oldRegion.setEnd(oldKeyEnd);
 			} finally {

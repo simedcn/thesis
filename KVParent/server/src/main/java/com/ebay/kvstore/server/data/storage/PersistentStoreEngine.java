@@ -218,7 +218,8 @@ public class PersistentStoreEngine extends BaseStoreEngine {
 			return;
 		}
 		Region region = getRegionById(regionId);
-		if (region == null) {
+		Region newRegion = getRegionById(newRegionId);
+		if (region == null|| newRegion!=null) {
 			if (callback != null) {
 				callback.callback(false, null, null);
 			}

@@ -11,20 +11,20 @@ public class SplitOperation extends BaseOperation {
 	protected int newRegionId;
 
 	protected byte[] oldKeyEnd;
-	
+
 	protected byte[] newKeyEnd;
 
 	public SplitOperation() {
-		this(0, 0, null, null,null);
+		this(0, 0, null, null, null);
 	}
 
-	public SplitOperation(int regionId, int newRegionId, Address addr, byte[] oldKeyEnd,byte[] newKeyEnd) {
+	public SplitOperation(int regionId, int newRegionId, Address addr, byte[] oldKeyEnd,
+			byte[] newKeyEnd) {
 		super(regionId, addr);
 		this.newRegionId = newRegionId;
 		this.oldKeyEnd = oldKeyEnd;
 		this.newKeyEnd = newKeyEnd;
 	}
-	
 
 	public byte[] getNewKeyEnd() {
 		return newKeyEnd;
@@ -33,7 +33,7 @@ public class SplitOperation extends BaseOperation {
 	public int getNewRegionId() {
 		return newRegionId;
 	}
-	
+
 	public byte[] getOldKeyEnd() {
 		return oldKeyEnd;
 	}
@@ -51,9 +51,13 @@ public class SplitOperation extends BaseOperation {
 		this.oldKeyEnd = new byte[length];
 		in.read(oldKeyEnd);
 		length = in.readInt();
-		this.newKeyEnd = new byte[length];
-		in.read(newKeyEnd);
-		
+		if (length == 0) {
+			this.newKeyEnd = null;
+		} else {
+			this.newKeyEnd = new byte[length];
+			in.read(newKeyEnd);
+		}
+
 	}
 
 	@Override
@@ -63,8 +67,13 @@ public class SplitOperation extends BaseOperation {
 		out.writeInt(newRegionId);
 		out.writeInt(oldKeyEnd.length);
 		out.write(oldKeyEnd);
-		out.writeInt(newKeyEnd.length);
-		out.write(newKeyEnd);
+		if (newKeyEnd == null) {
+			out.writeInt(0);
+		} else {
+			out.writeInt(newKeyEnd.length);
+			out.write(newKeyEnd);
+		}
+
 	}
 
 }

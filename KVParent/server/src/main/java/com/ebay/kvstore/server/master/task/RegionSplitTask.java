@@ -27,7 +27,6 @@ public class RegionSplitTask extends LoadBalanceTask {
 		super.onRegionSplit(oldId, newId);
 		regionIds.remove(oldId);
 		regionIds.remove(newId);
-
 	}
 
 	@Override

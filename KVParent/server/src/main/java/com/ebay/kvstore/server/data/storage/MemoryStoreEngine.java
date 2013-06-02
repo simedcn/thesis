@@ -262,13 +262,18 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 		boolean finished = false;
 		Region newRegion = null;
 		Region oldRegion = null;
+		oldRegion = getRegionById(regionId);
+		newRegion = getRegionById(newRegionId);
+		if (oldRegion == null || newRegion != null) {
+			if (callback != null) {
+				callback.callback(false, oldRegion, newRegion);
+			}
+			return;
+		}
 		IMonitorObject object = monitor.getMonitorObject(IPerformanceMonitor.Memory_Split_Monitor);
 		try {
 			object.start();
-			oldRegion = getRegionById(regionId);
-			if (oldRegion == null) {
-				return;
-			}
+
 			List<Entry<byte[], Value>> list = new LinkedList<>();
 			int size = 0;
 			// traverse the cache
@@ -280,7 +285,7 @@ public class MemoryStoreEngine extends BaseStoreEngine {
 						list.add(e);
 						size += KeyValueUtil.getKeyValueLen(e.getKey(), e.getValue());
 						found = true;
-					}else if(found){
+					} else if (found) {
 						break;
 					}
 				}

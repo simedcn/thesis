@@ -392,6 +392,9 @@ public class MasterEngine implements IMasterEngine {
 
 	@Override
 	public synchronized void stop() throws IOException {
+		if(opLogger!=null){
+			opLogger.close();
+		}
 		taskManager.stop();
 	}
 

@@ -25,7 +25,7 @@ public class SystemTest extends BaseClientTest {
 	@Before
 	public void setUp() throws Exception {
 		initClient(new ClientOption(true, 2000, 30, new Address("127.0.0.1", 20000)));
-		repeat = 1000;
+		repeat = 50;
 		keys = new HashSet<>();
 	}
 
@@ -47,10 +47,10 @@ public class SystemTest extends BaseClientTest {
 				case 1:
 				case 2:
 				case 3:
-					set();
-					break;
 				case 4:
 				case 5:
+					set();
+					break;
 				case 6:
 					get();
 					break;
