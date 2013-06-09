@@ -49,18 +49,17 @@ public class SystemTest extends BaseClientTest {
 				case 3:
 				case 4:
 				case 5:
+				case 6:
 					set();
 					break;
-				case 6:
+				case 7:
 					get();
 					break;
-				case 7:
+				case 8:
 					incr();
 					break;
-				case 8:
-					delete();
-					break;
 				case 9:
+					delete();
 					break;
 				}
 				stat();

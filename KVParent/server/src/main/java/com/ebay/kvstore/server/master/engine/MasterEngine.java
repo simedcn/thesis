@@ -420,7 +420,6 @@ public class MasterEngine implements IMasterEngine {
 				} else if (getDataServer(nr) != null && !oldStruct.containsRegion(nr)) {
 					unassignRegion(oldStruct, nr);
 				} else {
-					oldStruct.removeRegion(nr);
 					oldStruct.addRegion(nr);
 				}
 			}

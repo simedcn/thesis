@@ -97,6 +97,7 @@ namespace kvstore
                 int type = stream.ReadInt();
                 int retCode = stream.ReadInt();
                 int retry = stream.ReadByte();
+                int ttl = stream.ReadInt();
                 byte[] key = stream.ReadBytes();
                 value = stream.ReadBytes();
                 return retCode;
@@ -111,6 +112,7 @@ namespace kvstore
                 stream.Position = 4;
                 stream.WriteInt(KVProtocolType.Set_Req);
                 stream.WriteByte(1);
+                stream.WriteInt(0);
                 stream.WriteBytes(key);
                 stream.WriteBytes(value);
                 EndWrite(stream);
@@ -137,6 +139,7 @@ namespace kvstore
                 stream.Position = 4;
                 stream.WriteInt(KVProtocolType.Incr_Req);
                 stream.WriteByte(1);
+                stream.WriteInt(0);
                 stream.WriteBytes(key);
                 stream.WriteInt(incremental);
                 stream.WriteInt(initValue);
@@ -153,6 +156,7 @@ namespace kvstore
                 int type = stream.ReadInt();
                 int retCode = stream.ReadInt();
                 int retry = stream.ReadByte();
+                int ttl = stream.ReadInt();
                 byte[] key = stream.ReadBytes();
                 int incremental = stream.ReadInt();
                 value = stream.ReadInt();

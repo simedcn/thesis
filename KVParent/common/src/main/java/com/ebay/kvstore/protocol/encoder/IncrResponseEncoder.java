@@ -24,5 +24,5 @@ public class IncrResponseEncoder implements IProtocolEncoder<IncrResponse> {
 		buffer.putInt(response.getIncremental());
 		buffer.putInt(response.getValue());
 	}
-
+ 
 }
